@@ -37,7 +37,7 @@
   .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; }
   .classflow-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .flow-chip { border: 1px solid #dfe8ff; background: #f7f9ff; color: #2d5dce; border-radius: 999px; padding: 4px 10px; font-size: 12px; }
-  .quick-side-tools { position: absolute; left: 12px; top: 158px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+  .quick-side-tools { position: absolute; right: 12px; top: 158px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
   .quick-btn { width: 44px; height: 44px; border-radius: 10px; border: 1px solid #d9dfe9; background: #fff; cursor: pointer; font-size: 11px; color: #445; }
   .quick-btn.active { background: #2d5dce; color: #fff; border-color: #2d5dce; }
   .floating-toolbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px; width: calc(100% - 34px); max-width: 980px; border: 1px solid #e2e7f2; border-radius: 12px; background: rgba(255,255,255,0.96); backdrop-filter: blur(6px); padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; z-index: 3; }
@@ -52,6 +52,7 @@
   .courseware-ctrl { display: flex; align-items: center; gap: 8px; font-size: 12px; }
   .courseware-ctrl span { color: #666; }
   .manage-panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px; }
+  .live-side .manage-panel { margin-top: 0; }
   .panel-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
   .panel-tab { border: 1px solid #d9d9d9; background: #fff; border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
   .panel-tab.active { border-color: #2d5dce; background: #edf1ff; color: #2d5dce; }
@@ -90,7 +91,9 @@
   .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
   .chat-input { flex: 1; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 10px; height: 34px; font-size: 12px; outline: none; }
   .muted-list { margin-top: 8px; font-size: 12px; color: #666; min-height: 18px; }
-  .muted-list span { color: #e74c3c; }
+  .muted-list .muted-empty { color: #e74c3c; }
+  .muted-item { display: inline-flex; align-items: center; gap: 6px; margin-right: 8px; margin-bottom: 6px; }
+  .muted-name { color: #e74c3c; }
   .raise-list { border: 1px solid #ececec; border-radius: 8px; background: #fafcff; padding: 10px; max-height: 220px; overflow-y: auto; }
   .raise-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
   .raise-item:last-child { border-bottom: none; }
@@ -98,8 +101,6 @@
 </head>
 <body>
 <div class="container">
-  <div class="page-title">直播授课页</div>
-  <div class="page-subtitle">入门C班 · 吃子技巧 第5课 <span class="tag tag-green">进行中</span></div>
   <div id="onboarding-modal" class="choice-modal show">
     <div class="onboarding-modal-card">
       <div class="card-title">首次进入授课流程</div>
@@ -124,7 +125,7 @@
           </div>
         </div>
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-          <div style="font-size:13px;color:#2d5dce;">设备检测完成，可进入数据统计步骤</div>
+          <div style="font-size:13px;color:#2d5dce;"></div>
           <button class="btn btn-primary" onclick="goToStep(2)">完成设备检查，进入数据统计</button>
         </div>
       </div>
@@ -155,7 +156,7 @@
     </div>
   </div>
   <div class="card">
-    <div class="card-title">直播控制台 - 入门C班 · 吃子技巧 第5课</div>
+    <div class="card-title"> 入门C班 · 吃子技巧 第5课 <span class="tag tag-green">进行中</span></div>
     <div class="live-control">
       <div class="live-main">
         <div class="meeting-shell">
@@ -168,29 +169,26 @@
               <span class="status-dot"></span>
               <span>连接稳定</span>
               <span class="tool-chip">当前工具：<strong id="current-tool">未选择</strong></span>
-              <span class="tool-chip">课堂点数：<strong id="class-point">0</strong></span>
               <span class="tool-chip">举手人数：<strong id="raise-count">0</strong></span>
               <button class="btn btn-sm btn-toggle active" id="mic-switch-btn" onclick="toggleMicFromToolbar()">麦克风：开启</button>
               <button class="btn btn-sm btn-toggle active" id="camera-switch-btn" onclick="toggleCameraFromToolbar()">摄像头：开启</button>
             </div>
           </div>
           <div class="classflow-bar">
+            <div style="padding:6px 10px;background:#fff4e5;border:1px solid #f0d9b5;border-radius:6px;font-size:12px;color:#e67e22;display:flex;align-items:center;gap:8px;">
+              <span>&#9200;</span>
+              <span>剩余时间 <strong style="font-size:14px;color:#e74c3c;">12:35</strong></span>
+            </div>
             <div class="courseware-ctrl">
               <span>课件:</span>
               <button class="btn btn-sm">上一页</button>
               <span style="font-weight:500;">第 5 / 18 页</span>
               <button class="btn btn-sm">下一页</button>
-              <button class="btn btn-sm">全屏</button>
-            </div>
-            <div style="padding:6px 10px;background:#fff4e5;border:1px solid #f0d9b5;border-radius:6px;font-size:12px;color:#e67e22;display:flex;align-items:center;gap:8px;">
-              <span>&#9200;</span>
-              <span>剩余时间 <strong style="font-size:14px;color:#e74c3c;">12:35</strong></span>
             </div>
           </div>
           <div class="quick-side-tools">
             <button class="quick-btn" id="tool-buzzer-main" onclick="toggleToolButton('tool-buzzer-main', '抢答器')">抢答</button>
             <button class="quick-btn" id="tool-choice-main" onclick="openChoiceModal()">答题</button>
-            <button class="quick-btn" id="tool-point" onclick="addClassPoint()">点数</button>
             <button class="quick-btn" id="tool-brush" onclick="switchSingleTool('tool-brush', '画笔')">画笔</button>
             <button class="quick-btn" id="tool-eraser" onclick="switchSingleTool('tool-eraser', '擦除工具')">擦除</button>
             <button class="quick-btn" id="tool-lasso" onclick="switchSingleTool('tool-lasso', '框选工具')">框选</button>
@@ -273,7 +271,7 @@
               <input id="chat-input" class="chat-input" placeholder="输入教师消息并发送">
               <button class="btn btn-primary btn-sm" onclick="sendTeacherMessage()">发送</button>
             </div>
-            <div id="muted-list" class="muted-list">已禁言：<span>无</span></div>
+            <div id="muted-list" class="muted-list">已禁言：<span class="muted-empty">无</span></div>
             <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin:12px 0 8px;">课堂统计</div>
             <div style="font-size:13px;color:#666;line-height:2;">
               <div>本课已发起答题: <strong>3</strong> 次</div>
@@ -383,7 +381,21 @@
 
   function renderMutedList() {
     var el = document.getElementById('muted-list');
-    el.innerHTML = '已禁言：<span>' + (mutedStudents.length ? mutedStudents.join('、') : '无') + '</span>';
+    if (!mutedStudents.length) {
+      el.innerHTML = '已禁言：<span class="muted-empty">无</span>';
+      return;
+    }
+    var listHtml = mutedStudents.map(function(name) {
+      return '<span class="muted-item"><span class="muted-name">' + name + '</span><button class="btn btn-sm" onclick="unmuteStudent(\'' + name + '\')">取消禁言</button></span>';
+    }).join('');
+    el.innerHTML = '已禁言：' + listHtml;
+  }
+
+  function unmuteStudent(name) {
+    mutedStudents = mutedStudents.filter(function(item) {
+      return item !== name;
+    });
+    renderMutedList();
   }
 
   function sendTeacherMessage() {
@@ -499,7 +511,7 @@
     musicOn = !musicOn;
     var el = document.getElementById('tool-music');
     el.classList.toggle('active', musicOn);
-    setCurrentTool(musicOn ? '音乐播放功能' : '未选择');
+    setCurrentTool(musicOn ? '课件音乐播放' : '未选择');
   }
 
   function toggleMicFromToolbar() {
@@ -552,6 +564,17 @@
     });
   }
 
+  function alignManagePanelToPreview() {
+    var preview = document.querySelector('.live-preview');
+    var liveSide = document.querySelector('.live-side');
+    var panel = document.querySelector('.live-side .manage-panel');
+    if (!preview || !liveSide || !panel) {
+      return;
+    }
+    var offset = preview.getBoundingClientRect().top - liveSide.getBoundingClientRect().top;
+    panel.style.marginTop = Math.max(0, Math.round(offset)) + 'px';
+  }
+
   document.querySelectorAll('#chat-list .chat-item .text').forEach(function(node) {
     node.setAttribute('data-raw-text', node.textContent);
     node.textContent = filterDirtyText(node.textContent);
@@ -559,6 +582,8 @@
   updateTimerView();
   renderRaiseHandQueue();
   updateDeviceToolStatus();
+  alignManagePanelToPreview();
+  window.addEventListener('resize', alignManagePanelToPreview);
   initOnboardingModal();
 </script>
 </body>
