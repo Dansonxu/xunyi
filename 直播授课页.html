@@ -206,8 +206,6 @@
               </div>
             </div>
             <div class="toolbar-row">
-              <button class="btn btn-sm">&#127908; 连麦</button>
-              <button class="btn btn-sm btn-primary">&#127942; 排行榜</button>
               <button class="btn btn-sm tool-btn" id="tool-music" onclick="toggleMusic()">课间音乐</button>
               <span class="toolbar-divider"></span>
               <button class="btn btn-sm btn-danger">&#9724; 下课</button>
@@ -275,8 +273,23 @@
             <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin:12px 0 8px;">课堂统计</div>
             <div style="font-size:13px;color:#666;line-height:2;">
               <div>本课已发起答题: <strong>3</strong> 次</div>
-              <div>平均正确率: <strong style="color:#22c55e;">78%</strong></div>
-              <div>最高正确率: <strong>92%</strong></div>
+              <div style="margin-top: 4px; margin-bottom: 4px;">
+                <div>各题平均正确率:</div>
+                <div style="padding-left: 12px; font-size: 12px; line-height: 1.8;">
+                  <div style="display: flex; justify-content: space-between; gap: 8px;">
+                    <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="第1题：当对白棋形成包围时，黑棋下一手最优先应做什么？">第1题：当对白棋形成包围时，黑棋下一手最优先应做什么？</span>
+                    <strong style="color:#22c55e;">85%</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; gap: 8px;">
+                    <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="第2题：判断能否吃子的核心依据是什么？">第2题：判断能否吃子的核心依据是什么？</span>
+                    <strong style="color:#22c55e;">72%</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; gap: 8px;">
+                    <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="第3题：征子进行中，哪种情况下应及时转换策略？">第3题：征子进行中，哪种情况下应及时转换策略？</span>
+                    <strong style="color:#22c55e;">77%</strong>
+                  </div>
+                </div>
+              </div>
               <div>参与率: <strong>95%</strong></div>
             </div>
           </div>
