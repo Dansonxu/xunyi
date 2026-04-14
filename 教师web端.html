@@ -137,10 +137,11 @@
   .course-block:hover { opacity: 0.85; }
   .course-block.big { background: #3b82f6; }
   .course-block.small { background: #22c55e; }
+  /* 新增置灰状态 */
+  .course-block.ended { background: #d9d9d9 !important; color: #666; }
   .course-block .cb-class { font-weight: 600; }
   .course-block .cb-room { opacity: 0.85; }
-  .course-block .cb-actions { display: none; margin-top: 2px; }
-  .course-block:hover .cb-actions { display: flex; gap: 3px; }
+  .course-block .cb-actions { display: flex; gap: 3px; margin-top: 4px; }
   .course-block .cb-action-btn { font-size: 9px; padding: 1px 4px; background: rgba(255,255,255,0.9); color: #333; border: none; border-radius: 2px; cursor: pointer; line-height: 1.4; }
   .course-block .cb-action-btn:hover { background: #fff; }
 
@@ -161,18 +162,6 @@
   .detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
   .detail-label { width: 90px; color: #999; flex-shrink: 0; }
   .detail-value { color: #333; }
-
-  /* ===== 直播管理 ===== */
-  .live-control { display: flex; gap: 16px; margin-top: 16px; }
-  .live-main { flex: 1; }
-  .live-side { width: 300px; }
-  .live-preview { width: 100%; height: 360px; }
-  .live-toolbar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-  .courseware-ctrl { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; }
-  .courseware-ctrl span { color: #666; }
-  .online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
-  .online-dot.on { background: #22c55e; }
-  .online-dot.off { background: #d9d9d9; }
 
   /* ===== 监课巡课 ===== */
   .monitor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -275,12 +264,6 @@
       <div class="sidebar-item active" data-page="schedule" onclick="switchPage(this)">
         <span class="icon">&#128197;</span><span>课程表</span>
       </div>
-      <div class="sidebar-item" data-page="courseware" onclick="switchPage(this)">
-        <span class="icon">&#128218;</span><span>课件查看</span>
-      </div>
-      <div class="sidebar-item" data-page="live" onclick="switchPage(this)">
-        <span class="icon">&#128250;</span><span>直播管理</span>
-      </div>
       <div class="sidebar-item" data-page="students" onclick="switchPage(this)">
         <span class="icon">&#128101;</span><span>学员管理</span>
       </div>
@@ -300,81 +283,6 @@
 
     <!-- Content -->
     <div class="content">
-
-      <!-- 全局说明 -->
-      <div style="margin-bottom:16px;padding:10px 14px;background:#fff4e5;border:1px solid #f0d9b5;border-radius:6px;font-size:13px;color:#b8860b;">
-        &#9888; 课件资源统一在运营管理端管理（已确认）。教师端"课件查看"为只读模式，不提供上传/管理功能。
-      </div>
-
-      <!-- ===== 0. 课件查看（只读） ===== -->
-      <div id="page-courseware" class="page">
-        <div class="page-title">课件查看</div>
-        <div style="margin-bottom:16px;padding:10px 14px;background:#e8f0fe;border-radius:6px;font-size:13px;color:#2d5dce;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
-          <span>&#128218; 课件资源统一在运营端管理，教师端<strong>仅查看（只读）</strong></span>
-          <span>|</span>
-          <span>支持操作：按课程/级别/类型分类浏览、搜索、预览</span>
-          <span>|</span>
-          <span>模拟测试（P1）：课件模拟演练，预演互动流程</span>
-        </div>
-        <div class="toolbar">
-          <input class="search-input" placeholder="搜索课件名称、课程、标签..." />
-          <select class="form-select">
-            <option>全部课程</option>
-            <option>围棋基础</option>
-            <option>吃子技巧</option>
-            <option>死活题</option>
-            <option>中盘战术</option>
-          </select>
-          <select class="form-select">
-            <option>全部级别</option>
-            <option>启蒙</option>
-            <option>入门</option>
-            <option>进阶</option>
-            <option>冲段</option>
-          </select>
-          <select class="form-select">
-            <option>全部类型</option>
-            <option>PPT课件</option>
-            <option>PDF文档</option>
-            <option>视频</option>
-          </select>
-        </div>
-        <div class="card">
-          <div class="card-title">课件资源列表</div>
-          <table>
-            <thead>
-              <tr><th>课件名称</th><th>关联课程</th><th>级别</th><th>类型</th><th>状态</th><th>操作</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>围棋基础-第8课-气与连接</td><td>围棋基础</td><td><span class="tag tag-blue">启蒙</span></td><td>PPT</td>
-                <td><span class="tag tag-green">已发布</span></td>
-                <td><button class="btn btn-sm btn-primary">预览</button> <button class="btn btn-sm">模拟演练</button></td>
-              </tr>
-              <tr>
-                <td>吃子技巧-第5课-综合训练</td><td>吃子技巧</td><td><span class="tag tag-blue">入门</span></td><td>PPT</td>
-                <td><span class="tag tag-green">已发布</span></td>
-                <td><button class="btn btn-sm btn-primary">预览</button> <button class="btn btn-sm">模拟演练</button></td>
-              </tr>
-              <tr>
-                <td>死活题-第12课-基础死活</td><td>死活题</td><td><span class="tag tag-orange">进阶</span></td><td>PPT</td>
-                <td><span class="tag tag-green">已发布</span></td>
-                <td><button class="btn btn-sm btn-primary">预览</button> <button class="btn btn-sm">模拟演练</button></td>
-              </tr>
-              <tr>
-                <td>围棋礼仪-第3课-对局礼仪</td><td>围棋基础</td><td><span class="tag tag-blue">启蒙</span></td><td>视频</td>
-                <td><span class="tag tag-green">已发布</span></td>
-                <td><button class="btn btn-sm btn-primary">预览</button></td>
-              </tr>
-              <tr>
-                <td>中盘战术-第6课-攻防转换</td><td>中盘战术</td><td><span class="tag tag-red">冲段</span></td><td>PPT</td>
-                <td><span class="tag tag-green">已发布</span></td>
-                <td><button class="btn btn-sm btn-primary">预览</button> <button class="btn btn-sm">模拟演练</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       <!-- ===== 1. 课程表 ===== -->
       <div id="page-schedule" class="page active">
@@ -419,14 +327,14 @@
                 <td class="time-col">08:00</td>
                 <td></td><td></td><td></td><td></td><td></td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail()">
+                  <div class="course-block big" onclick="showCourseDetail('not_started')">
                     <div class="cb-class">启蒙A班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">围棋基础 · 1教室</div>
                   </div>
                 </td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail()">
+                  <div class="course-block big" onclick="showCourseDetail('not_started')">
                     <div class="cb-class">启蒙B班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">围棋基础 · 2教室</div>
@@ -437,7 +345,7 @@
                 <td class="time-col">09:00</td>
                 <td></td><td></td><td></td><td></td><td></td>
                 <td>
-                  <div class="course-block small" onclick="showCourseDetail()">
+                  <div class="course-block small" onclick="showCourseDetail('not_started')">
                     <div class="cb-class">冲段精英班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">中盘战术 · 3教室</div>
@@ -448,7 +356,7 @@
               <tr>
                 <td class="time-col">10:00</td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail()">
+                  <div class="course-block big ended" onclick="showCourseDetail('ended')">
                     <div class="cb-class">入门C班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">吃子技巧 · 1教室</div>
@@ -456,7 +364,7 @@
                 </td>
                 <td></td>
                 <td>
-                  <div class="course-block small" onclick="showCourseDetail()">
+                  <div class="course-block small in_progress" onclick="showCourseDetail('in_progress')">
                     <div class="cb-class">1v1辅导</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">布局训练 · 线上</div>
@@ -470,7 +378,7 @@
                 <td class="time-col">13:00</td>
                 <td></td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail()">
+                  <div class="course-block big ended" onclick="showCourseDetail('ended')">
                     <div class="cb-class">进阶D班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">死活题 · 2教室</div>
@@ -482,7 +390,7 @@
                 <td class="time-col">14:00</td>
                 <td></td><td></td><td></td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail()">
+                  <div class="course-block big" onclick="showCourseDetail('not_started')">
                     <div class="cb-class">启蒙A班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">围棋礼仪 · 1教室</div>
@@ -490,7 +398,7 @@
                 </td>
                 <td></td>
                 <td>
-                  <div class="course-block small" onclick="showCourseDetail()">
+                  <div class="course-block small" onclick="showCourseDetail('not_started')">
                     <div class="cb-class">高段选拔班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">对局复盘 · 线上</div>
@@ -503,7 +411,7 @@
                 <td class="time-col">16:00</td>
                 <td></td><td></td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail()">
+                  <div class="course-block big" onclick="showCourseDetail('not_started')">
                     <div class="cb-class">入门E班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">基础规则 · 3教室</div>
@@ -511,7 +419,7 @@
                 </td>
                 <td></td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail()">
+                  <div class="course-block big" onclick="showCourseDetail('not_started')">
                     <div class="cb-class">进阶F班</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">定式讲解 · 1教室</div>
@@ -524,7 +432,7 @@
                 <td class="time-col">18:00</td>
                 <td></td><td></td><td></td><td></td><td></td>
                 <td>
-                  <div class="course-block small" onclick="showCourseDetail()">
+                  <div class="course-block small" onclick="showCourseDetail('not_started')">
                     <div class="cb-class">1v1辅导</div>
                     <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">官子技巧 · 线上</div>
@@ -541,53 +449,6 @@
           <span><span style="display:inline-block;width:12px;height:12px;background:#3b82f6;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>大班课</span>
           <span><span style="display:inline-block;width:12px;height:12px;background:#22c55e;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>小班课 / 1v1</span>
         </div>
-      </div>
-
-      <!-- ===== 2. 直播管理 ===== -->
-      <div id="page-live" class="page">
-        <div class="page-title">直播管理</div>
-        <div style="margin-bottom:16px;padding:10px 14px;background:#e8f0fe;border-radius:6px;font-size:13px;color:#2d5dce;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
-          <span>&#128225; 直播SDK：<strong>腾讯 LCIC（已确认）</strong></span>
-          <span>|</span>
-          <span>支持 <strong>10万人并发</strong></span>
-          <span>|</span>
-          <span>录制策略：<strong>自动录制，全录制，存储无限制</strong></span>
-          <span>|</span>
-          <span>剩余时间提醒（P1）：<strong>课程临近结束时高亮提醒</strong></span>
-          <span>|</span>
-          <span>大班自动考勤：<strong>进直播间 = 签到</strong>（已确认）</span>
-        </div>
-        <div class="card">
-          <div class="card-title">今日课程</div>
-          <table>
-            <thead>
-              <tr><th>时间</th><th>班级</th><th>课程</th><th>状态</th><th>操作</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>08:00-09:00</td><td>启蒙A班</td><td>围棋基础 第8课</td>
-                <td><span class="tag tag-gray">已结束</span></td>
-                <td><button class="btn btn-sm">查看回放</button></td>
-              </tr>
-              <tr>
-                <td>10:00-11:00</td><td>入门C班</td><td>吃子技巧 第5课</td>
-                <td><span class="tag tag-green">进行中</span></td>
-                <td><button class="btn btn-sm btn-primary" onclick="openLiveTeachingPage()">进入直播间</button></td>
-              </tr>
-              <tr>
-                <td>14:00-15:00</td><td>启蒙A班</td><td>围棋礼仪 第3课</td>
-                <td><span class="tag tag-orange">未开始</span></td>
-                <td><button class="btn btn-sm btn-success">开始直播</button></td>
-              </tr>
-              <tr>
-                <td>16:00-17:00</td><td>入门E班</td><td>基础规则 第2课</td>
-                <td><span class="tag tag-orange">未开始</span></td>
-                <td><button class="btn btn-sm btn-success">开始直播</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
       </div>
 
       <!-- ===== 3. 学员管理 ===== -->
@@ -825,7 +686,7 @@
                 <td><button class="btn btn-sm btn-primary" onclick="showAIEdit()">填写点评</button></td>
               </tr>
               <tr>
-                <td>吃子技巧 第5课</td><td>入门C班</td><td>2026-04-09</td>
+                <td>第5课 吃子技巧</td><td>入门C班</td><td>2026-04-09</td>
                 <td><span class="tag tag-red">待点评</span></td>
                 <td><button class="btn btn-sm btn-primary" onclick="showAIEdit()">填写点评</button></td>
               </tr>
@@ -880,7 +741,7 @@
                 <td><button class="btn btn-sm">查看详情</button></td>
               </tr>
               <tr>
-                <td>吃子技巧 第5课</td><td>入门C班</td><td>吃子综合练习 x8题</td><td>2026-04-09 12:00</td>
+                <td>第5课 吃子技巧</td><td>入门C班</td><td>吃子综合练习 x8题</td><td>2026-04-09 12:00</td>
                 <td><span style="font-weight:600;color:#2d5dce;">62%</span></td>
                 <td><button class="btn btn-sm">查看详情</button></td>
               </tr>
@@ -984,9 +845,8 @@
     <div class="detail-row"><div class="detail-label">类型</div><div class="detail-value"><span class="tag tag-blue">大班课</span></div></div>
     <div class="detail-row"><div class="detail-label">学员数</div><div class="detail-value">20人</div></div>
     <div class="detail-row"><div class="detail-label">课件</div><div class="detail-value"><a href="#" style="color:#2d5dce;">围棋基础-第8课.pptx</a></div></div>
-    <div style="margin-top:20px;display:flex;gap:10px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="openLiveTeachingPage()">进入直播间</button>
-      <button class="btn" style="flex:1;">查看课件</button>
+    <div id="modal-course-actions" style="margin-top:20px;display:flex;gap:10px;">
+      <!-- Buttons injected by JS -->
     </div>
   </div>
 </div>
@@ -1053,7 +913,22 @@ function switchPage(el) {
 }
 
 // 课程详情弹窗
-function showCourseDetail() {
+function showCourseDetail(status) {
+  status = status || 'not_started';
+  var actionContainer = document.getElementById('modal-course-actions');
+  var html = '';
+  
+  if (status === 'ended') {
+    html += '<button class="btn" style="flex:1;">查看回放</button>';
+  } else if (status === 'in_progress') {
+    html += '<button class="btn btn-primary" style="flex:1;" onclick="openLiveTeachingPage()">进入直播间</button>';
+  } else {
+    // not_started
+    html += '<button class="btn btn-success" style="flex:1;" onclick="openLiveTeachingPage()">开始上课</button>';
+  }
+  html += '<button class="btn" style="flex:1;">查看课件</button>';
+  
+  actionContainer.innerHTML = html;
   document.getElementById('modal-course').classList.add('show');
 }
 
