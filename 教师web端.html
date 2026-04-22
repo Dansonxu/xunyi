@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>讯弈围棋·教师端 Web 原型图 v3.1</title>
+<title>讯弈围棋·教师端 Web 原型图 v1.0</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #333; font-size: 14px; }
@@ -130,20 +130,18 @@
   .timetable th { text-align: center; padding: 12px 8px; background: #fafbfc; border: 1px solid #eee; font-size: 13px; }
   .timetable td { border: 1px solid #eee; height: 52px; vertical-align: top; padding: 2px; position: relative; width: 13%; }
   .timetable td.time-col { width: 70px; text-align: center; vertical-align: middle; font-size: 12px; color: #999; background: #fafbfc; }
+  .timetable td.slot-unavailable { background: #f1f3f5; }
   .course-block {
     border-radius: 4px; padding: 4px 6px; font-size: 11px; margin: 1px;
     cursor: pointer; color: #fff; line-height: 1.4; transition: opacity .15s;
+    background: #3b82f6;
   }
   .course-block:hover { opacity: 0.85; }
-  .course-block.big { background: #3b82f6; }
-  .course-block.small { background: #22c55e; }
-  /* 新增置灰状态 */
+  .course-block.in_progress { background: #e74c3c; }
   .course-block.ended { background: #d9d9d9 !important; color: #666; }
   .course-block .cb-class { font-weight: 600; }
   .course-block .cb-room { opacity: 0.85; }
-  .course-block .cb-actions { display: flex; gap: 3px; margin-top: 4px; }
-  .course-block .cb-action-btn { font-size: 9px; padding: 1px 4px; background: rgba(255,255,255,0.9); color: #333; border: none; border-radius: 2px; cursor: pointer; line-height: 1.4; }
-  .course-block .cb-action-btn:hover { background: #fff; }
+  .course-block .cb-time { font-size: 11px; font-weight: 700; color: #1a1a2e; background: #ffe066; padding: 2px 6px; border-radius: 4px; margin-bottom: 3px; display: inline-block; }
 
   /* 课程详情弹窗 */
   .modal-overlay {
@@ -161,22 +159,7 @@
   .modal-close:hover { background: #e0e0e0; }
   .detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
   .detail-label { width: 90px; color: #999; flex-shrink: 0; }
-  .detail-value { color: #333; }
-
-  /* ===== 监课巡课 ===== */
-  .monitor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .monitor-cell { height: 180px; position: relative; }
-  .monitor-cell .mc-info { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); color: #fff; padding: 6px 10px; font-size: 12px; display: flex; justify-content: space-between; border-radius: 0 0 6px 6px; }
-
-  /* ===== AI报告 ===== */
-  .ai-edit-area { display: flex; gap: 16px; }
-  .ai-edit-area .left { flex: 1; }
-  .ai-edit-area .right { flex: 1; }
-  .auto-summary { background: #f8f9ff; border: 1px solid #e0e4f0; border-radius: 6px; padding: 14px; font-size: 13px; color: #555; line-height: 1.7; min-height: 120px; }
-  textarea.edit-textarea { width: 100%; min-height: 140px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 12px; font-size: 13px; resize: vertical; outline: none; font-family: inherit; }
-  textarea.edit-textarea:focus { border-color: #2d5dce; }
-
-  /* ===== 个人中心 ===== */
+  .detail-value { color: #333; }/* ===== 个人中心 ===== */
   .profile-form { max-width: 560px; }
   .profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: #2d5dce; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
   .form-item { margin-bottom: 18px; }
@@ -203,7 +186,7 @@
 <div id="page-login">
   <div class="login-card">
     <div class="login-logo">&#9823;</div>
-    <div class="login-title">讯弈围棋·教师端 <span style="font-size:12px;color:#2d5dce;background:#e8f0fe;padding:2px 8px;border-radius:4px;vertical-align:middle;">v3.1</span></div>
+    <div class="login-title">讯弈围棋·教师端 <span style="font-size:12px;color:#2d5dce;background:#e8f0fe;padding:2px 8px;border-radius:4px;vertical-align:middle;">v1.0</span></div>
     <div class="login-subtitle">围棋教育智慧平台</div>
     <div class="login-tabs">
       <div class="login-tab active" onclick="switchLoginTab(this, 'account')">账号密码登录</div>
@@ -246,7 +229,7 @@
   <div class="header">
     <div class="header-left">
       <span class="logo-icon">&#9823;</span>
-      <span class="logo-text">讯弈围棋·教师端 <span style="font-size:10px;color:#2d5dce;background:#e8f0fe;padding:1px 6px;border-radius:3px;vertical-align:middle;">v3.1</span></span>
+      <span class="logo-text">讯弈围棋·教师端 <span style="font-size:10px;color:#2d5dce;background:#e8f0fe;padding:1px 6px;border-radius:3px;vertical-align:middle;">v1.0</span></span>
     </div>
     <div class="header-right">
       <span class="header-bell" title="消息通知">&#128276;<span class="badge">3</span></span>
@@ -270,12 +253,6 @@
       <div class="sidebar-item" data-page="analytics" onclick="switchPage(this)">
         <span class="icon">&#128202;</span><span>学情数据</span>
       </div>
-      <div class="sidebar-item" data-page="monitor" onclick="switchPage(this)">
-        <span class="icon">&#128065;</span><span>监课巡课</span>
-      </div>
-      <div class="sidebar-item" data-page="aireport" onclick="switchPage(this)">
-        <span class="icon">&#128221;</span><span>AI报告与作业</span>
-      </div>
       <div class="sidebar-item" data-page="profile" onclick="switchPage(this)">
         <span class="icon">&#128100;</span><span>个人中心</span>
       </div>
@@ -287,15 +264,6 @@
       <!-- ===== 1. 课程表 ===== -->
       <div id="page-schedule" class="page active">
         <div class="page-title">课程表</div>
-        <div style="margin-bottom:16px;padding:10px 14px;background:#e8f0fe;border-radius:6px;font-size:13px;color:#2d5dce;display:flex;gap:20px;align-items:center;">
-          <span>&#9432; 排课模式：<strong>按周固定排课</strong></span>
-          <span>|</span>
-          <span>教师类型：全职教师（无兼职）</span>
-          <span>|</span>
-          <span>支持操作：调课、换老师</span>
-          <span>|</span>
-          <span>课件：仅查看（由运营端统一管理）</span>
-        </div>
         <div class="schedule-header">
           <div class="view-switch">
             <div class="vs-btn active">本周</div>
@@ -306,13 +274,17 @@
             <div class="date-text">2026年4月6日 - 4月12日</div>
             <div class="arrow">&#8250;</div>
           </div>
-          <button class="btn" style="visibility:hidden;">占位</button>
+          <div style="font-size:12px; color:#999; display:flex; gap:20px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+            <span><span style="display:inline-block;width:12px;height:12px;background:#3b82f6;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>未开始</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:#e74c3c;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>进行中</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:#d9d9d9;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>已结束</span>
+          </div>
         </div>
         <div class="card" style="padding:0;overflow:auto;">
           <table class="timetable">
             <thead>
               <tr>
-                <th style="width:70px;">时间</th>
+                <th style="width:70px;">节次</th>
                 <th>周一<br><span style="font-weight:400;color:#aaa;font-size:11px;">4/6</span></th>
                 <th>周二<br><span style="font-weight:400;color:#aaa;font-size:11px;">4/7</span></th>
                 <th>周三<br><span style="font-weight:400;color:#aaa;font-size:11px;">4/8</span></th>
@@ -324,143 +296,259 @@
             </thead>
             <tbody>
               <tr>
-                <td class="time-col">08:00</td>
-                <td></td><td></td><td></td><td></td><td></td>
+                <td class="time-col">第一节</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail('not_started')">
+                  <div class="course-block big" data-day="6" data-slot="1" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">09:00-10:25</div>
                     <div class="cb-class">启蒙A班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">围棋基础 · 1教室</div>
                   </div>
                 </td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail('not_started')">
+                  <div class="course-block big" data-day="7" data-slot="1" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">09:00-10:25</div>
                     <div class="cb-class">启蒙B班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">围棋基础 · 2教室</div>
                   </div>
                 </td>
               </tr>
               <tr>
-                <td class="time-col">09:00</td>
-                <td></td><td></td><td></td><td></td><td></td>
+                <td class="time-col">第二节</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
                 <td>
-                  <div class="course-block small" onclick="showCourseDetail('not_started')">
+                  <div class="course-block small" data-day="6" data-slot="2" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">10:30-11:55</div>
                     <div class="cb-class">冲段精英班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">中盘战术 · 3教室</div>
                   </div>
                 </td>
-                <td></td>
+                <td class="slot-unavailable"></td>
               </tr>
               <tr>
-                <td class="time-col">10:00</td>
+                <td class="time-col">第三节</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
                 <td>
-                  <div class="course-block big ended" onclick="showCourseDetail('ended')">
+                  <div class="course-block" data-day="6" data-slot="3" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">13:00-14:25</div>
                     <div class="cb-class">入门C班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">吃子技巧 · 1教室</div>
                   </div>
                 </td>
-                <td></td>
                 <td>
-                  <div class="course-block small in_progress" onclick="showCourseDetail('in_progress')">
+                  <div class="course-block small" data-day="7" data-slot="3" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">13:00-14:25</div>
                     <div class="cb-class">1v1辅导</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">布局训练 · 线上</div>
                   </div>
                 </td>
-                <td></td><td></td><td></td><td></td>
               </tr>
-              <tr><td class="time-col">11:00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-              <tr><td class="time-col">12:00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               <tr>
-                <td class="time-col">13:00</td>
-                <td></td>
+                <td class="time-col">第四节</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
                 <td>
-                  <div class="course-block big ended" onclick="showCourseDetail('ended')">
+                  <div class="course-block big" data-day="6" data-slot="4" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">14:30-15:55</div>
                     <div class="cb-class">进阶D班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">死活题 · 2教室</div>
                   </div>
                 </td>
-                <td></td><td></td><td></td><td></td><td></td>
-              </tr>
-              <tr>
-                <td class="time-col">14:00</td>
-                <td></td><td></td><td></td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail('not_started')">
+                  <div class="course-block big" data-day="7" data-slot="4" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">14:30-15:55</div>
                     <div class="cb-class">启蒙A班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">围棋礼仪 · 1教室</div>
                   </div>
                 </td>
-                <td></td>
-                <td>
-                  <div class="course-block small" onclick="showCourseDetail('not_started')">
-                    <div class="cb-class">高段选拔班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
-                    <div class="cb-room">对局复盘 · 线上</div>
-                  </div>
-                </td>
-                <td></td>
               </tr>
-              <tr><td class="time-col">15:00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               <tr>
-                <td class="time-col">16:00</td>
-                <td></td><td></td>
+                <td class="time-col">第五节</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
                 <td>
-                  <div class="course-block big" onclick="showCourseDetail('not_started')">
-                    <div class="cb-class">入门E班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
-                    <div class="cb-room">基础规则 · 3教室</div>
-                  </div>
-                </td>
-                <td></td>
-                <td>
-                  <div class="course-block big" onclick="showCourseDetail('not_started')">
+                  <div class="course-block big" data-day="5" data-slot="5" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">15:00-16:25</div>
                     <div class="cb-class">进阶F班</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
                     <div class="cb-room">定式讲解 · 1教室</div>
                   </div>
                 </td>
-                <td></td><td></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
               </tr>
-              <tr><td class="time-col">17:00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
               <tr>
-                <td class="time-col">18:00</td>
-                <td></td><td></td><td></td><td></td><td></td>
+                <td class="time-col">第六节</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
                 <td>
-                  <div class="course-block small" onclick="showCourseDetail('not_started')">
+                  <div class="course-block small" data-day="6" data-slot="6" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">16:00-17:25</div>
+                    <div class="cb-class">高段选拔班</div>
+                    <div class="cb-room">对局复盘 · 线上</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="7" data-slot="6" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">16:00-17:25</div>
+                    <div class="cb-class">入门E班</div>
+                    <div class="cb-room">基础规则 · 3教室</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="time-col">第七节</td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="2" data-slot="7" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">16:30-17:55</div>
+                    <div class="cb-class">启蒙A班</div>
+                    <div class="cb-room">围棋基础 · 1教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="3" data-slot="7" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">16:30-17:55</div>
+                    <div class="cb-class">入门E班</div>
+                    <div class="cb-room">基础规则 · 3教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="4" data-slot="7" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">16:30-17:55</div>
+                    <div class="cb-class">进阶D班</div>
+                    <div class="cb-room">死活题 · 2教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block small" data-day="5" data-slot="7" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">16:30-17:55</div>
                     <div class="cb-class">1v1辅导</div>
-                    <div class="cb-actions"><button class="cb-action-btn">调课</button><button class="cb-action-btn">换老师</button></div>
+                    <div class="cb-room">布局训练 · 线上</div>
+                  </div>
+                </td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+              </tr>
+              <tr>
+                <td class="time-col">第八节</td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="2" data-slot="8" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">18:00-19:25</div>
+                    <div class="cb-class">启蒙B班</div>
+                    <div class="cb-room">围棋基础 · 2教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="3" data-slot="8" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">18:00-19:25</div>
+                    <div class="cb-class">冲段精英班</div>
+                    <div class="cb-room">中盘战术 · 3教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="4" data-slot="8" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">18:00-19:25</div>
+                    <div class="cb-class">高段选拔班</div>
+                    <div class="cb-room">对局复盘 · 线上</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="5" data-slot="8" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">18:00-19:25</div>
+                    <div class="cb-class">进阶F班</div>
+                    <div class="cb-room">定式讲解 · 1教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block small" data-day="6" data-slot="8" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">18:00-19:25</div>
+                    <div class="cb-class">1v1辅导</div>
                     <div class="cb-room">官子技巧 · 线上</div>
                   </div>
                 </td>
-                <td></td>
+                <td>
+                  <div class="course-block big" data-day="7" data-slot="8" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">18:00-19:25</div>
+                    <div class="cb-class">高段冲刺班</div>
+                    <div class="cb-room">官子训练 · 2教室</div>
+                  </div>
+                </td>
               </tr>
-              <tr><td class="time-col">19:00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-              <tr><td class="time-col">20:00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr>
+                <td class="time-col">第九节</td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="2" data-slot="9" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">19:30-20:55</div>
+                    <div class="cb-class">布局提高班</div>
+                    <div class="cb-room">布局要点 · 1教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="3" data-slot="9" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">19:30-20:55</div>
+                    <div class="cb-class">进阶复盘班</div>
+                    <div class="cb-room">对局复盘 · 2教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="4" data-slot="9" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">19:30-20:55</div>
+                    <div class="cb-class">1v1辅导</div>
+                    <div class="cb-room">中盘突破 · 线上</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="5" data-slot="9" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">19:30-20:55</div>
+                    <div class="cb-class">启蒙晚课班</div>
+                    <div class="cb-room">规则巩固 · 3教室</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="6" data-slot="9" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">19:30-20:55</div>
+                    <div class="cb-class">高段选拔班</div>
+                    <div class="cb-room">实战对局 · 线上</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="7" data-slot="9" onclick="showCourseDetail('not_started')">
+                    <div class="cb-time">19:30-20:55</div>
+                    <div class="cb-class">冲段精英班</div>
+                    <div class="cb-room">冲段专训 · 1教室</div>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
-        </div>
-        <div style="margin-top:12px; font-size:12px; color:#999; display:flex; gap:20px;">
-          <span><span style="display:inline-block;width:12px;height:12px;background:#3b82f6;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>大班课</span>
-          <span><span style="display:inline-block;width:12px;height:12px;background:#22c55e;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>小班课 / 1v1</span>
         </div>
       </div>
 
       <!-- ===== 3. 学员管理 ===== -->
       <div id="page-students" class="page">
         <div class="page-title">学员管理</div>
-        <div style="margin-bottom:16px;padding:10px 14px;background:#e8f0fe;border-radius:6px;font-size:13px;color:#2d5dce;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
-          <span>&#128101; 学员列表与档案（P0）</span>
-          <span>|</span>
-          <span>请假/停课管理（P1）：辅导老师查看处理请假申请、停课状态与预计复课时间</span>
-          <span>|</span>
-          <span>大班自动考勤：进直播间 = 签到（已确认）</span>
-        </div>
         <div class="card">
           <div class="toolbar">
             <input class="search-input" placeholder="搜索学员姓名..." />
@@ -471,47 +559,35 @@
               <option>进阶D班</option>
               <option>冲段精英班</option>
             </select>
-            <select class="form-select">
-              <option>全部校区</option>
-              <option>城东校区</option>
-              <option>城西校区</option>
-              <option>线上</option>
-            </select>
           </div>
           <table>
             <thead>
-              <tr><th>姓名</th><th>年龄</th><th>等级</th><th>校区</th><th>出勤率</th><th>预习完成率</th><th>操作</th></tr>
+              <tr><th>姓名</th><th>年龄</th><th>等级</th><th>出勤率</th><th>预习完成率</th><th>作业完成率</th></tr>
             </thead>
             <tbody>
               <tr>
-                <td>张小明</td><td>8岁</td><td><span class="tag tag-blue">15级</span></td><td>城东校区</td>
-                <td>96%</td><td>88%</td>
-                <td><button class="btn btn-sm" onclick="showStudentProfile()">查看档案</button> <button class="btn btn-sm">请假记录</button></td>
+                <td>张小明</td><td>8岁</td><td><span class="tag tag-blue">15级</span></td>
+                <td>96%</td><td>88%</td><td>91%</td>
               </tr>
               <tr>
-                <td>李文博</td><td>9岁</td><td><span class="tag tag-blue">10级</span></td><td>城东校区</td>
-                <td>92%</td><td>75%</td>
-                <td><button class="btn btn-sm" onclick="showStudentProfile()">查看档案</button> <button class="btn btn-sm">请假记录</button></td>
+                <td>李文博</td><td>9岁</td><td><span class="tag tag-blue">10级</span></td>
+                <td>92%</td><td>75%</td><td>78%</td>
               </tr>
               <tr>
-                <td>王思琪</td><td>7岁</td><td><span class="tag tag-blue">18级</span></td><td>城西校区</td>
-                <td>100%</td><td>95%</td>
-                <td><button class="btn btn-sm" onclick="showStudentProfile()">查看档案</button> <button class="btn btn-sm">请假记录</button></td>
+                <td>王思琪</td><td>7岁</td><td><span class="tag tag-blue">18级</span></td>
+                <td>100%</td><td>95%</td><td>97%</td>
               </tr>
               <tr>
-                <td>赵天宇</td><td>10岁</td><td><span class="tag tag-green">5级</span></td><td>城东校区</td>
-                <td>75%</td><td>60%</td>
-                <td><button class="btn btn-sm" onclick="showStudentProfile()">查看档案</button> <button class="btn btn-sm">请假记录</button></td>
+                <td>赵天宇</td><td>10岁</td><td><span class="tag tag-green">5级</span></td>
+                <td>75%</td><td>60%</td><td>58%</td>
               </tr>
               <tr>
-                <td>刘子涵</td><td>8岁</td><td><span class="tag tag-blue">12级</span></td><td>线上</td>
-                <td>88%</td><td>82%</td>
-                <td><button class="btn btn-sm" onclick="showStudentProfile()">查看档案</button> <button class="btn btn-sm">请假记录</button></td>
+                <td>刘子涵</td><td>8岁</td><td><span class="tag tag-blue">12级</span></td>
+                <td>88%</td><td>82%</td><td>84%</td>
               </tr>
               <tr>
-                <td>陈雨萱</td><td>6岁</td><td><span class="tag tag-blue">20级</span></td><td>城西校区</td>
-                <td>92%</td><td>90%</td>
-                <td><button class="btn btn-sm" onclick="showStudentProfile()">查看档案</button> <button class="btn btn-sm">请假记录</button></td>
+                <td>陈雨萱</td><td>6岁</td><td><span class="tag tag-blue">20级</span></td>
+                <td>92%</td><td>90%</td><td>93%</td>
               </tr>
             </tbody>
           </table>
@@ -582,183 +658,7 @@
             <div class="alert-text"><strong>周思远</strong> 已请假2周未复课，请确认是否继续学习。</div>
           </div>
         </div>
-      </div>
-
-      <!-- ===== 5. 监课巡课 ===== -->
-      <div id="page-monitor" class="page">
-        <div class="page-title">监课巡课</div>
-        <div style="margin-bottom:16px;padding:10px 14px;background:#e8f0fe;border-radius:6px;font-size:13px;color:#2d5dce;">
-          &#128065; 隐身旁听模式：管理员可隐身进入直播间观察教学，<strong>支持文字沟通，不支持语音</strong>
-        </div>
-        <div class="card">
-          <div class="card-title">今日直播课</div>
-          <table>
-            <thead>
-              <tr><th>班级</th><th>教师</th><th>时间</th><th>在线人数</th><th>互动次数</th><th>状态</th><th>操作</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>入门C班</td><td>李老师</td><td>10:00-11:00</td><td>18/20</td><td>42</td>
-                <td><span class="tag tag-green">直播中</span></td>
-                <td><button class="btn btn-sm btn-primary">隐身进入</button> <button class="btn btn-sm">查看数据</button></td>
-              </tr>
-              <tr>
-                <td>进阶D班</td><td>王老师</td><td>10:00-11:00</td><td>15/16</td><td>38</td>
-                <td><span class="tag tag-green">直播中</span></td>
-                <td><button class="btn btn-sm btn-primary">隐身进入</button> <button class="btn btn-sm">查看数据</button></td>
-              </tr>
-              <tr>
-                <td>启蒙B班</td><td>张老师</td><td>10:00-11:00</td><td>22/24</td><td>28</td>
-                <td><span class="tag tag-green">直播中</span></td>
-                <td><button class="btn btn-sm btn-primary">隐身进入</button> <button class="btn btn-sm">查看数据</button></td>
-              </tr>
-              <tr>
-                <td>启蒙A班</td><td>李老师</td><td>14:00-15:00</td><td>-</td><td>-</td>
-                <td><span class="tag tag-orange">未开始</span></td>
-                <td><button class="btn btn-sm" disabled>隐身进入</button> <button class="btn btn-sm">查看数据</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div style="display:flex;gap:16px;">
-          <div class="card" style="flex:2;">
-            <div class="card-title">实时监控面板</div>
-            <div class="monitor-grid">
-              <div class="placeholder-box monitor-cell" style="border-radius:8px;">
-                <span>&#127909; 入门C班</span>
-                <div class="mc-info"><span>入门C班 - 李老师</span><span>18人</span></div>
-              </div>
-              <div class="placeholder-box monitor-cell" style="border-radius:8px;">
-                <span>&#127909; 进阶D班</span>
-                <div class="mc-info"><span>进阶D班 - 王老师</span><span>15人</span></div>
-              </div>
-              <div class="placeholder-box monitor-cell" style="border-radius:8px;">
-                <span>&#127909; 启蒙B班</span>
-                <div class="mc-info"><span>启蒙B班 - 张老师</span><span>22人</span></div>
-              </div>
-              <div class="placeholder-box monitor-cell" style="border-radius:8px;">
-                <span>&#127909; 冲段精英班</span>
-                <div class="mc-info"><span>冲段精英班 - 陈老师</span><span>8人</span></div>
-              </div>
-              <div class="placeholder-box monitor-cell" style="border-radius:8px;">
-                <span>&#127909; 入门E班</span>
-                <div class="mc-info"><span>入门E班 - 赵老师</span><span>20人</span></div>
-              </div>
-              <div class="placeholder-box monitor-cell" style="border-radius:8px;">
-                <span>&#127909; 高段选拔班</span>
-                <div class="mc-info"><span>高段选拔班 - 刘老师</span><span>6人</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="card" style="flex:1;">
-            <div class="card-title">紧急调配</div>
-            <div style="font-size:13px;color:#666;margin-bottom:12px;">可用机动教师</div>
-            <table>
-              <thead><tr><th>教师</th><th>状态</th><th>操作</th></tr></thead>
-              <tbody>
-                <tr><td>周老师</td><td><span class="tag tag-green">空闲</span></td><td><button class="btn btn-sm btn-primary">一键调配</button></td></tr>
-                <tr><td>吴老师</td><td><span class="tag tag-green">空闲</span></td><td><button class="btn btn-sm btn-primary">一键调配</button></td></tr>
-                <tr><td>郑老师</td><td><span class="tag tag-orange">备课中</span></td><td><button class="btn btn-sm">一键调配</button></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== 6. AI报告与作业 ===== -->
-      <div id="page-aireport" class="page">
-        <div class="page-title">AI报告与作业</div>
-        <div style="margin-bottom:16px;padding:10px 14px;background:#e8f0fe;border-radius:6px;font-size:13px;color:#2d5dce;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
-          <span>&#128221; AI辅助点评生成（P0）：根据学情数据自动生成点评，教师编辑确认后发送家长</span>
-          <span>|</span>
-          <span>标准化作业推送（P0）：按课程节点自动推送对应作业至学员APP</span>
-        </div>
-        <div class="card">
-          <div class="card-title">待处理课节点评</div>
-          <table>
-            <thead>
-              <tr><th>课程</th><th>班级</th><th>日期</th><th>状态</th><th>操作</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>围棋基础 第8课</td><td>启蒙A班</td><td>2026-04-09</td>
-                <td><span class="tag tag-red">待点评</span></td>
-                <td><button class="btn btn-sm btn-primary" onclick="showAIEdit()">填写点评</button></td>
-              </tr>
-              <tr>
-                <td>第5课 吃子技巧</td><td>入门C班</td><td>2026-04-09</td>
-                <td><span class="tag tag-red">待点评</span></td>
-                <td><button class="btn btn-sm btn-primary" onclick="showAIEdit()">填写点评</button></td>
-              </tr>
-              <tr>
-                <td>死活题 第12课</td><td>进阶D班</td><td>2026-04-08</td>
-                <td><span class="tag tag-green">已完成</span></td>
-                <td><button class="btn btn-sm">查看</button></td>
-              </tr>
-              <tr>
-                <td>中盘战术 第6课</td><td>冲段精英班</td><td>2026-04-07</td>
-                <td><span class="tag tag-green">已完成</span></td>
-                <td><button class="btn btn-sm">查看</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="card" id="ai-edit-panel" style="display:none;">
-          <div class="card-title">课后点评编辑 - 启蒙A班 · 围棋基础 第8课</div>
-          <div class="ai-edit-area">
-            <div class="left">
-              <div style="font-size:13px;color:#666;margin-bottom:8px;">学情摘要 (AI自动生成)</div>
-              <div class="auto-summary">
-                本节课围棋基础第8课，班级出勤率95%（19/20人）。课堂互动积极，共发起答题4次，平均正确率82%。
-                张小明、王思琪表现突出，答题全部正确。赵天宇本节缺课。
-                整体教学进度正常，学员对"气"的概念掌握良好，部分学员在"连接与切断"知识点上仍需加强练习。
-                建议下节课安排针对性的连接切断专项训练。
-              </div>
-            </div>
-            <div class="right">
-              <div style="font-size:13px;color:#666;margin-bottom:8px;">教师点评</div>
-              <textarea class="edit-textarea" placeholder="请输入您的课后点评...">本节课同学们表现很棒！重点讲解了"气"和"连接与切断"的概念，大部分同学掌握较好。建议回家后多做连接切断的练习题巩固。</textarea>
-              <div style="margin-top:10px;display:flex;gap:8px;">
-                <button class="btn">&#10024; AI润色</button>
-                <button class="btn">&#10024; AI扩写</button>
-                <button class="btn btn-primary">保存点评</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">作业管理</div>
-          <table>
-            <thead>
-              <tr><th>课节</th><th>班级</th><th>作业内容</th><th>推送时间</th><th>完成率</th><th>操作</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>围棋基础 第8课</td><td>启蒙A班</td><td>连接切断练习 x10题</td><td>2026-04-09 12:00</td>
-                <td><span style="font-weight:600;color:#2d5dce;">45%</span></td>
-                <td><button class="btn btn-sm">查看详情</button></td>
-              </tr>
-              <tr>
-                <td>第5课 吃子技巧</td><td>入门C班</td><td>吃子综合练习 x8题</td><td>2026-04-09 12:00</td>
-                <td><span style="font-weight:600;color:#2d5dce;">62%</span></td>
-                <td><button class="btn btn-sm">查看详情</button></td>
-              </tr>
-              <tr>
-                <td>死活题 第12课</td><td>进阶D班</td><td>死活题专项 x15题</td><td>2026-04-08 18:00</td>
-                <td><span style="font-weight:600;color:#22c55e;">89%</span></td>
-                <td><button class="btn btn-sm">查看详情</button></td>
-              </tr>
-            </tbody>
-          </table>
-          <div style="margin-top:14px;text-align:right;">
-            <button class="btn btn-primary">批量发送报告</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== 7. 个人中心 ===== -->
+      </div><!-- ===== 7. 个人中心 ===== -->
       <div id="page-profile" class="page">
         <div class="page-title">个人中心</div>
         <div style="display:flex;gap:20px;">
@@ -932,15 +832,43 @@ function showCourseDetail(status) {
   document.getElementById('modal-course').classList.add('show');
 }
 
+// 按模拟当前时间自动刷新课程状态，便于原型演示不同时间点的颜色变化
+var MOCK_CURRENT_COURSE_TIME = { day: 4, slot: 7 };
+
+function compareCourseOrder(dayA, slotA, dayB, slotB) {
+  if (dayA !== dayB) return dayA - dayB;
+  return slotA - slotB;
+}
+
+function applyMockCourseStatuses() {
+  document.querySelectorAll('.timetable .course-block[data-day][data-slot]').forEach(function(block) {
+    var day = Number(block.getAttribute('data-day'));
+    var slot = Number(block.getAttribute('data-slot'));
+    var compareResult = compareCourseOrder(day, slot, MOCK_CURRENT_COURSE_TIME.day, MOCK_CURRENT_COURSE_TIME.slot);
+    var status = 'not_started';
+
+    if (compareResult < 0) {
+      status = 'ended';
+    } else if (compareResult === 0) {
+      status = 'in_progress';
+    }
+
+    block.dataset.status = status;
+    block.classList.remove('ended', 'in_progress');
+
+    if (status === 'ended') {
+      block.classList.add('ended');
+    } else if (status === 'in_progress') {
+      block.classList.add('in_progress');
+    }
+
+    block.setAttribute('onclick', "showCourseDetail('" + status + "')");
+  });
+}
+
 // 学员档案弹窗
 function showStudentProfile() {
   document.getElementById('modal-student').classList.add('show');
-}
-
-// AI编辑面板
-function showAIEdit() {
-  document.getElementById('ai-edit-panel').style.display = 'block';
-  document.getElementById('ai-edit-panel').scrollIntoView({ behavior: 'smooth' });
 }
 
 function openLiveTeachingPage() {
@@ -968,11 +896,13 @@ document.querySelectorAll('.view-switch .vs-btn').forEach(function(btn) {
     btn.classList.add('active');
   });
 });
+
+applyMockCourseStatuses();
 </script>
 
 <!--
   ============================================================
-  PRD v3.0 Coverage Check (v3.1 prototype)
+  PRD v3.0 Coverage Check (v1.0 prototype)
   ============================================================
   - 登录                                          OK (login page with account/phone tabs)
   - 课程表(按周固定/调课/换老师)                    OK (page-schedule, timetable with action buttons)
@@ -983,9 +913,6 @@ document.querySelectorAll('.view-switch .vs-btn').forEach(function(btn) {
   - 学员管理(列表/档案/请假)                        OK (page-students, table with profile/leave buttons)
     - 请假/停课管理(P1)                            OK (info bar note + leave record buttons per student)
   - 学情数据(大盘/多维度)                           OK (page-analytics, stat cards + charts + alerts)
-  - 监课巡课(文字沟通/紧急调配)                     OK (page-monitor, stealth entry + text-only note + dispatch)
-  - AI报告与作业(点评/作业推送)                     OK (page-aireport, AI edit + homework table)
-    - 标准化作业推送(P0)                           OK (info bar note + homework management table)
     - 模拟测试(P1)                                 OK (courseware page simulate buttons + info bar note)
   - 个人中心                                       OK (page-profile, profile form + password + stats)
   ============================================================
