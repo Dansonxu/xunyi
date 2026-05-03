@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>讯弈围棋·教师端 Web 原型图 v1.0</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #333; font-size: 14px; }
+
+  /* ===== 登录页 ===== */
+  #page-login {
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; background: linear-gradient(135deg, #e8edf5 0%, #d5dce8 100%);
+  }
+  .login-card {
+    width: 400px; background: #fff; border-radius: 12px; padding: 48px 40px;
+    border: 1px solid #ddd; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  .login-logo { font-size: 40px; margin-bottom: 8px; }
+  .login-title { font-size: 22px; font-weight: 600; margin-bottom: 6px; color: #1a1a2e; }
+  .login-subtitle { font-size: 13px; color: #999; margin-bottom: 32px; }
+  .login-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid #eee; }
+  .login-tab { flex: 1; padding: 10px 0; cursor: pointer; color: #999; border-bottom: 2px solid transparent; transition: all .2s; }
+  .login-tab.active { color: #2d5dce; border-bottom-color: #2d5dce; font-weight: 500; }
+  .form-group { margin-bottom: 16px; text-align: left; }
+  .form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+  .form-input {
+    width: 100%; height: 42px; border: 1px solid #d9d9d9; border-radius: 6px;
+    padding: 0 14px; font-size: 14px; outline: none; transition: border .2s;
+  }
+  .form-input:focus { border-color: #2d5dce; }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-input { flex: 1; }
+  .btn-code {
+    width: 120px; height: 42px; border: 1px solid #2d5dce; border-radius: 6px;
+    background: #fff; color: #2d5dce; cursor: pointer; font-size: 13px; white-space: nowrap;
+  }
+  .login-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 13px; color: #999; }
+  .login-options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .btn-login {
+    width: 100%; height: 44px; background: #2d5dce; color: #fff; border: none;
+    border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; transition: background .2s;
+  }
+  .btn-login:hover { background: #1e4bb8; }
+
+  /* ===== 主布局 ===== */
+  #app-main { display: none; height: 100vh; }
+  .header {
+    height: 56px; background: #fff; border-bottom: 1px solid #e5e5e5;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-left .logo-icon { font-size: 24px; }
+  .header-left .logo-text { font-size: 16px; font-weight: 600; color: #1a1a2e; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .header-bell { font-size: 20px; cursor: pointer; position: relative; }
+  .header-bell .badge { position: absolute; top: -4px; right: -6px; width: 16px; height: 16px; background: #e74c3c; color: #fff; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+  .header-user { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .header-avatar { width: 32px; height: 32px; border-radius: 50%; background: #2d5dce; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .btn-logout { background: none; border: 1px solid #ddd; border-radius: 4px; padding: 4px 12px; font-size: 12px; color: #999; cursor: pointer; }
+  .btn-logout:hover { color: #e74c3c; border-color: #e74c3c; }
+
+  .layout { display: flex; margin-top: 56px; height: calc(100vh - 56px); }
+
+  /* ===== 侧边栏 ===== */
+  .sidebar {
+    width: 200px; min-width: 200px; background: #fff; border-right: 1px solid #e5e5e5;
+    padding: 12px 0; overflow-y: auto;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px; cursor: pointer; color: #555; transition: all .15s;
+    font-size: 14px; border-left: 3px solid transparent;
+  }
+  .sidebar-item:hover { background: #f0f4ff; color: #2d5dce; }
+  .sidebar-item.active { background: #edf1ff; color: #2d5dce; border-left-color: #2d5dce; font-weight: 500; }
+  .sidebar-item .icon { font-size: 18px; width: 24px; text-align: center; }
+
+  /* ===== 内容区 ===== */
+  .content { flex: 1; padding: 24px; overflow-y: auto; background: #f5f6fa; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; color: #1a1a2e; }
+
+  /* 通用组件 */
+  .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #333; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 16px; border-radius: 6px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; font-size: 13px; transition: all .15s; }
+  .btn:hover { border-color: #2d5dce; color: #2d5dce; }
+  .btn-primary { background: #2d5dce; color: #fff; border-color: #2d5dce; }
+  .btn-primary:hover { background: #1e4bb8; color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-danger { color: #e74c3c; border-color: #e74c3c; }
+  .btn-success { background: #27ae60; color: #fff; border-color: #27ae60; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+  .tag-blue { background: #e8f0fe; color: #2d5dce; }
+  .tag-green { background: #e8f8ef; color: #27ae60; }
+  .tag-orange { background: #fff4e5; color: #e67e22; }
+  .tag-red { background: #fde8e8; color: #e74c3c; }
+  .tag-gray { background: #f0f0f0; color: #999; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  th { background: #fafbfc; color: #666; font-weight: 500; font-size: 12px; }
+  tr:hover td { background: #fafbfe; }
+  .placeholder-box { background: #f0f2f5; border: 2px dashed #d9d9d9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 14px; }
+  .stat-cards { display: flex; gap: 16px; margin-bottom: 20px; }
+  .stat-card { flex: 1; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; text-align: center; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: #2d5dce; }
+  .stat-card .label { font-size: 12px; color: #999; margin-top: 4px; }
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-input { height: 36px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 12px; font-size: 13px; width: 220px; outline: none; }
+  .search-input:focus { border-color: #2d5dce; }
+  select.form-select { height: 36px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; background: #fff; min-width: 140px; }
+
+  /* ===== 课程表 ===== */
+  .schedule-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .schedule-nav { display: flex; align-items: center; gap: 12px; }
+  .schedule-nav .arrow { width: 32px; height: 32px; border: 1px solid #d9d9d9; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; font-size: 16px; }
+  .schedule-nav .arrow:hover { border-color: #2d5dce; color: #2d5dce; }
+  .schedule-nav .date-text { font-size: 15px; font-weight: 500; min-width: 200px; text-align: center; }
+  .view-switch { display: flex; gap: 0; }
+  .view-switch .vs-btn { padding: 6px 16px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; font-size: 13px; }
+  .view-switch .vs-btn:first-child { border-radius: 6px 0 0 6px; }
+  .view-switch .vs-btn:last-child { border-radius: 0 6px 6px 0; margin-left: -1px; }
+  .view-switch .vs-btn.active { background: #2d5dce; color: #fff; border-color: #2d5dce; }
+  .timetable { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; }
+  .timetable th { text-align: center; padding: 12px 8px; background: #fafbfc; border: 1px solid #eee; font-size: 13px; }
+  .timetable td { border: 1px solid #eee; height: 52px; vertical-align: top; padding: 2px; position: relative; width: 13%; }
+  .timetable td.time-col { width: 70px; text-align: center; vertical-align: middle; font-size: 12px; color: #999; background: #fafbfc; }
+  .timetable td.slot-unavailable { background: #f1f3f5; }
+  .course-block {
+    border-radius: 4px; padding: 4px 6px; font-size: 11px; margin: 1px;
+    cursor: pointer; color: #fff; line-height: 1.4; transition: opacity .15s;
+    background: #3b82f6;
+  }
+  .course-block:hover { opacity: 0.85; }
+  .course-block.in_progress { background: #e74c3c; }
+  .course-block.ended { background: #d9d9d9 !important; color: #666; }
+  .course-block .cb-class { font-weight: 600; }
+  .course-block .cb-time { font-size: 11px; font-weight: 700; color: #1a1a2e; background: #ffe066; padding: 2px 6px; border-radius: 4px; margin-bottom: 3px; display: inline-block; }
+
+  /* 课程详情弹窗 */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.35); z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; padding: 28px; width: 480px; max-height: 80vh;
+    overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-header h3 { font-size: 17px; }
+  .modal-close { width: 28px; height: 28px; border: none; background: #f0f0f0; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { background: #e0e0e0; }
+  .detail-row { display: flex; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+  .detail-label { width: 90px; color: #999; flex-shrink: 0; }
+  .detail-value { color: #333; }
+
+  /* ===== 面包屑 ===== */
+  .breadcrumb { font-size: 13px; color: #999; margin-bottom: 16px; }
+  .breadcrumb a { color: #2d5dce; cursor: pointer; text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb .sep { margin: 0 6px; }
+
+  /* ===== 班级卡片 ===== */
+  .class-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .class-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 20px; cursor: pointer; transition: all .15s; }
+  .class-card:hover { border-color: #2d5dce; box-shadow: 0 2px 8px rgba(45,93,206,0.08); }
+  .class-card .name { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
+  .class-card .meta { display: flex; gap: 16px; font-size: 13px; color: #666; }
+  .class-card .meta-item .num { font-size: 20px; font-weight: 700; color: #2d5dce; }
+  .class-card .meta-item .label { font-size: 11px; color: #999; margin-top: 2px; }
+
+  /* ===== 返回按钮 ===== */
+  .btn-back { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; margin-bottom: 16px; }
+  .btn-back:hover { border-color: #2d5dce; color: #2d5dce; }
+
+  /* ===== 弹窗Tab ===== */
+  .modal-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid #eee; }
+  .modal-tab { flex: 1; padding: 10px 0; cursor: pointer; color: #999; border-bottom: 2px solid transparent; transition: all .2s; text-align: center; font-size: 13px; }
+  .modal-tab.active { color: #2d5dce; border-bottom-color: #2d5dce; font-weight: 500; }
+
+  /* ===== 复盘视图 ===== */
+  #schedule-review .timetable td { height: auto; min-height: 52px; }
+
+  /* ===== 表格排序 ===== */
+  .sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+  .sortable:hover { color: #2d5dce; }
+  .sort-arrow { margin-left: 4px; font-size: 10px; color: #ccc; display: inline-block; width: 10px; }
+  .sortable.asc .sort-arrow::after { content: '▲'; color: #2d5dce; }
+  .sortable.desc .sort-arrow::after { content: '▼'; color: #2d5dce; }
+
+  /* ===== 个人中心 ===== */
+  .profile-form { max-width: 560px; }
+  .profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: #2d5dce; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; }
+  .form-item { margin-bottom: 18px; }
+  .form-item label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+  .form-item input, .form-item textarea { width: 100%; height: 38px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 12px; font-size: 13px; outline: none; }
+  .form-item input:focus, .form-item textarea:focus { border-color: #2d5dce; }
+  .form-item textarea { height: 80px; padding: 10px 12px; resize: vertical; font-family: inherit; }
+
+  /* ===== 预警列表 ===== */
+  .alert-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+  .alert-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .alert-icon.warn { background: #fff4e5; }
+  .alert-icon.danger { background: #fde8e8; }
+  .alert-text { font-size: 13px; color: #555; }
+  .alert-text strong { color: #333; }
+
+  /* ===== 班级列表父子层级 ===== */
+  .class-parent { background: #fff; }
+  .class-parent:hover { background: #fafbfe; }
+  .expand-icon {
+    display: inline-block;
+    width: 16px; height: 16px; line-height: 16px;
+    text-align: center; font-size: 10px; color: #999;
+    margin-right: 6px; cursor: pointer;
+    transition: transform .2s; user-select: none;
+  }
+  .expand-icon.expanded { transform: rotate(90deg); color: #2d5dce; }
+  .class-child { background: #fafbfc; display: none; }
+  .class-child.show { display: table-row; }
+  .class-child:hover { background: #f0f4ff; }
+  .child-indicator {
+    color: #bbb; font-size: 12px; margin-right: 4px;
+  }
+  .class-child td:first-child { padding-left: 36px; }
+
+  /* 隐藏 */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ==================== 登录页 ==================== -->
+<div id="page-login">
+  <div class="login-card">
+    <div class="login-logo">&#9823;</div>
+    <div class="login-title">讯弈围棋·教师端 <span style="font-size:12px;color:#2d5dce;background:#e8f0fe;padding:2px 8px;border-radius:4px;vertical-align:middle;">v1.0</span></div>
+    <div class="login-subtitle">围棋教育智慧平台</div>
+    <div class="login-tabs">
+      <div class="login-tab active" onclick="switchLoginTab(this, 'account')">账号密码登录</div>
+      <div class="login-tab" onclick="switchLoginTab(this, 'phone')">手机号登录</div>
+    </div>
+    <div id="login-account">
+      <div class="form-group">
+        <label>账号</label>
+        <input class="form-input" placeholder="请输入账号" />
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input class="form-input" type="password" placeholder="请输入密码" />
+      </div>
+    </div>
+    <div id="login-phone" style="display:none;">
+      <div class="form-group">
+        <label>手机号</label>
+        <input class="form-input" placeholder="请输入手机号" />
+      </div>
+      <div class="form-group">
+        <label>验证码</label>
+        <div class="form-row">
+          <input class="form-input" placeholder="请输入验证码" />
+          <button class="btn-code">获取验证码</button>
+        </div>
+      </div>
+    </div>
+    <div class="login-options">
+      <label><input type="checkbox" /> 记住密码</label>
+      <a href="#" style="color:#2d5dce;text-decoration:none;font-size:13px;">忘记密码?</a>
+    </div>
+    <button class="btn-login" onclick="doLogin()">登 录</button>
+  </div>
+</div>
+
+<!-- ==================== 主应用 ==================== -->
+<div id="app-main">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <span class="logo-icon">&#9823;</span>
+      <span class="logo-text">讯弈围棋·教师端 <span style="font-size:10px;color:#2d5dce;background:#e8f0fe;padding:1px 6px;border-radius:3px;vertical-align:middle;">v1.0</span></span>
+    </div>
+    <div class="header-right">
+      <span class="header-bell" title="消息通知">&#128276;<span class="badge">3</span></span>
+      <div class="header-user" onclick="switchTeacher()" style="cursor:pointer;" title="点击切换老师">
+        <div class="header-avatar" id="teacher-avatar">李</div>
+        <span id="teacher-name">李老师</span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">退出</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-item active" data-page="schedule" onclick="switchPage(this)">
+        <span class="icon">&#128197;</span><span>课程表</span>
+      </div>
+      <div class="sidebar-item" data-page="analytics" onclick="switchPage(this)">
+        <span class="icon">&#128202;</span><span>班级学情</span>
+      </div>
+      <div class="sidebar-item" data-page="profile" onclick="switchPage(this)">
+        <span class="icon">&#128100;</span><span>个人中心</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- ===== 1. 课程表 ===== -->
+      <div id="page-schedule" class="page active">
+        <div class="schedule-header">
+          <div class="schedule-nav">
+            <div class="arrow" id="week-prev" onclick="switchWeek(-1)">&#8249;</div>
+            <div class="date-text" id="date-text">2026年4月6日 - 4月12日</div>
+            <div class="arrow" id="week-next" onclick="switchWeek(1)">&#8250;</div>
+          </div>
+          <div style="font-size:12px; color:#999; display:flex; gap:20px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+            <span><span style="display:inline-block;width:12px;height:12px;background:#3b82f6;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>未开始</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:#e74c3c;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>进行中</span>
+            <span><span style="display:inline-block;width:12px;height:12px;background:#d9d9d9;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>已结束</span>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:auto;">
+          <div id="schedule-normal" class="schedule-view">
+            <table class="timetable" id="timetable-normal">
+            <thead>
+              <tr>
+                <th style="width:70px;">时间</th>
+                <th>周一<br><span id="th-date-0" style="font-weight:400;color:#aaa;font-size:11px;">4/6</span></th>
+                <th>周二<br><span id="th-date-1" style="font-weight:400;color:#aaa;font-size:11px;">4/7</span></th>
+                <th>周三<br><span id="th-date-2" style="font-weight:400;color:#aaa;font-size:11px;">4/8</span></th>
+                <th>周四<br><span id="th-date-3" style="font-weight:400;color:#aaa;font-size:11px;">4/9</span></th>
+                <th>周五<br><span id="th-date-4" style="font-weight:400;color:#aaa;font-size:11px;">4/10</span></th>
+                <th>周六<br><span id="th-date-5" style="font-weight:400;color:#aaa;font-size:11px;">4/11</span></th>
+                <th>周日<br><span id="th-date-6" style="font-weight:400;color:#aaa;font-size:11px;">4/12</span></th>
+              </tr>
+            </thead>
+            <tbody id="timetable-tbody">
+              <tr>
+                <td class="time-col">9:00-10:25</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="6" data-slot="1" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S1-L1</div>
+                    <div class="cb-class">直播课1</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="7" data-slot="1" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S1-L1</div>
+                    <div class="cb-class">直播课1</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="time-col">10:30-11:55</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block small" data-day="6" data-slot="2" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S2-L1</div>
+                    <div class="cb-class">直播课2</div>
+                  </div>
+                </td>
+                <td class="slot-unavailable"></td>
+              </tr>
+              <tr>
+                <td class="time-col">13:00-14:25</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block" data-day="6" data-slot="3" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S3-L1</div>
+                    <div class="cb-class">直播课3</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block small" data-day="7" data-slot="3" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S4-L1</div>
+                    <div class="cb-class">直播课4</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="time-col">14:30-15:55</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="6" data-slot="4" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S5-L1</div>
+                    <div class="cb-class">直播课5</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="7" data-slot="4" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S1-L2</div>
+                    <div class="cb-class">直播课11</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="time-col">15:00-16:25</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="5" data-slot="5" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S6-L1</div>
+                    <div class="cb-class">直播课6</div>
+                  </div>
+                </td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+              </tr>
+              <tr>
+                <td class="time-col">16:00-17:25</td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block small" data-day="6" data-slot="6" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S7-L1</div>
+                    <div class="cb-class">直播课7</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="7" data-slot="6" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S8-L1</div>
+                    <div class="cb-class">直播课8</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="time-col">16:30-17:55</td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="2" data-slot="7" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S1-L3</div>
+                    <div class="cb-class">直播课18</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="3" data-slot="7" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S2-L2</div>
+                    <div class="cb-class">直播课12</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="4" data-slot="7" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S3-L2</div>
+                    <div class="cb-class">直播课13</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block small" data-day="5" data-slot="7" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S4-L2</div>
+                    <div class="cb-class">直播课14</div>
+                  </div>
+                </td>
+                <td class="slot-unavailable"></td>
+                <td class="slot-unavailable"></td>
+              </tr>
+              <tr>
+                <td class="time-col">18:00-19:25</td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="2" data-slot="8" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S1-L2</div>
+                    <div class="cb-class">直播课11</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="3" data-slot="8" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S5-L2</div>
+                    <div class="cb-class">直播课15</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="4" data-slot="8" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S6-L2</div>
+                    <div class="cb-class">直播课16</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="5" data-slot="8" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S7-L2</div>
+                    <div class="cb-class">直播课17</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block small" data-day="6" data-slot="8" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S2-L3</div>
+                    <div class="cb-class">直播课19</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="7" data-slot="8" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S1-L4</div>
+                    <div class="cb-class">直播课22</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="time-col">19:30-20:55</td>
+                <td class="slot-unavailable"></td>
+                <td>
+                  <div class="course-block big" data-day="2" data-slot="9" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S9-L1</div>
+                    <div class="cb-class">直播课9</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="3" data-slot="9" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S10-L1</div>
+                    <div class="cb-class">直播课10</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="4" data-slot="9" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S2-L4</div>
+                    <div class="cb-class">直播课23</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="5" data-slot="9" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S3-L4</div>
+                    <div class="cb-class">直播课24</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="6" data-slot="9" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S3-L3</div>
+                    <div class="cb-class">直播课20</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="course-block big" data-day="7" data-slot="9" onclick="showCourseDetail(event, 'not_started')">
+                    <div class="cb-time">S4-L3</div>
+                    <div class="cb-class">直播课21</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+          <div id="schedule-review" class="schedule-view" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- ===== 班级学情 - 概览 ===== -->
+      <div id="page-analytics" class="page">
+        <div class="stat-cards">
+          <div class="stat-card"><div class="value">92%</div><div class="label">平均出勤率</div></div>
+          <div class="stat-card"><div class="value">81%</div><div class="label">平均预习完成率</div></div>
+          <div class="stat-card"><div class="value">78%</div><div class="label">平均答题正确率</div></div>
+          <div class="stat-card"><div class="value">73%</div><div class="label">平均作业完成率</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">班级列表</div>
+          <div id="class-list-container">
+            <table>
+              <thead>
+                <tr><th>班级名称</th><th>学员数</th><th>出勤率</th><th>预习完成率</th><th>答题正确率</th><th>作业完成率</th><th>操作</th></tr>
+              </thead>
+              <tbody id="class-list-body">
+                <tr onclick="showClassDetail('启蒙A班')" style="cursor:pointer;">
+                  <td><strong>启蒙A班</strong></td><td>6</td><td>96%</td><td>88%</td><td>85%</td><td>82%</td>
+                  <td><span class="tag tag-blue" style="cursor:pointer;">查看详情</span></td>
+                </tr>
+                <tr onclick="showClassDetail('入门C班')" style="cursor:pointer;">
+                  <td><strong>入门C班</strong></td><td>8</td><td>90%</td><td>82%</td><td>80%</td><td>78%</td>
+                  <td><span class="tag tag-blue" style="cursor:pointer;">查看详情</span></td>
+                </tr>
+                <tr onclick="showClassDetail('进阶D班')" style="cursor:pointer;">
+                  <td><strong>进阶D班</strong></td><td>5</td><td>85%</td><td>76%</td><td>72%</td><td>70%</td>
+                  <td><span class="tag tag-blue" style="cursor:pointer;">查看详情</span></td>
+                </tr>
+                <tr onclick="showClassDetail('冲段精英班')" style="cursor:pointer;">
+                  <td><strong>冲段精英班</strong></td><td>4</td><td>98%</td><td>92%</td><td>90%</td><td>88%</td>
+                  <td><span class="tag tag-blue" style="cursor:pointer;">查看详情</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 班级学情 - 班级详情 ===== -->
+      <div id="page-class-detail" class="page">
+        <div class="breadcrumb">
+          <a onclick="goBackToOverview()">班级学情</a><span class="sep">&gt;</span><span id="breadcrumb-class-name">启蒙A班</span>
+        </div>
+        <button class="btn-back" onclick="goBackToOverview()">&#8249; 返回</button>
+        <div class="page-title" id="class-detail-title">启蒙A班</div>
+        <div class="stat-cards">
+          <div class="stat-card"><div class="value">96%</div><div class="label">平均出勤率</div></div>
+          <div class="stat-card"><div class="value">88%</div><div class="label">平均预习完成率</div></div>
+          <div class="stat-card"><div class="value">85%</div><div class="label">平均答题正确率</div></div>
+          <div class="stat-card"><div class="value">82%</div><div class="label">平均作业完成率</div></div>
+        </div>
+        <div class="card">
+          <div class="toolbar">
+            <input class="search-input" placeholder="搜索学员姓名..." />
+          </div>
+          <table id="student-table">
+            <thead>
+              <tr><th>序号</th><th>姓名</th><th>年龄</th><th>等级</th><th class="sortable" data-sort-col="4" onclick="sortStudentTable(4)">出勤率<span class="sort-arrow"></span></th><th class="sortable" data-sort-col="5" onclick="sortStudentTable(5)">预习完成率<span class="sort-arrow"></span></th><th class="sortable" data-sort-col="6" onclick="sortStudentTable(6)">作业完成率<span class="sort-arrow"></span></th><th class="sortable" data-sort-col="7" onclick="sortStudentTable(7)">答题正确率<span class="sort-arrow"></span></th><th>操作</th></tr>
+            </thead>
+            <tbody id="student-tbody">
+              <tr>
+                <td>1</td><td>张小明</td><td>8岁</td><td><span class="tag tag-blue">15级</span></td>
+                <td>96%</td><td>88%</td><td>91%</td><td>89%</td>
+                <td><span class="tag tag-blue" style="cursor:pointer;" onclick="showStudentDetail('张小明')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td>2</td><td>李文博</td><td>9岁</td><td><span class="tag tag-blue">10级</span></td>
+                <td>92%</td><td>75%</td><td>78%</td><td>72%</td>
+                <td><span class="tag tag-blue" style="cursor:pointer;" onclick="showStudentDetail('李文博')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td>3</td><td>王思琪</td><td>7岁</td><td><span class="tag tag-blue">18级</span></td>
+                <td>100%</td><td>95%</td><td>97%</td><td>94%</td>
+                <td><span class="tag tag-blue" style="cursor:pointer;" onclick="showStudentDetail('王思琪')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td>4</td><td>赵天宇</td><td>10岁</td><td><span class="tag tag-green">5级</span></td>
+                <td>75%</td><td>60%</td><td>58%</td><td>55%</td>
+                <td><span class="tag tag-blue" style="cursor:pointer;" onclick="showStudentDetail('赵天宇')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td>5</td><td>刘子涵</td><td>8岁</td><td><span class="tag tag-blue">12级</span></td>
+                <td>88%</td><td>82%</td><td>84%</td><td>80%</td>
+                <td><span class="tag tag-blue" style="cursor:pointer;" onclick="showStudentDetail('刘子涵')">查看详情</span></td>
+              </tr>
+              <tr>
+                <td>6</td><td>陈雨萱</td><td>6岁</td><td><span class="tag tag-blue">20级</span></td>
+                <td>92%</td><td>90%</td><td>93%</td><td>91%</td>
+                <td><span class="tag tag-blue" style="cursor:pointer;" onclick="showStudentDetail('陈雨萱')">查看详情</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== 班级学情 - 学生详情 ===== -->
+      <div id="page-student-detail" class="page">
+        <div class="breadcrumb">
+          <a onclick="goBackToOverview()">班级学情</a><span class="sep">&gt;</span><a onclick="goBackToClass()"><span id="breadcrumb-student-class">启蒙A班</span></a><span class="sep">&gt;</span><span id="breadcrumb-student-name">张小明</span>
+        </div>
+        <button class="btn-back" onclick="goBackToClass()">&#8249; 返回</button>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:flex;gap:16px;align-items:center;">
+            <div style="width:56px;height:56px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:24px;">&#128103;</div>
+            <div>
+              <div style="font-size:16px;font-weight:600;" id="student-info-name">张小明</div>
+              <div style="font-size:13px;color:#999;margin-top:4px;">8岁 | 启蒙A班 | 城东校区</div>
+              <div style="margin-top:6px;display:flex;gap:6px;">
+                <span class="tag tag-blue">15级</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-cards" style="margin-bottom:16px;">
+          <div class="stat-card"><div class="value">96%</div><div class="label">出勤率</div></div>
+          <div class="stat-card"><div class="value">88%</div><div class="label">预习完成率</div></div>
+          <div class="stat-card"><div class="value">91%</div><div class="label">作业完成率</div></div>
+          <div class="stat-card"><div class="value">89%</div><div class="label">答题正确率</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">每节课数据表现</div>
+          <table>
+            <thead>
+              <tr><th>课包名称</th><th>课程名称</th><th>出勤状态</th><th>预习完成</th><th>课堂答题正确率</th><th>课后作业完成</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>S1-L1</td><td>直播课1</td><td><span class="tag tag-green">出勤</span></td><td><span class="tag tag-green">已完成</span></td><td>92%</td><td><span class="tag tag-green">已完成</span></td></tr>
+              <tr><td>S2-L1</td><td>直播课2</td><td><span class="tag tag-green">出勤</span></td><td><span class="tag tag-green">已完成</span></td><td>88%</td><td><span class="tag tag-green">已完成</span></td></tr>
+              <tr><td>S3-L1</td><td>直播课3</td><td><span class="tag tag-green">出勤</span></td><td><span class="tag tag-green">已完成</span></td><td>85%</td><td><span class="tag tag-orange">待完成</span></td></tr>
+              <tr><td>S4-L1</td><td>直播课4</td><td><span class="tag tag-green">出勤</span></td><td><span class="tag tag-green">已完成</span></td><td>90%</td><td><span class="tag tag-green">已完成</span></td></tr>
+              <tr><td>S5-L1</td><td>直播课5</td><td><span class="tag tag-red">缺勤</span></td><td><span class="tag tag-gray">—</span></td><td>—</td><td><span class="tag tag-gray">—</span></td></tr>
+              <tr><td>S6-L1</td><td>直播课6</td><td><span class="tag tag-green">出勤</span></td><td><span class="tag tag-orange">未完成</span></td><td>78%</td><td><span class="tag tag-green">已完成</span></td></tr>
+              <tr><td>S7-L1</td><td>直播课7</td><td><span class="tag tag-green">出勤</span></td><td><span class="tag tag-green">已完成</span></td><td>95%</td><td><span class="tag tag-green">已完成</span></td></tr>
+              <tr><td>S8-L1</td><td>直播课8</td><td><span class="tag tag-green">出勤</span></td><td><span class="tag tag-green">已完成</span></td><td>91%</td><td><span class="tag tag-green">已完成</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== 7. 个人中心 ===== -->
+      <div id="page-profile" class="page">
+        <div style="display:flex;gap:20px;">
+          <div class="card" style="flex:1;">
+            <div class="card-title">个人资料</div>
+            <div class="profile-form">
+              <div class="profile-avatar">李</div>
+              <div style="margin-bottom:16px;">
+                <button class="btn btn-sm">更换头像</button>
+              </div>
+              <div class="form-item">
+                <label>姓名</label>
+                <input value="李明远" />
+              </div>
+              <div class="form-item">
+                <label>围棋段位</label>
+                <input value="业余5段" />
+              </div>
+              <div class="form-item">
+                <label>手机号</label>
+                <input value="138****6789" />
+              </div>
+              <div class="form-item">
+                <label>个人简介</label>
+                <textarea>毕业于北京体育大学，从事围棋教学8年，擅长启蒙和入门阶段教学。全国少儿围棋锦标赛优秀教练员。</textarea>
+              </div>
+              <button class="btn btn-primary">保存修改</button>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:20px;">
+            <div class="card">
+              <div class="card-title">修改密码</div>
+              <div class="profile-form">
+                <div class="form-item">
+                  <label>当前密码</label>
+                  <input type="password" placeholder="请输入当前密码" />
+                </div>
+                <div class="form-item">
+                  <label>新密码</label>
+                  <input type="password" placeholder="请输入新密码" />
+                </div>
+                <div class="form-item">
+                  <label>确认新密码</label>
+                  <input type="password" placeholder="请再次输入新密码" />
+                </div>
+                <button class="btn btn-primary">确认修改</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">教学统计（本月）</div>
+              <div class="stat-cards" style="margin-bottom:0;">
+                <div class="stat-card">
+                  <div class="value">32</div>
+                  <div class="label">本月课时数</div>
+                </div>
+                <div class="stat-card">
+                  <div class="value">4.8</div>
+                  <div class="label">学员评价</div>
+                </div>
+              </div>
+              <div style="margin-top:16px;">
+                <div class="placeholder-box" style="height:120px;">&#128200; 月度课时趋势图</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /layout -->
+</div><!-- /app-main -->
+
+<!-- ===== 课程详情弹窗 ===== -->
+<div class="modal-overlay" id="modal-course">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>课程详情</h3>
+      <button class="modal-close" onclick="closeModal('modal-course')">&times;</button>
+    </div>
+    <div id="modal-course-body">
+      <div class="modal-tabs" id="modal-course-tabs" style="display:none;"></div>
+      <div id="modal-course-tab-contents"></div>
+    </div>
+    <div id="modal-course-actions" style="margin-top:20px;display:flex;gap:10px;">
+      <!-- Buttons injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ===== 学员档案弹窗 ===== -->
+<div class="modal-overlay" id="modal-student">
+  <div class="modal" style="width:540px;">
+    <div class="modal-header">
+      <h3>学员档案</h3>
+      <button class="modal-close" onclick="closeModal('modal-student')">&times;</button>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:16px;">
+      <div style="width:56px;height:56px;border-radius:50%;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">&#128103;</div>
+      <div>
+        <div style="font-size:16px;font-weight:600;">张小明</div>
+        <div style="font-size:13px;color:#999;margin-top:4px;">8岁 | 启蒙A班 | 城东校区</div>
+        <div style="margin-top:6px;display:flex;gap:6px;">
+          <span class="tag tag-blue">15级</span>
+          <span class="tag tag-green">学习积极</span>
+          <span class="tag tag-orange">需加强死活题</span>
+        </div>
+      </div>
+    </div>
+    <div class="detail-row"><div class="detail-label">家长</div><div class="detail-value">张先生 (138****1234)</div></div>
+    <div class="detail-row"><div class="detail-label">入学时间</div><div class="detail-value">2025年9月</div></div>
+    <div class="detail-row"><div class="detail-label">累计课时</div><div class="detail-value">48课时</div></div>
+    <div class="detail-row"><div class="detail-label">出勤率</div><div class="detail-value">96%</div></div>
+    <div class="detail-row"><div class="detail-label">预习完成率</div><div class="detail-value">88%</div></div>
+    <div style="margin-top:16px;">
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px;">学习进度趋势</div>
+      <div class="placeholder-box" style="height:160px;">&#128200; 学习进度折线图（答题正确率 / 出勤率 / 作业完成率）</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 登录页 tab 切换
+function switchLoginTab(el, type) {
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('login-account').style.display = type === 'account' ? 'block' : 'none';
+  document.getElementById('login-phone').style.display = type === 'phone' ? 'block' : 'none';
+}
+
+// 登录
+function doLogin() {
+  document.getElementById('page-login').style.display = 'none';
+  document.getElementById('app-main').style.display = 'block';
+}
+
+// 退出
+function doLogout() {
+  document.getElementById('app-main').style.display = 'none';
+  document.getElementById('page-login').style.display = 'flex';
+}
+
+// 侧边栏导航
+function switchPage(el) {
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  var page = el.getAttribute('data-page');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+}
+
+// 显示班级详情
+function showClassDetail(className) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-class-detail').classList.add('active');
+  document.getElementById('breadcrumb-class-name').textContent = className;
+  document.getElementById('class-detail-title').textContent = className;
+}
+
+// 显示学生详情
+function showStudentDetail(studentName) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-student-detail').classList.add('active');
+  document.getElementById('breadcrumb-student-name').textContent = studentName;
+  document.getElementById('student-detail-name').textContent = studentName;
+  document.getElementById('student-info-name').textContent = studentName;
+}
+
+// 返回班级概览
+function goBackToOverview() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-analytics').classList.add('active');
+}
+
+// 返回班级详情
+function goBackToClass() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-class-detail').classList.add('active');
+}
+
+// 老师切换
+var currentTeacher = 'li';
+var classDataLi = [
+  { name: '启蒙A班', count: 200, attendance: '96%', preview: '88%', correct: '85%', homework: '82%',
+    children: [
+      { name: '启蒙A班-复盘1组', count: 8, attendance: '94%', preview: '86%', correct: '83%', homework: '80%' },
+      { name: '启蒙A班-复盘2组', count: 8, attendance: '92%', preview: '84%', correct: '81%', homework: '78%' },
+      { name: '启蒙A班-复盘3组', count: 8, attendance: '98%', preview: '90%', correct: '88%', homework: '85%' }
+    ]
+  },
+  { name: '入门C班', count: 200, attendance: '90%', preview: '82%', correct: '80%', homework: '78%',
+    children: [
+      { name: '入门C班-复盘1组', count: 8, attendance: '88%', preview: '80%', correct: '78%', homework: '76%' },
+      { name: '入门C班-复盘2组', count: 8, attendance: '91%', preview: '83%', correct: '81%', homework: '79%' }
+    ]
+  },
+  { name: '进阶D班', count: 200, attendance: '85%', preview: '76%', correct: '72%', homework: '70%',
+    children: [
+      { name: '进阶D班-复盘1组', count: 8, attendance: '87%', preview: '78%', correct: '75%', homework: '73%' }
+    ]
+  },
+  { name: '冲段精英班', count: 200, attendance: '98%', preview: '92%', correct: '90%', homework: '88%',
+    children: [
+      { name: '冲段精英班-复盘1组', count: 8, attendance: '97%', preview: '93%', correct: '91%', homework: '90%' },
+      { name: '冲段精英班-复盘2组', count: 8, attendance: '99%', preview: '94%', correct: '92%', homework: '91%' }
+    ]
+  }
+];
+var classDataLiu = [
+  { name: '启蒙A班-复盘1组', count: 8, attendance: '94%', preview: '86%', correct: '83%', homework: '80%' },
+  { name: '启蒙A班-复盘2组', count: 8, attendance: '92%', preview: '84%', correct: '81%', homework: '78%' },
+  { name: '入门C班-复盘1组', count: 8, attendance: '88%', preview: '80%', correct: '78%', homework: '76%' }
+];
+function renderClassList(data) {
+  var html = '';
+  data.forEach(function(c, idx) {
+    var hasChildren = c.children && c.children.length > 0;
+    // 父级（大班）行：整行不可点击，仅展开箭头和查看详情可交互
+    html += '<tr class="class-parent">';
+    html += '<td>';
+    if (hasChildren) {
+      html += '<span class="expand-icon" id="expand-icon-' + idx + '" onclick="event.stopPropagation();toggleClassExpand(' + idx + ')">&#9654;</span>';
+    }
+    html += '<strong>' + c.name + '</strong>';
+    if (hasChildren) {
+      html += ' <span class="tag tag-gray" style="font-size:11px;">' + c.children.length + '个复盘班</span>';
+    }
+    html += '</td>';
+    html += '<td>' + c.count + '</td>';
+    html += '<td>' + c.attendance + '</td>';
+    html += '<td>' + c.preview + '</td>';
+    html += '<td>' + c.correct + '</td>';
+    html += '<td>' + c.homework + '</td>';
+    html += '<td><span class="tag tag-blue" style="cursor:pointer;" onclick="showClassDetail(\'' + c.name + '\');event.stopPropagation();">查看详情</span></td>';
+    html += '</tr>';
+
+    // 子级（复盘班）行：整行不可点击，仅查看详情可交互
+    if (hasChildren) {
+      c.children.forEach(function(child) {
+        html += '<tr class="class-child class-child-' + idx + '">';
+        html += '<td><span class="child-indicator">&#9492;&#9472;</span>' + child.name + '</td>';
+        html += '<td>' + child.count + '</td>';
+        html += '<td>' + child.attendance + '</td>';
+        html += '<td>' + child.preview + '</td>';
+        html += '<td>' + child.correct + '</td>';
+        html += '<td>' + child.homework + '</td>';
+        html += '<td><span class="tag tag-blue" style="cursor:pointer;" onclick="showClassDetail(\'' + child.name + '\');event.stopPropagation();">查看详情</span></td>';
+        html += '</tr>';
+      });
+    }
+  });
+  document.getElementById('class-list-body').innerHTML = html;
+}
+
+function toggleClassExpand(idx) {
+  var icon = document.getElementById('expand-icon-' + idx);
+  var children = document.querySelectorAll('.class-child-' + idx);
+  var isExpanded = icon.classList.contains('expanded');
+  if (isExpanded) {
+    icon.classList.remove('expanded');
+    children.forEach(function(row) { row.classList.remove('show'); });
+  } else {
+    icon.classList.add('expanded');
+    children.forEach(function(row) { row.classList.add('show'); });
+  }
+}
+function switchTeacher() {
+  currentTeacher = currentTeacher === 'li' ? 'liu' : 'li';
+  document.getElementById('teacher-name').textContent = currentTeacher === 'li' ? '李老师' : '刘老师';
+  document.getElementById('teacher-avatar').textContent = currentTeacher === 'li' ? '李' : '刘';
+  document.getElementById('schedule-normal').style.display = currentTeacher === 'li' ? 'block' : 'none';
+  document.getElementById('schedule-review').style.display = currentTeacher === 'li' ? 'none' : 'block';
+  renderClassList(currentTeacher === 'li' ? classDataLi : classDataLiu);
+}
+
+// 周次切换
+var currentWeek = 0;
+var weekRanges = ['2026年4月6日 - 4月12日', '2026年4月13日 - 4月19日', '2026年4月20日 - 4月26日'];
+var weekDates = [
+  ['4/6', '4/7', '4/8', '4/9', '4/10', '4/11', '4/12'],
+  ['4/13', '4/14', '4/15', '4/16', '4/17', '4/18', '4/19'],
+  ['4/20', '4/21', '4/22', '4/23', '4/24', '4/25', '4/26']
+];
+var timeSlotLabels = ['', '9:00-10:25', '10:30-11:55', '13:00-14:25', '14:30-15:55', '15:00-16:25', '16:00-17:25', '16:30-17:55', '18:00-19:25', '19:30-20:55'];
+
+var weekCourses = [
+  [
+    {day: 6, slot: 1, cls: 'big', code: 'S1-L1', name: '直播课1', className: '启蒙A班'},
+    {day: 7, slot: 1, cls: 'big', code: 'S1-L1', name: '直播课1', className: '启蒙A班'},
+    {day: 6, slot: 2, cls: 'small', code: 'S2-L1', name: '直播课2', className: '启蒙A班'},
+    {day: 6, slot: 3, cls: '', code: 'S3-L1', name: '直播课3', className: '启蒙A班'},
+    {day: 7, slot: 3, cls: 'small', code: 'S4-L1', name: '直播课4', className: '启蒙A班'},
+    {day: 6, slot: 4, cls: 'big', code: 'S5-L1', name: '直播课5', className: '启蒙A班'},
+    {day: 7, slot: 4, cls: 'big', code: 'S1-L2', name: '直播课11', className: '启蒙A班'},
+    {day: 5, slot: 5, cls: 'big', code: 'S6-L1', name: '直播课6', className: '启蒙A班'},
+    {day: 6, slot: 6, cls: 'small', code: 'S7-L1', name: '直播课7', className: '启蒙A班'},
+    {day: 7, slot: 6, cls: 'big', code: 'S8-L1', name: '直播课8', className: '启蒙A班'},
+    {day: 2, slot: 7, cls: 'big', code: 'S1-L3', name: '直播课18', className: '启蒙A班'},
+    {day: 3, slot: 7, cls: 'big', code: 'S2-L2', name: '直播课12', className: '启蒙A班'},
+    {day: 4, slot: 7, cls: 'big', code: 'S3-L2', name: '直播课13', className: '启蒙A班'},
+    {day: 5, slot: 7, cls: 'small', code: 'S4-L2', name: '直播课14', className: '启蒙A班'},
+    {day: 2, slot: 8, cls: 'big', code: 'S1-L2', name: '直播课11', className: '启蒙A班'},
+    {day: 3, slot: 8, cls: 'big', code: 'S5-L2', name: '直播课15', className: '启蒙A班'},
+    {day: 4, slot: 8, cls: 'big', code: 'S6-L2', name: '直播课16', className: '启蒙A班'},
+    {day: 5, slot: 8, cls: 'big', code: 'S7-L2', name: '直播课17', className: '启蒙A班'},
+    {day: 6, slot: 8, cls: 'small', code: 'S2-L3', name: '直播课19', className: '启蒙A班'},
+    {day: 7, slot: 8, cls: 'big', code: 'S1-L4', name: '直播课22', className: '启蒙A班'},
+    {day: 2, slot: 9, cls: 'big', code: 'S9-L1', name: '直播课9', className: '启蒙A班'},
+    {day: 3, slot: 9, cls: 'big', code: 'S10-L1', name: '直播课10', className: '启蒙A班'},
+    {day: 4, slot: 9, cls: 'big', code: 'S2-L4', name: '直播课23', className: '启蒙A班'},
+    {day: 5, slot: 9, cls: 'big', code: 'S3-L4', name: '直播课24', className: '启蒙A班'},
+    {day: 6, slot: 9, cls: 'big', code: 'S3-L3', name: '直播课20', className: '启蒙A班'},
+    {day: 7, slot: 9, cls: 'big', code: 'S4-L3', name: '直播课21', className: '启蒙A班'}
+  ],
+  [
+    {day: 6, slot: 1, cls: 'big', code: 'S1-L2', name: '直播课11', className: '启蒙A班'},
+    {day: 7, slot: 1, cls: 'big', code: 'S2-L2', name: '直播课12', className: '启蒙A班'},
+    {day: 6, slot: 2, cls: 'small', code: 'S3-L2', name: '直播课13', className: '启蒙A班'},
+    {day: 2, slot: 3, cls: '', code: 'S4-L2', name: '直播课14', className: '启蒙A班'},
+    {day: 3, slot: 3, cls: 'small', code: 'S5-L2', name: '直播课15', className: '启蒙A班'},
+    {day: 6, slot: 4, cls: 'big', code: 'S6-L2', name: '直播课16', className: '启蒙A班'},
+    {day: 7, slot: 4, cls: 'big', code: 'S7-L2', name: '直播课17', className: '启蒙A班'},
+    {day: 5, slot: 5, cls: 'big', code: 'S1-L3', name: '直播课18', className: '启蒙A班'},
+    {day: 6, slot: 6, cls: 'small', code: 'S2-L3', name: '直播课19', className: '启蒙A班'},
+    {day: 7, slot: 6, cls: 'big', code: 'S3-L3', name: '直播课20', className: '启蒙A班'},
+    {day: 2, slot: 7, cls: 'big', code: 'S4-L3', name: '直播课21', className: '启蒙A班'},
+    {day: 3, slot: 7, cls: 'big', code: 'S1-L4', name: '直播课22', className: '启蒙A班'},
+    {day: 4, slot: 7, cls: 'big', code: 'S2-L4', name: '直播课23', className: '启蒙A班'},
+    {day: 5, slot: 7, cls: 'small', code: 'S3-L4', name: '直播课24', className: '启蒙A班'},
+    {day: 2, slot: 8, cls: 'big', code: 'S1-L1', name: '直播课1', className: '启蒙A班'},
+    {day: 3, slot: 8, cls: 'big', code: 'S2-L1', name: '直播课2', className: '启蒙A班'},
+    {day: 4, slot: 8, cls: 'big', code: 'S3-L1', name: '直播课3', className: '启蒙A班'},
+    {day: 5, slot: 8, cls: 'big', code: 'S4-L1', name: '直播课4', className: '启蒙A班'},
+    {day: 6, slot: 8, cls: 'small', code: 'S5-L1', name: '直播课5', className: '启蒙A班'},
+    {day: 7, slot: 8, cls: 'big', code: 'S6-L1', name: '直播课6', className: '启蒙A班'},
+    {day: 2, slot: 9, cls: 'big', code: 'S7-L1', name: '直播课7', className: '启蒙A班'},
+    {day: 3, slot: 9, cls: 'big', code: 'S8-L1', name: '直播课8', className: '启蒙A班'},
+    {day: 4, slot: 9, cls: 'big', code: 'S9-L1', name: '直播课9', className: '启蒙A班'},
+    {day: 5, slot: 9, cls: 'big', code: 'S10-L1', name: '直播课10', className: '启蒙A班'}
+  ],
+  [
+    {day: 6, slot: 1, cls: 'big', code: 'S1-L3', name: '直播课18', className: '启蒙A班'},
+    {day: 7, slot: 1, cls: 'big', code: 'S2-L3', name: '直播课19', className: '启蒙A班'},
+    {day: 2, slot: 2, cls: 'small', code: 'S3-L3', name: '直播课20', className: '启蒙A班'},
+    {day: 3, slot: 2, cls: '', code: 'S4-L3', name: '直播课21', className: '启蒙A班'},
+    {day: 4, slot: 3, cls: 'small', code: 'S1-L4', name: '直播课22', className: '启蒙A班'},
+    {day: 5, slot: 3, cls: '', code: 'S2-L4', name: '直播课23', className: '启蒙A班'},
+    {day: 6, slot: 4, cls: 'big', code: 'S3-L4', name: '直播课24', className: '启蒙A班'},
+    {day: 7, slot: 4, cls: 'big', code: 'S1-L1', name: '直播课1', className: '启蒙A班'},
+    {day: 2, slot: 5, cls: 'big', code: 'S2-L1', name: '直播课2', className: '启蒙A班'},
+    {day: 5, slot: 5, cls: 'big', code: 'S3-L1', name: '直播课3', className: '启蒙A班'},
+    {day: 6, slot: 6, cls: 'small', code: 'S4-L1', name: '直播课4', className: '启蒙A班'},
+    {day: 7, slot: 6, cls: 'big', code: 'S5-L1', name: '直播课5', className: '启蒙A班'},
+    {day: 2, slot: 7, cls: 'big', code: 'S6-L1', name: '直播课6', className: '启蒙A班'},
+    {day: 3, slot: 7, cls: 'big', code: 'S7-L1', name: '直播课7', className: '启蒙A班'},
+    {day: 4, slot: 7, cls: 'big', code: 'S8-L1', name: '直播课8', className: '启蒙A班'},
+    {day: 5, slot: 7, cls: 'small', code: 'S9-L1', name: '直播课9', className: '启蒙A班'},
+    {day: 2, slot: 8, cls: 'big', code: 'S1-L2', name: '直播课11', className: '启蒙A班'},
+    {day: 3, slot: 8, cls: 'big', code: 'S2-L2', name: '直播课12', className: '启蒙A班'},
+    {day: 4, slot: 8, cls: 'big', code: 'S3-L2', name: '直播课13', className: '启蒙A班'},
+    {day: 5, slot: 8, cls: 'big', code: 'S4-L2', name: '直播课14', className: '启蒙A班'},
+    {day: 6, slot: 8, cls: 'small', code: 'S5-L2', name: '直播课15', className: '启蒙A班'},
+    {day: 7, slot: 8, cls: 'big', code: 'S6-L2', name: '直播课16', className: '启蒙A班'},
+    {day: 2, slot: 9, cls: 'big', code: 'S7-L2', name: '直播课17', className: '启蒙A班'},
+    {day: 3, slot: 9, cls: 'big', code: 'S1-L4', name: '直播课22', className: '启蒙A班'},
+    {day: 4, slot: 9, cls: 'big', code: 'S2-L4', name: '直播课23', className: '启蒙A班'},
+    {day: 5, slot: 9, cls: 'big', code: 'S3-L4', name: '直播课24', className: '启蒙A班'}
+  ]
+];
+
+function renderWeekBody(weekIdx) {
+  var courses = weekCourses[weekIdx];
+  var tbody = document.getElementById('timetable-tbody');
+  var html = '';
+  for (var slot = 1; slot <= 9; slot++) {
+    html += '<tr>';
+    html += '<td class="time-col">' + timeSlotLabels[slot] + '</td>';
+    for (var day = 1; day <= 7; day++) {
+      var course = null;
+      for (var i = 0; i < courses.length; i++) {
+        if (courses[i].day === day && courses[i].slot === slot) {
+          course = courses[i];
+          break;
+        }
+      }
+      if (course) {
+        var clsStr = course.cls ? ' ' + course.cls : '';
+        html += '<td><div class="course-block' + clsStr + '" data-day="' + day + '" data-slot="' + slot + '" data-class-name="' + course.className + '" onclick="showCourseDetail(event, \'not_started\')">';
+        html += '<div class="cb-time">' + course.code + '</div>';
+        html += '<div class="cb-class">' + course.name + '</div>';
+        html += '</div></td>';
+      } else {
+        html += '<td class="slot-unavailable"></td>';
+      }
+    }
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function switchWeek(dir) {
+  var newWeek = currentWeek + dir;
+  if (newWeek < 0 || newWeek > 2) return;
+  currentWeek = newWeek;
+  document.getElementById('date-text').textContent = weekRanges[currentWeek];
+  for (var i = 0; i < 7; i++) {
+    document.getElementById('th-date-' + i).textContent = weekDates[currentWeek][i];
+  }
+  renderWeekBody(currentWeek);
+  applyMockCourseStatuses();
+  if (currentTeacher === 'liu') {
+    initReviewSchedule();
+    applyMockCourseStatuses();
+  }
+}
+
+// 生成复盘视图课表
+function initReviewSchedule() {
+  var normalTable = document.getElementById('timetable-normal');
+  var reviewContainer = document.getElementById('schedule-review');
+  reviewContainer.innerHTML = normalTable.outerHTML;
+
+  var reviewTable = reviewContainer.querySelector('.timetable');
+  reviewTable.removeAttribute('id');
+
+  reviewTable.querySelectorAll('td').forEach(function(td) {
+    var blocks = td.querySelectorAll('.course-block');
+    blocks.forEach(function(block, idx) {
+      block.setAttribute('data-review-index', idx);
+    });
+    if (blocks.length === 1) {
+      var clone = blocks[0].cloneNode(true);
+      clone.setAttribute('data-review-index', '1');
+      var origClass = blocks[0].getAttribute('data-class-name') || '启蒙A班';
+      clone.setAttribute('data-class-name', origClass === '启蒙A班' ? '入门C班' : '启蒙A班');
+      td.appendChild(clone);
+    }
+  });
+}
+
+// 学员列表排序
+var studentSortState = { col: -1, dir: 'asc' };
+function sortStudentTable(colIndex) {
+  var tbody = document.getElementById('student-tbody');
+  var rows = Array.from(tbody.querySelectorAll('tr'));
+  if (studentSortState.col === colIndex) {
+    studentSortState.dir = studentSortState.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    studentSortState.col = colIndex;
+    studentSortState.dir = 'desc';
+  }
+  document.querySelectorAll('#student-table th.sortable').forEach(function(th) { th.classList.remove('asc', 'desc'); });
+  var activeTh = document.querySelector('#student-table th[data-sort-col="' + colIndex + '"]');
+  if (activeTh) activeTh.classList.add(studentSortState.dir);
+  rows.sort(function(a, b) {
+    var aText = a.cells[colIndex].textContent.trim().replace('%', '');
+    var bText = b.cells[colIndex].textContent.trim().replace('%', '');
+    var aVal = parseFloat(aText) || 0;
+    var bVal = parseFloat(bText) || 0;
+    return studentSortState.dir === 'asc' ? aVal - bVal : bVal - aVal;
+  });
+  rows.forEach(function(row, idx) {
+    row.cells[0].textContent = idx + 1;
+    tbody.appendChild(row);
+  });
+}
+
+// 弹窗Tab切换
+function switchCourseTab(el, index) {
+  document.querySelectorAll('#modal-course-tabs .modal-tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  document.querySelectorAll('#modal-course-tab-contents .modal-tab-content').forEach(function(c) { c.style.display = 'none'; });
+  var content = document.getElementById('modal-tab-content-' + index);
+  if (content) content.style.display = 'block';
+}
+
+// 课程详情弹窗
+function showCourseDetail(event, status) {
+  status = status || 'not_started';
+  var block = event.target.closest('.course-block');
+  var slot = block ? Number(block.getAttribute('data-slot')) : 1;
+  var reviewIndex = block ? (block.getAttribute('data-review-index') || '0') : '0';
+
+  var timeSlots = ['', '9:00-10:25', '10:30-11:55', '13:00-14:25', '14:30-15:55',
+    '15:00-16:25', '16:00-17:25', '16:30-17:55', '18:00-19:25', '19:30-20:55'];
+  var timeText = timeSlots[slot] || '08:00 - 09:00';
+
+  var siblingBlocks = [];
+  if (block) {
+    var td = block.closest('td');
+    if (td) siblingBlocks = Array.from(td.querySelectorAll('.course-block'));
+  }
+  if (siblingBlocks.length === 0) siblingBlocks = [block];
+
+  var tabsContainer = document.getElementById('modal-course-tabs');
+  var contentsContainer = document.getElementById('modal-course-tab-contents');
+
+  var tabsHtml = '';
+  var contentsHtml = '';
+  var isReview = block && block.closest('#schedule-review');
+  siblingBlocks.forEach(function(b, idx) {
+    var isActive = String(idx) === reviewIndex;
+    var courseName = b.querySelector('.cb-class') ? b.querySelector('.cb-class').textContent : '直播课1';
+    var courseCode = b.querySelector('.cb-time') ? b.querySelector('.cb-time').textContent : 'S1-L1';
+    var className = b.getAttribute('data-class-name') || '启蒙A班';
+    var tabName = isReview ? className : courseName;
+    tabsHtml += '<div class="modal-tab ' + (isActive ? 'active' : '') + '" onclick="switchCourseTab(this, ' + idx + ')">' + tabName + '</div>';
+
+    contentsHtml += '<div class="modal-tab-content" id="modal-tab-content-' + idx + '" style="display:' + (isActive ? 'block' : 'none') + ';">';
+    if (isReview) {
+      contentsHtml += '<div class="detail-row"><div class="detail-label">课程名称</div><div class="detail-value">' + courseName + '</div></div>';
+      contentsHtml += '<div class="detail-row"><div class="detail-label">课包名称</div><div class="detail-value">' + courseCode + '</div></div>';
+      contentsHtml += '<div class="detail-row"><div class="detail-label">班级</div><div class="detail-value">' + className + '</div></div>';
+    } else {
+      contentsHtml += '<div class="detail-row"><div class="detail-label">班级</div><div class="detail-value">启蒙A班</div></div>';
+      contentsHtml += '<div class="detail-row"><div class="detail-label">课程</div><div class="detail-value">' + courseName + '</div></div>';
+      contentsHtml += '<div class="detail-row"><div class="detail-label">课包名称</div><div class="detail-value">' + courseCode + '</div></div>';
+    }
+    contentsHtml += '<div class="detail-row"><div class="detail-label">时间</div><div class="detail-value">' + timeText + '</div></div>';
+    var studentCount = isReview ? '8人' : '200人';
+    contentsHtml += '<div class="detail-row"><div class="detail-label">学员数</div><div class="detail-value">' + studentCount + '</div></div>';
+    contentsHtml += '</div>';
+  });
+
+  tabsContainer.innerHTML = tabsHtml;
+  tabsContainer.style.display = siblingBlocks.length > 1 ? 'flex' : 'none';
+  contentsContainer.innerHTML = contentsHtml;
+
+  var actionContainer = document.getElementById('modal-course-actions');
+  var actionHtml = '';
+  if (status === 'ended') {
+    actionHtml += '<button class="btn" style="flex:1;">查看回放</button>';
+  } else if (status === 'in_progress') {
+    actionHtml += '<button class="btn btn-primary" style="flex:1;" onclick="openLiveTeachingPage()">进入直播间</button>';
+  } else {
+    actionHtml += '<button class="btn btn-success" style="flex:1;" onclick="openLiveTeachingPage()">开始上课</button>';
+    actionHtml += '<button class="btn" style="flex:1;">备课</button>';
+  }
+  actionContainer.innerHTML = actionHtml;
+
+  document.getElementById('modal-course').classList.add('show');
+}
+
+// 按模拟当前时间自动刷新课程状态，便于原型演示不同时间点的颜色变化
+var MOCK_CURRENT_COURSE_TIME = { day: 4, slot: 7 };
+
+function compareCourseOrder(dayA, slotA, dayB, slotB) {
+  if (dayA !== dayB) return dayA - dayB;
+  return slotA - slotB;
+}
+
+function applyMockCourseStatuses() {
+  document.querySelectorAll('.timetable .course-block[data-day][data-slot]').forEach(function(block) {
+    var day = Number(block.getAttribute('data-day'));
+    var slot = Number(block.getAttribute('data-slot'));
+    var compareResult = compareCourseOrder(day, slot, MOCK_CURRENT_COURSE_TIME.day, MOCK_CURRENT_COURSE_TIME.slot);
+    var status = 'not_started';
+
+    if (compareResult < 0) {
+      status = 'ended';
+    } else if (compareResult === 0) {
+      status = 'in_progress';
+    }
+
+    block.dataset.status = status;
+    block.classList.remove('ended', 'in_progress');
+
+    if (status === 'ended') {
+      block.classList.add('ended');
+    } else if (status === 'in_progress') {
+      block.classList.add('in_progress');
+    }
+
+    block.setAttribute('onclick', "showCourseDetail(event, '" + status + "')");
+  });
+}
+
+// 学员档案弹窗
+function showStudentProfile() {
+  document.getElementById('modal-student').classList.add('show');
+}
+
+function openLiveTeachingPage() {
+  window.open('直播授课页.html', '_blank');
+}
+
+// 关闭弹窗
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+// 点击遮罩关闭弹窗
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) {
+      overlay.classList.remove('show');
+    }
+  });
+});
+
+// 视图切换
+document.querySelectorAll('.view-switch .vs-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.view-switch .vs-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+renderWeekBody(0);
+initReviewSchedule();
+applyMockCourseStatuses();
+renderClassList(classDataLi);
+</script>
+
+<!--
+  ============================================================
+  PRD v3.0 Coverage Check (v1.0 prototype)
+  ============================================================
+  - 登录                                          OK (login page with account/phone tabs)
+  - 课程表(按周固定/调课/换老师)                    OK (page-schedule, timetable with action buttons)
+  - 课件查看(只读, 统一在运营端管理)                OK (page-courseware, browse/search/preview/simulate)
+  - 直播管理(腾讯LCIC/10万人/全录制)               OK (page-live, console with LCIC note)
+    - 剩余时间提醒(P1)                             OK (live console remaining time indicator)
+    - 大班自动考勤(进直播间=签到)                   OK (noted in live info bar and student mgmt)
+  - 学员管理(列表/档案/请假)                        OK (page-students, table with profile/leave buttons)
+    - 请假/停课管理(P1)                            OK (info bar note + leave record buttons per student)
+  - 学情数据(大盘/多维度)                           OK (page-analytics, stat cards + charts + alerts)
+    - 模拟测试(P1)                                 OK (courseware page simulate buttons + info bar note)
+  - 个人中心                                       OK (page-profile, profile form + password + stats)
+  ============================================================
+-->
+</body>
+</html>

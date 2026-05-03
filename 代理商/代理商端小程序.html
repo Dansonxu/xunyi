@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>讯弈围棋 - 代理商端微信小程序原型图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* Header */
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .page-subtitle {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  /* Screen selector */
+  .screen-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 20px;
+    max-width: 600px;
+  }
+  .screen-nav button {
+    padding: 6px 14px;
+    border: 1.5px solid #ccc;
+    border-radius: 16px;
+    background: #fff;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .screen-nav button:hover { border-color: #07C160; color: #07C160; }
+  .screen-nav button.active {
+    background: #07C160;
+    color: #fff;
+    border-color: #07C160;
+  }
+
+  /* Phone frame */
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: #fff;
+    border-radius: 40px;
+    border: 8px solid #1a1a1a;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,.18);
+    flex-shrink: 0;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 44px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+  }
+  .status-bar .time { font-size: 14px; font-weight: 700; }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; }
+  .status-bar .icons span { font-size: 11px; }
+
+  /* Screen content area */
+  .screen-content {
+    height: calc(100% - 44px - 50px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen-content::-webkit-scrollbar { display: none; }
+
+  /* Bottom tab bar */
+  .tab-bar {
+    height: 50px;
+    background: #fff;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    padding: 4px 0;
+    flex: 1;
+  }
+  .tab-item .tab-icon { font-size: 20px; line-height: 1; }
+  .tab-item .tab-label { font-size: 10px; color: #999; }
+  .tab-item.active .tab-label { color: #07C160; font-weight: 600; }
+  .tab-item.active .tab-icon { color: #07C160; }
+
+  /* Screen containers */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Common wireframe styles */
+  .wf-header {
+    background: linear-gradient(135deg, #07C160, #05a34e);
+    color: #fff;
+    padding: 16px;
+  }
+  .wf-section {
+    padding: 12px 16px;
+  }
+  .wf-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  .wf-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1px solid #eee;
+  }
+  .wf-divider {
+    height: 8px;
+    background: #f5f5f5;
+  }
+  .wf-placeholder {
+    background: #f8f8f8;
+    border: 1.5px dashed #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bbb;
+    font-size: 13px;
+  }
+  .wf-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .wf-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+  }
+  .wf-btn-primary {
+    background: #07C160;
+    color: #fff;
+  }
+  .wf-btn-outline {
+    background: #fff;
+    color: #07C160;
+    border: 1.5px solid #07C160;
+  }
+  .wf-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .wf-list-item:last-child { border-bottom: none; }
+
+  /* ======== Screen 1: Login ======== */
+  .login-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+    background: linear-gradient(180deg, #f0faf4 0%, #fff 60%);
+  }
+  .login-logo {
+    width: 80px; height: 80px;
+    border-radius: 20px;
+    background: #07C160;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+  .login-title { font-size: 22px; font-weight: 700; color: #333; margin-bottom: 6px; }
+  .login-desc { font-size: 13px; color: #999; margin-bottom: 40px; }
+  .login-wx-btn {
+    width: 100%;
+    padding: 14px;
+    background: #07C160;
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .login-wx-btn .wx-icon { font-size: 22px; }
+  .login-verify-btn {
+    width: 100%;
+    padding: 14px;
+    background: #fff;
+    color: #07C160;
+    border: 1.5px solid #07C160;
+    border-radius: 24px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .login-footer { margin-top: auto; font-size: 11px; color: #ccc; }
+
+  /* ======== Screen 2: Dashboard ======== */
+  .dash-header {
+    background: linear-gradient(135deg, #07C160 0%, #05a34e 100%);
+    color: #fff;
+    padding: 16px 16px 20px;
+    border-radius: 0 0 16px 16px;
+  }
+  .dash-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .dash-agent-name { font-size: 18px; font-weight: 700; }
+  .dash-badge {
+    padding: 2px 10px;
+    background: rgba(255,255,255,.25);
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .dash-contract { font-size: 12px; opacity: .85; margin-top: 2px; }
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .dash-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #eee;
+  }
+  .dash-card .label { font-size: 12px; color: #999; margin-bottom: 4px; }
+  .dash-card .value { font-size: 22px; font-weight: 700; color: #333; }
+  .dash-card .value.money { color: #07C160; }
+  .dash-card .unit { font-size: 12px; color: #999; font-weight: 400; }
+  .chart-area {
+    margin: 0 16px 12px;
+    height: 160px;
+  }
+  .store-summary {
+    margin: 0 16px 16px;
+  }
+  .store-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #eee;
+  }
+  .store-row .name { font-size: 13px; font-weight: 600; color: #333; }
+  .store-row .metrics { display: flex; gap: 16px; }
+  .store-row .metric { text-align: center; }
+  .store-row .metric .val { font-size: 14px; font-weight: 700; color: #333; }
+  .store-row .metric .lbl { font-size: 10px; color: #999; }
+
+  /* ======== Screen 3: Promotion ======== */
+  .promo-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px;
+    background: #f9f9f9;
+  }
+  .promo-stat { text-align: center; }
+  .promo-stat .num { font-size: 22px; font-weight: 700; color: #333; }
+  .promo-stat .lbl { font-size: 11px; color: #999; margin-top: 2px; }
+  .promo-link-box {
+    margin: 12px 16px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .promo-link-box .url {
+    font-size: 12px;
+    color: #666;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .promo-link-box .copy-btn {
+    padding: 4px 12px;
+    background: #07C160;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 8px;
+    flex-shrink: 0;
+  }
+  .product-card {
+    margin: 0 16px 10px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+  }
+  .product-card .img-placeholder {
+    width: 70px; height: 70px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .product-card .info { flex: 1; }
+  .product-card .name { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 4px; }
+  .product-card .price { font-size: 15px; font-weight: 700; color: #e64a19; }
+  .product-card .commission { font-size: 12px; color: #07C160; margin-top: 2px; }
+  .product-card .share-btn {
+    align-self: center;
+    padding: 6px 14px;
+    border: 1.5px solid #07C160;
+    color: #07C160;
+    background: #fff;
+    border-radius: 16px;
+    font-size: 12px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ======== Screen 4: Commission ======== */
+  .comm-tabs {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+  }
+  .comm-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 0;
+    font-size: 14px;
+    color: #999;
+    cursor: pointer;
+    position: relative;
+  }
+  .comm-tab.active {
+    color: #07C160;
+    font-weight: 600;
+  }
+  .comm-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 30%;
+    right: 30%;
+    height: 2px;
+    background: #07C160;
+    border-radius: 1px;
+  }
+  .comm-filters {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #fafafa;
+  }
+  .comm-filter {
+    padding: 6px 12px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .comm-filter .arrow { font-size: 10px; }
+  .comm-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fff;
+  }
+  .comm-item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .comm-item-date { font-size: 12px; color: #999; }
+  .comm-item-amount { font-size: 16px; font-weight: 700; }
+  .comm-item-amount.positive { color: #07C160; }
+  .comm-item-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .comm-type-tag {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tag-enroll { background: #e8f5e9; color: #2e7d32; }
+  .tag-renew { background: #e3f2fd; color: #1565c0; }
+  .tag-robot { background: #fff3e0; color: #e65100; }
+  .tag-refer { background: #f3e5f5; color: #7b1fa2; }
+  .tag-consume { background: #fce4ec; color: #c62828; }
+  .comm-item-ref { font-size: 12px; color: #999; }
+  .comm-status {
+    font-size: 11px;
+    margin-left: auto;
+  }
+  .status-pending { color: #ff9800; }
+  .status-settled { color: #07C160; }
+  .status-revoked { color: #f44336; }
+
+  /* Settlement records */
+  .settle-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fff;
+  }
+  .settle-period {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .settle-target-badge {
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .target-hit { background: #e8f5e9; color: #2e7d32; }
+  .target-miss { background: #fbe9e7; color: #bf360c; }
+  .settle-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666;
+    padding: 2px 0;
+  }
+  .settle-row .val { font-weight: 600; color: #333; }
+  .settle-status {
+    margin-top: 6px;
+    text-align: right;
+  }
+
+  /* ======== Screen 5: Store ======== */
+  .store-card {
+    margin: 10px 16px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    padding: 14px;
+  }
+  .store-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .store-card-name { font-size: 15px; font-weight: 600; color: #333; }
+  .store-status-active {
+    padding: 2px 8px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  .store-card-info { font-size: 12px; color: #999; line-height: 1.8; }
+  .store-card-metrics {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .store-metric { text-align: center; flex: 1; }
+  .store-metric .val { font-size: 16px; font-weight: 700; color: #333; }
+  .store-metric .lbl { font-size: 10px; color: #999; }
+  .store-detail-section {
+    padding: 12px 16px;
+  }
+  .device-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #f9f9f9;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .device-sn { color: #333; font-weight: 500; }
+  .device-status { font-size: 11px; }
+  .device-online { color: #07C160; }
+  .device-offline { color: #f44336; }
+  .area-protection {
+    margin: 10px 16px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    padding: 14px;
+  }
+  .area-map-placeholder {
+    height: 120px;
+    margin-top: 8px;
+  }
+
+  /* ======== Screen 6: Sub Agents ======== */
+  .sub-summary {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px;
+    background: #f0faf4;
+    margin: 10px 16px;
+    border-radius: 10px;
+  }
+  .sub-summary-item { text-align: center; }
+  .sub-summary-item .num { font-size: 20px; font-weight: 700; color: #07C160; }
+  .sub-summary-item .lbl { font-size: 11px; color: #999; margin-top: 2px; }
+  .sub-agent-card {
+    margin: 0 16px 10px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    padding: 12px 14px;
+  }
+  .sub-agent-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .sub-agent-name { font-size: 14px; font-weight: 600; color: #333; }
+  .sub-agent-level {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .level-dengfeng { background: #fff8e1; color: #f57f17; }
+  .level-guanyun { background: #e8eaf6; color: #283593; }
+  .level-lanxing { background: #fce4ec; color: #ad1457; }
+  .sub-agent-info {
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    color: #999;
+  }
+  .sub-agent-bottom {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 12px;
+  }
+  .sub-agent-bottom .lbl { color: #999; }
+  .sub-agent-bottom .val { font-weight: 600; color: #333; }
+
+  /* ======== Screen 7: Profile ======== */
+  .profile-header {
+    background: linear-gradient(135deg, #07C160, #05a34e);
+    color: #fff;
+    padding: 24px 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .profile-avatar {
+    width: 56px; height: 56px;
+    background: rgba(255,255,255,.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+  }
+  .profile-name { font-size: 18px; font-weight: 700; }
+  .profile-meta { font-size: 12px; opacity: .85; margin-top: 2px; }
+  .contract-card {
+    margin: 12px 16px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    padding: 14px;
+  }
+  .contract-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .contract-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .contract-row:last-child { border: none; }
+  .contract-row .lbl { color: #999; }
+  .contract-row .val { color: #333; font-weight: 500; }
+  .func-list {
+    margin: 0 16px;
+  }
+  .func-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .func-item:last-child { border: none; }
+  .func-item-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .func-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .func-item-label { font-size: 14px; color: #333; }
+  .func-arrow { color: #ccc; font-size: 14px; }
+
+  /* Tab sub-panels */
+  .comm-panel { display: none; }
+  .comm-panel.active { display: block; }
+  .store-view { display: none; }
+  .store-view.active { display: block; }
+
+  /* Scrollable body bg for certain screens */
+  .screen-bg-gray { background: #f5f5f5; min-height: 100%; }
+
+  /* Login screen has no tab bar - override content height */
+  .screen-content.login-content {
+    height: calc(100% - 44px);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">讯弈围棋教育平台 - 代理商端微信小程序</div>
+<div class="page-subtitle">交互原型图 / Wireframe Prototype</div>
+
+<div class="screen-nav" id="screenNav">
+  <button class="active" onclick="showScreen('login')">登录页</button>
+  <button onclick="showScreen('dashboard')">数据看板</button>
+  <button onclick="showScreen('promo')">推广页</button>
+  <button onclick="showScreen('commission')">分润管理</button>
+  <button onclick="showScreen('store')">门店管理</button>
+  <button onclick="showScreen('subagent')">下级代理商</button>
+  <button onclick="showScreen('profile')">我的</button>
+</div>
+
+<div class="phone-frame">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="icons">
+      <span>&#9679;&#9679;&#9679;&#9679;&#9675;</span>
+      <span>WiFi</span>
+      <span>&#128267;</span>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 1: Login ==================== -->
+  <div class="screen-content login-content" id="screen-login">
+    <div class="screen active" id="view-login">
+      <div class="login-screen">
+        <div class="login-logo">&#9818;</div>
+        <div class="login-title">讯弈围棋</div>
+        <div class="login-desc">代理商管理平台</div>
+        <button class="login-wx-btn" onclick="showScreen('dashboard')">
+          <span class="wx-icon">&#128172;</span>
+          微信授权登录
+        </button>
+        <button class="login-verify-btn">代理商身份验证</button>
+        <div class="login-footer">讯弈围棋教育平台 v3.1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 2: Dashboard ==================== -->
+  <div class="screen-content" id="screen-dashboard" style="display:none;">
+    <div class="screen active">
+      <div class="screen-bg-gray" style="padding-bottom: 10px;">
+        <!-- PRD: 数据看板(P0) - 覆盖 销售/学员/分润 三大维度 -->
+        <!-- Header -->
+        <div class="dash-header">
+          <div class="dash-header-top">
+            <span class="dash-agent-name">杭州弈星教育</span>
+            <span class="dash-badge">&#11088; 观云代理</span>
+          </div>
+          <div class="dash-contract">合约有效期至 2027-06-30 | 20席位</div>
+        </div>
+
+        <!-- Core data grid -->
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="label">本月营收</div>
+            <div class="value money">¥32,580</div>
+          </div>
+          <div class="dash-card">
+            <div class="label">本月新生</div>
+            <div class="value">18<span class="unit">人</span></div>
+          </div>
+          <div class="dash-card">
+            <div class="label">累计学员</div>
+            <div class="value">256<span class="unit">人</span></div>
+          </div>
+          <div class="dash-card">
+            <div class="label">待结算分润</div>
+            <div class="value money">¥12,450</div>
+          </div>
+        </div>
+
+        <!-- Chart area -->
+        <div class="wf-section-title" style="padding: 0 16px; margin-bottom: 8px;">收入趋势</div>
+        <div class="chart-area wf-placeholder">
+          <div style="text-align:center;">
+            <div style="font-size:28px; margin-bottom:4px;">&#128200;</div>
+            <div>近6个月收入趋势折线图</div>
+            <div style="margin-top:8px; display:flex; gap:16px; justify-content:center; font-size:11px;">
+              <span>10月</span><span>11月</span><span>12月</span><span>1月</span><span>2月</span><span>3月</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Store summary -->
+        <div class="wf-section-title" style="padding: 0 16px; margin-bottom: 8px;">门店数据</div>
+        <div class="store-summary">
+          <div class="store-row">
+            <div class="name">西湖旗舰店</div>
+            <div class="metrics">
+              <div class="metric">
+                <div class="val">¥18,200</div>
+                <div class="lbl">营收</div>
+              </div>
+              <div class="metric">
+                <div class="val">148</div>
+                <div class="lbl">学员</div>
+              </div>
+            </div>
+          </div>
+          <div class="store-row">
+            <div class="name">滨江分店</div>
+            <div class="metrics">
+              <div class="metric">
+                <div class="val">¥14,380</div>
+                <div class="lbl">营收</div>
+              </div>
+              <div class="metric">
+                <div class="val">108</div>
+                <div class="lbl">学员</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 3: Promotion ==================== -->
+  <div class="screen-content" id="screen-promo" style="display:none;">
+    <div class="screen active">
+      <div class="screen-bg-gray" style="padding-bottom: 10px;">
+        <!-- PRD: 课程/商品展示与购买(P0) + 分享推广(P0, 小程序分享码) -->
+        <!-- Header -->
+        <div class="wf-header" style="padding-bottom:20px; text-align:center;">
+          <div style="font-size:16px; font-weight:600; margin-bottom:12px;">推广中心</div>
+          <button style="width:80%; padding:12px; background:#fff; color:#07C160; border:none; border-radius:24px; font-size:15px; font-weight:700; cursor:pointer;">
+            &#127912; 生成推广海报
+          </button>
+        </div>
+
+        <!-- Share Code (prominent) -->
+        <div style="margin:12px 16px; background:#fff; border-radius:10px; border:2px solid #07C160; padding:16px; text-align:center;">
+          <div style="font-size:12px; color:#999; margin-bottom:6px;">我的小程序分享码</div>
+          <div style="font-size:28px; font-weight:800; color:#07C160; letter-spacing:4px; margin-bottom:6px;">HZ2026</div>
+          <div style="font-size:11px; color:#666; margin-bottom:10px;">通过小程序分享码追踪</div>
+          <button style="padding:6px 20px; background:#07C160; color:#fff; border:none; border-radius:16px; font-size:13px; cursor:pointer;">复制分享码</button>
+        </div>
+
+        <!-- Link -->
+        <div class="promo-link-box">
+          <span class="url">https://xy.com/a/HZ2026...</span>
+          <button class="copy-btn">复制链接</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="promo-stats">
+          <div class="promo-stat">
+            <div class="num">1,286</div>
+            <div class="lbl">扫码次数</div>
+          </div>
+          <div class="promo-stat">
+            <div class="num">324</div>
+            <div class="lbl">注册转化</div>
+          </div>
+          <div class="promo-stat">
+            <div class="num">87</div>
+            <div class="lbl">付费转化</div>
+          </div>
+        </div>
+
+        <div class="wf-divider"></div>
+
+        <!-- Products -->
+        <div class="wf-section-title" style="padding: 12px 16px 0;">课程 / 商品推广</div>
+
+        <div class="product-card">
+          <div class="img-placeholder">&#9818;</div>
+          <div class="info">
+            <div class="name">围棋启蒙课 (4-6岁)</div>
+            <div class="price">¥2,980/年</div>
+            <div class="commission">招生分润 40%: ¥1,192</div>
+          </div>
+          <button class="share-btn">分享</button>
+        </div>
+
+        <div class="product-card">
+          <div class="img-placeholder">&#9818;</div>
+          <div class="info">
+            <div class="name">围棋进阶课 (7-12岁)</div>
+            <div class="price">¥4,580/年</div>
+            <div class="commission">招生分润 40%: ¥1,832</div>
+          </div>
+          <button class="share-btn">分享</button>
+        </div>
+
+        <div class="wf-section-title" style="padding: 4px 16px 0;">围棋机器人</div>
+
+        <div class="product-card">
+          <div class="img-placeholder">&#129302;</div>
+          <div class="info">
+            <div class="name">围棋机器人 专业版</div>
+            <div class="price">¥4,939</div>
+            <div class="commission">佣金: ¥1,139</div>
+          </div>
+          <button class="share-btn">分享</button>
+        </div>
+
+        <div class="product-card">
+          <div class="img-placeholder">&#129302;</div>
+          <div class="info">
+            <div class="name">围棋机器人 三合一版</div>
+            <div class="price">¥5,414</div>
+            <div class="commission">佣金: ¥1,614</div>
+          </div>
+          <button class="share-btn">分享</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 4: Commission ==================== -->
+  <div class="screen-content" id="screen-commission" style="display:none;">
+    <div class="screen active">
+      <div class="screen-bg-gray">
+        <!-- Tabs -->
+        <div class="comm-tabs">
+          <div class="comm-tab active" onclick="switchCommTab(this, 'detail')">分润明细</div>
+          <div class="comm-tab" onclick="switchCommTab(this, 'settle')">结算记录</div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="comm-panel active" id="comm-detail">
+          <div class="comm-filters">
+            <div class="comm-filter">全部类型 <span class="arrow">&#9662;</span></div>
+            <div class="comm-filter">2026年3月 <span class="arrow">&#9662;</span></div>
+          </div>
+
+          <div class="comm-item">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-03-28</span>
+              <span class="comm-item-amount positive">+¥1,192.00</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-enroll">招生分润</span>
+              <span class="comm-item-ref">订单 #20260328001</span>
+              <span class="comm-status status-pending">待结算</span>
+            </div>
+          </div>
+
+          <div class="comm-item">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-03-25</span>
+              <span class="comm-item-amount positive">+¥1,832.00</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-renew">续费分润</span>
+              <span class="comm-item-ref">订单 #20260325003</span>
+              <span class="comm-status status-pending">待结算</span>
+            </div>
+          </div>
+
+          <div class="comm-item">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-03-22</span>
+              <span class="comm-item-amount positive">+¥1,614.00</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-robot">机器人佣金</span>
+              <span class="comm-item-ref">订单 #20260322005</span>
+              <span class="comm-status status-settled">已结算</span>
+            </div>
+          </div>
+
+          <div class="comm-item">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-03-18</span>
+              <span class="comm-item-amount positive">+¥900.00</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-refer">推荐佣金</span>
+              <span class="comm-item-ref">合约 #AG20260318</span>
+              <span class="comm-status status-settled">已结算</span>
+            </div>
+          </div>
+
+          <div class="comm-item">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-03-15</span>
+              <span class="comm-item-amount positive">+¥560.00</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-consume">课消奖励</span>
+              <span class="comm-item-ref">下级 #弈星分销01</span>
+              <span class="comm-status status-settled">已结算</span>
+            </div>
+          </div>
+
+          <div class="comm-item">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-03-10</span>
+              <span class="comm-item-amount" style="color:#f44336;">-¥480.00</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-enroll">招生分润</span>
+              <span class="comm-item-ref">退款 #RF20260310</span>
+              <span class="comm-status status-revoked">已扣回</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settlement Panel -->
+        <div class="comm-panel" id="comm-settle">
+          <div style="padding:10px 16px; background:#fff8e1; border-bottom:1px solid #f0f0f0;">
+            <div style="font-size:12px; color:#e65100; font-weight:600;">&#9432; 达标标准：后台配置</div>
+            <div style="font-size:11px; color:#999; margin-top:4px;">结算流程：结算 &#8594; 财务审批 &#8594; 提现</div>
+          </div>
+          <div class="settle-item">
+            <div class="settle-period">
+              2026年3月 月度结算
+              <span class="settle-target-badge target-hit">&#10003; 月度达标</span>
+            </div>
+            <div class="settle-row"><span>月度营收</span><span class="val">¥32,580</span></div>
+            <div class="settle-row"><span>分润比例</span><span class="val">40%</span></div>
+            <div class="settle-row"><span>应结算</span><span class="val">¥13,032</span></div>
+            <div class="settle-row"><span>扣回</span><span class="val" style="color:#f44336;">-¥480</span></div>
+            <div class="settle-row"><span>实际结算</span><span class="val" style="color:#07C160;">¥12,552</span></div>
+            <div class="settle-status">
+              <span class="wf-tag" style="background:#e8f5e9; color:#2e7d32;">已结算</span>
+            </div>
+          </div>
+
+          <div class="settle-item">
+            <div class="settle-period">
+              2026年Q1 季度奖金
+              <span class="settle-target-badge target-hit">&#10003; 季度达标</span>
+            </div>
+            <div class="settle-row"><span>季度营收</span><span class="val">¥89,240</span></div>
+            <div class="settle-row"><span>季度奖金比例</span><span class="val">5%</span></div>
+            <div class="settle-row"><span>应结算</span><span class="val">¥4,462</span></div>
+            <div class="settle-row"><span>扣回</span><span class="val">¥0</span></div>
+            <div class="settle-row"><span>实际结算</span><span class="val" style="color:#07C160;">¥4,462</span></div>
+            <div class="settle-status">
+              <span class="wf-tag" style="background:#fff3e0; color:#e65100;">待结算</span>
+            </div>
+          </div>
+
+          <div class="settle-item">
+            <div class="settle-period">
+              2026年2月 月度结算
+            </div>
+            <div class="settle-row"><span>月度营收</span><span class="val">¥28,760</span></div>
+            <div class="settle-row"><span>分润比例</span><span class="val">40%</span></div>
+            <div class="settle-row"><span>应结算</span><span class="val">¥11,504</span></div>
+            <div class="settle-row"><span>扣回</span><span class="val">¥0</span></div>
+            <div class="settle-row"><span>实际结算</span><span class="val" style="color:#07C160;">¥11,504</span></div>
+            <div class="settle-status">
+              <span class="wf-tag" style="background:#e8f5e9; color:#2e7d32;">已结算</span>
+            </div>
+          </div>
+
+          <div class="settle-item">
+            <div class="settle-period">
+              2025年度 年度奖金
+              <span class="settle-target-badge target-miss">&#10007; 未达标</span>
+            </div>
+            <div class="settle-row"><span>年度营收</span><span class="val">¥286,400</span></div>
+            <div class="settle-row"><span>年度奖金比例</span><span class="val">5%</span></div>
+            <div class="settle-row"><span>目标营收</span><span class="val">¥360,000</span></div>
+            <div class="settle-row"><span>实际结算</span><span class="val" style="color:#999;">¥0 (未达标)</span></div>
+            <div class="settle-status">
+              <span class="wf-tag" style="background:#fbe9e7; color:#bf360c;">未达标</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 5: Store ==================== -->
+  <div class="screen-content" id="screen-store" style="display:none;">
+    <div class="screen active">
+      <div class="screen-bg-gray" style="padding-bottom:10px;">
+        <!-- List View -->
+        <div class="store-view active" id="store-list">
+          <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:16px; font-weight:600; color:#333;">门店管理</span>
+            <span style="font-size:12px; color:#999;">共 2 / 可开 2 家</span>
+          </div>
+
+          <div class="store-card" onclick="switchStoreView('detail1')" style="cursor:pointer;">
+            <div class="store-card-header">
+              <span class="store-card-name">&#127970; 西湖旗舰店</span>
+              <span class="store-status-active">营业中</span>
+            </div>
+            <div class="store-card-info">
+              地址: 杭州市西湖区文三路 168 号<br>
+              席位: 12 席 | 设备: 12 台
+            </div>
+            <div class="store-card-metrics">
+              <div class="store-metric">
+                <div class="val">148</div>
+                <div class="lbl">学员</div>
+              </div>
+              <div class="store-metric">
+                <div class="val">¥18,200</div>
+                <div class="lbl">本月营收</div>
+              </div>
+              <div class="store-metric">
+                <div class="val">92%</div>
+                <div class="lbl">出勤率</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="store-card" onclick="switchStoreView('detail2')" style="cursor:pointer;">
+            <div class="store-card-header">
+              <span class="store-card-name">&#127970; 滨江分店</span>
+              <span class="store-status-active">营业中</span>
+            </div>
+            <div class="store-card-info">
+              地址: 杭州市滨江区江南大道 520 号<br>
+              席位: 8 席 | 设备: 8 台
+            </div>
+            <div class="store-card-metrics">
+              <div class="store-metric">
+                <div class="val">108</div>
+                <div class="lbl">学员</div>
+              </div>
+              <div class="store-metric">
+                <div class="val">¥14,380</div>
+                <div class="lbl">本月营收</div>
+              </div>
+              <div class="store-metric">
+                <div class="val">88%</div>
+                <div class="lbl">出勤率</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 0 16px;">
+            <button class="wf-btn wf-btn-outline" style="margin-top: 6px;">+ 新店申请</button>
+          </div>
+        </div>
+
+        <!-- Detail View -->
+        <div class="store-view" id="store-detail1">
+          <div style="padding:12px 16px; display:flex; align-items:center; gap:10px;">
+            <span style="cursor:pointer; font-size:18px;" onclick="switchStoreView('list')">&#8592;</span>
+            <span style="font-size:16px; font-weight:600;">西湖旗舰店</span>
+          </div>
+
+          <div class="store-card" style="margin-top:0;">
+            <div class="wf-section-title" style="margin-bottom:8px;">基本信息</div>
+            <div style="font-size:13px; color:#666; line-height:2;">
+              门店名称: 西湖旗舰店<br>
+              地址: 杭州市西湖区文三路 168 号<br>
+              席位数: 12 席<br>
+              开店日期: 2025-06-15<br>
+              状态: 营业中
+            </div>
+          </div>
+
+          <div class="store-detail-section">
+            <div class="wf-section-title">设备列表 (12台)</div>
+            <div style="font-size:11px; color:#999; margin-bottom:8px; padding:6px 10px; background:#f0faf4; border-radius:6px; border-left:3px solid #07C160;">
+              &#9432; 机构自行维护SN码 | 一个校区可有多台设备
+            </div>
+            <div class="device-item">
+              <span class="device-sn">SN: XY-2025-00101</span>
+              <span class="device-status device-online">&#9679; 在线</span>
+            </div>
+            <div class="device-item">
+              <span class="device-sn">SN: XY-2025-00102</span>
+              <span class="device-status device-online">&#9679; 在线</span>
+            </div>
+            <div class="device-item">
+              <span class="device-sn">SN: XY-2025-00103</span>
+              <span class="device-status device-online">&#9679; 在线</span>
+            </div>
+            <div class="device-item">
+              <span class="device-sn">SN: XY-2025-00104</span>
+              <span class="device-status device-offline">&#9679; 离线</span>
+            </div>
+            <div style="text-align:center; padding:8px; font-size:12px; color:#999;">...共12台设备</div>
+          </div>
+
+          <div class="area-protection">
+            <div class="wf-section-title" style="margin-bottom:4px;">区域保护范围</div>
+            <div style="font-size:12px; color:#999; margin-bottom:8px;">以门店为中心 1.5km 半径保护区域</div>
+            <div class="area-map-placeholder wf-placeholder">
+              <div style="text-align:center;">
+                <div style="font-size:24px;">&#128506;</div>
+                <div>地图 - 1.5km 保护区域</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail View 2 (滨江) -->
+        <div class="store-view" id="store-detail2">
+          <div style="padding:12px 16px; display:flex; align-items:center; gap:10px;">
+            <span style="cursor:pointer; font-size:18px;" onclick="switchStoreView('list')">&#8592;</span>
+            <span style="font-size:16px; font-weight:600;">滨江分店</span>
+          </div>
+
+          <div class="store-card" style="margin-top:0;">
+            <div class="wf-section-title" style="margin-bottom:8px;">基本信息</div>
+            <div style="font-size:13px; color:#666; line-height:2;">
+              门店名称: 滨江分店<br>
+              地址: 杭州市滨江区江南大道 520 号<br>
+              席位数: 8 席<br>
+              开店日期: 2025-09-01<br>
+              状态: 营业中
+            </div>
+          </div>
+
+          <div class="store-detail-section">
+            <div class="wf-section-title">设备列表 (8台)</div>
+            <div style="font-size:11px; color:#999; margin-bottom:8px; padding:6px 10px; background:#f0faf4; border-radius:6px; border-left:3px solid #07C160;">
+              &#9432; 机构自行维护SN码 | 一个校区可有多台设备
+            </div>
+            <div class="device-item">
+              <span class="device-sn">SN: XY-2025-00201</span>
+              <span class="device-status device-online">&#9679; 在线</span>
+            </div>
+            <div class="device-item">
+              <span class="device-sn">SN: XY-2025-00202</span>
+              <span class="device-status device-online">&#9679; 在线</span>
+            </div>
+            <div class="device-item">
+              <span class="device-sn">SN: XY-2025-00203</span>
+              <span class="device-status device-online">&#9679; 在线</span>
+            </div>
+            <div style="text-align:center; padding:8px; font-size:12px; color:#999;">...共8台设备</div>
+          </div>
+
+          <div class="area-protection">
+            <div class="wf-section-title" style="margin-bottom:4px;">区域保护范围</div>
+            <div style="font-size:12px; color:#999; margin-bottom:8px;">以门店为中心 1.5km 半径保护区域</div>
+            <div class="area-map-placeholder wf-placeholder">
+              <div style="text-align:center;">
+                <div style="font-size:24px;">&#128506;</div>
+                <div>地图 - 1.5km 保护区域</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 6: Sub Agents ==================== -->
+  <div class="screen-content" id="screen-subagent" style="display:none;">
+    <div class="screen active">
+      <div class="screen-bg-gray" style="padding-bottom:10px;">
+        <!-- PRD: 下级代理商管理(P0) - 推荐、列表、佣金记录 -->
+        <div style="padding:12px 16px; font-size:16px; font-weight:600; color:#333;">下级代理商</div>
+
+        <!-- Referral button -->
+        <div style="padding:0 16px 10px;">
+          <button class="wf-btn wf-btn-primary">+ 推荐新代理商</button>
+        </div>
+
+        <!-- Summary -->
+        <div class="sub-summary">
+          <div class="sub-summary-item">
+            <div class="num">3</div>
+            <div class="lbl">下级代理商</div>
+          </div>
+          <div class="sub-summary-item">
+            <div class="num">¥27,000</div>
+            <div class="lbl">席位佣金累计</div>
+          </div>
+          <div class="sub-summary-item">
+            <div class="num">¥4,680</div>
+            <div class="lbl">课消奖励累计</div>
+          </div>
+        </div>
+
+        <!-- Agent list -->
+        <div class="wf-section-title" style="padding: 12px 16px 0;">代理商列表</div>
+
+        <div class="sub-agent-card">
+          <div class="sub-agent-top">
+            <span class="sub-agent-name">温州弈趣教育</span>
+            <span class="sub-agent-level level-dengfeng">登峰</span>
+          </div>
+          <div class="sub-agent-info">
+            <span>6 席位</span>
+            <span>1 门店</span>
+            <span style="color:#07C160;">合作中</span>
+          </div>
+          <div class="sub-agent-bottom">
+            <div><span class="lbl">席位佣金: </span><span class="val">¥9,000</span></div>
+            <div><span class="lbl">课消奖励: </span><span class="val">¥1,560</span></div>
+          </div>
+        </div>
+
+        <div class="sub-agent-card">
+          <div class="sub-agent-top">
+            <span class="sub-agent-name">嘉兴围棋之星</span>
+            <span class="sub-agent-level level-dengfeng">登峰</span>
+          </div>
+          <div class="sub-agent-info">
+            <span>8 席位</span>
+            <span>1 门店</span>
+            <span style="color:#07C160;">合作中</span>
+          </div>
+          <div class="sub-agent-bottom">
+            <div><span class="lbl">席位佣金: </span><span class="val">¥12,000</span></div>
+            <div><span class="lbl">课消奖励: </span><span class="val">¥2,340</span></div>
+          </div>
+        </div>
+
+        <div class="sub-agent-card">
+          <div class="sub-agent-top">
+            <span class="sub-agent-name">绍兴弈智堂</span>
+            <span class="sub-agent-level level-dengfeng">登峰</span>
+          </div>
+          <div class="sub-agent-info">
+            <span>6 席位</span>
+            <span>1 门店</span>
+            <span style="color:#ff9800;">审核中</span>
+          </div>
+          <div class="sub-agent-bottom">
+            <div><span class="lbl">席位佣金: </span><span class="val">¥6,000</span></div>
+            <div><span class="lbl">课消奖励: </span><span class="val">¥780</span></div>
+          </div>
+        </div>
+
+        <!-- Detail section -->
+        <div class="wf-section-title" style="padding: 12px 16px 0;">佣金明细</div>
+        <div style="padding:0 16px;">
+          <div class="comm-item" style="background:#fff; border-radius:8px; margin-bottom:6px;">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-03-01 | 温州弈趣教育</span>
+              <span class="comm-item-amount positive">+¥560</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-consume">课消奖励</span>
+              <span class="comm-status status-settled">已结算</span>
+            </div>
+          </div>
+          <div class="comm-item" style="background:#fff; border-radius:8px; margin-bottom:6px;">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-02-15 | 嘉兴围棋之星</span>
+              <span class="comm-item-amount positive">+¥4,000</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-refer">席位佣金</span>
+              <span class="comm-status status-settled">已结算</span>
+            </div>
+          </div>
+          <div class="comm-item" style="background:#fff; border-radius:8px; margin-bottom:6px;">
+            <div class="comm-item-top">
+              <span class="comm-item-date">2026-01-20 | 温州弈趣教育</span>
+              <span class="comm-item-amount positive">+¥480</span>
+            </div>
+            <div class="comm-item-bottom">
+              <span class="comm-type-tag tag-consume">课消奖励</span>
+              <span class="comm-status status-settled">已结算</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Screen 7: Profile ==================== -->
+  <div class="screen-content" id="screen-profile" style="display:none;">
+    <div class="screen active">
+      <div class="screen-bg-gray" style="padding-bottom:10px;">
+        <div class="profile-header">
+          <div class="profile-avatar">&#128100;</div>
+          <div>
+            <div class="profile-name">杭州弈星教育</div>
+            <div class="profile-meta">观云代理 | 联系人: 张经理 | 138****6789</div>
+          </div>
+        </div>
+
+        <!-- Contract card -->
+        <div class="contract-card">
+          <div class="contract-title">&#128196; 合约信息</div>
+          <div class="contract-row">
+            <span class="lbl">合约编号</span>
+            <span class="val">AG-2025-HZ-008</span>
+          </div>
+          <div class="contract-row">
+            <span class="lbl">代理等级</span>
+            <span class="val">&#11088; 观云代理</span>
+          </div>
+          <div class="contract-row">
+            <span class="lbl">席位数</span>
+            <span class="val">20 席 (0.9万/席)</span>
+          </div>
+          <div class="contract-row">
+            <span class="lbl">授权区域</span>
+            <span class="val">杭州市西湖区 / 滨江区</span>
+          </div>
+          <div class="contract-row">
+            <span class="lbl">有效期</span>
+            <span class="val">2025-07-01 至 2027-06-30</span>
+          </div>
+          <div class="contract-row">
+            <span class="lbl">C端分润</span>
+            <span class="val">月40% + 季5% + 年5%</span>
+          </div>
+          <div class="contract-row">
+            <span class="lbl">可开门店</span>
+            <span class="val">2 家 (已开 2 家)</span>
+          </div>
+        </div>
+
+        <!-- Agent levels reference -->
+        <div class="contract-card">
+          <div class="contract-title">&#127942; 代理等级说明</div>
+          <div style="font-size:12px; line-height:2.2; color:#666;">
+            <div style="display:flex; justify-content:space-between; padding:0 4px; background:#fff8e1; border-radius:4px; margin-bottom:2px;">
+              <span><b style="color:#f57f17;">登峰</b></span>
+              <span>1万/席 | &ge;6席 | 1店</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0 4px; background:#e8eaf6; border-radius:4px; margin-bottom:2px;">
+              <span><b style="color:#283593;">观云</b></span>
+              <span>0.9万/席 | &ge;20席 | 2店</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0 4px; background:#fce4ec; border-radius:4px;">
+              <span><b style="color:#ad1457;">揽星</b></span>
+              <span>0.8万/席 | &ge;30席 | 3店</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Function list -->
+        <div class="func-list">
+          <div class="func-item" onclick="showScreen('subagent')" style="cursor:pointer;">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#f3e5f5;">&#128101;</div>
+              <span class="func-item-label">下级代理商</span>
+            </div>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+          <div class="func-item">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#fff3e0;">&#128276;</div>
+              <span class="func-item-label">消息通知</span>
+            </div>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+          <div class="func-item">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#e3f2fd;">&#10068;</div>
+              <span class="func-item-label">帮助中心</span>
+            </div>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+          <div class="func-item">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#e8f5e9;">&#128222;</div>
+              <span class="func-item-label">联系总部</span>
+            </div>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+        </div>
+
+        <div style="padding:16px; text-align:center;">
+          <button class="wf-btn" style="background:#f5f5f5; color:#999;" onclick="showScreen('login')">退出登录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Tab Bar (hidden on login) -->
+  <div class="tab-bar" id="tabBar" style="display:none;">
+    <div class="tab-item active" onclick="tabNav('dashboard', this)">
+      <span class="tab-icon">&#128202;</span>
+      <span class="tab-label">看板</span>
+    </div>
+    <div class="tab-item" onclick="tabNav('promo', this)">
+      <span class="tab-icon">&#128227;</span>
+      <span class="tab-label">推广</span>
+    </div>
+    <div class="tab-item" onclick="tabNav('commission', this)">
+      <span class="tab-icon">&#128176;</span>
+      <span class="tab-label">分润</span>
+    </div>
+    <div class="tab-item" onclick="tabNav('store', this)">
+      <span class="tab-icon">&#127970;</span>
+      <span class="tab-label">门店</span>
+    </div>
+    <div class="tab-item" onclick="tabNav('profile', this)">
+      <span class="tab-icon">&#128100;</span>
+      <span class="tab-label">我的</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // All screen IDs
+  const screens = ['login', 'dashboard', 'promo', 'commission', 'store', 'subagent', 'profile'];
+  // Screens that show the tab bar
+  const tabScreens = ['dashboard', 'promo', 'commission', 'store', 'subagent', 'profile'];
+  // Tab-bar mapped screens (index order matches tab-bar items)
+  const tabMap = ['dashboard', 'promo', 'commission', 'store', 'profile'];
+
+  function showScreen(id) {
+    // Hide all screens
+    screens.forEach(s => {
+      const el = document.getElementById('screen-' + s);
+      if (el) el.style.display = 'none';
+    });
+    // Show target
+    const target = document.getElementById('screen-' + id);
+    if (target) target.style.display = 'block';
+
+    // Tab bar visibility
+    const tabBar = document.getElementById('tabBar');
+    tabBar.style.display = tabScreens.includes(id) ? 'flex' : 'none';
+
+    // Update screen-content height based on tab bar
+    if (id === 'login') {
+      target.style.height = 'calc(100% - 44px)';
+    } else {
+      target.style.height = 'calc(100% - 44px - 50px)';
+    }
+
+    // Update top nav buttons
+    document.querySelectorAll('#screenNav button').forEach((btn, i) => {
+      btn.classList.toggle('active', screens[i] === id);
+    });
+
+    // Update tab bar active state
+    const tabIdx = tabMap.indexOf(id);
+    document.querySelectorAll('.tab-item').forEach((item, i) => {
+      item.classList.toggle('active', i === tabIdx);
+    });
+
+    // Reset store to list view
+    if (id === 'store') switchStoreView('list');
+  }
+
+  function tabNav(id, el) {
+    showScreen(id);
+  }
+
+  // Commission tab switching
+  function switchCommTab(tabEl, panelId) {
+    document.querySelectorAll('.comm-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+    document.querySelectorAll('.comm-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('comm-' + panelId).classList.add('active');
+  }
+
+  // Store view switching
+  function switchStoreView(viewId) {
+    document.querySelectorAll('.store-view').forEach(v => v.classList.remove('active'));
+    const target = document.getElementById('store-' + viewId);
+    if (target) target.classList.add('active');
+  }
+
+  // Handle "下级代理商" via screen nav (it's not a tab-bar item, needs special handling)
+  // Add click for sub-agent from profile or other screens
+</script>
+
+<!--
+  ============================================================
+  PRD v3.0 Coverage Check (v3.1 prototype)
+  ============================================================
+  - 登录                                          OK (screen-login, WeChat auth + identity verify)
+  - 数据看板(营收/学员/分润)                        OK (screen-dashboard, 4 core metrics + trend chart + store data)
+    - 销售数据概览(P0)                             OK (本月营收 card)
+    - 学员数量统计(P0)                             OK (本月新生 + 累计学员 cards)
+    - 分润收入概览(P0)                             OK (待结算分润 card)
+    - 门店数据对比(P1)                             OK (store summary rows)
+    - 趋势图表(P1)                                OK (6-month chart area)
+  - 推广(分享码/海报/商品)                          OK (screen-promo)
+    - 课程/商品展示与购买(P0)                      OK (product cards: courses + robots with prices)
+    - 分享推广(P0, 小程序分享码)                    OK (share code HZ2026 + poster + link + tracking stats)
+  - 分润管理(5类/结算/达标)                         OK (screen-commission)
+    - 分润明细(5 types: enroll/renew/robot/refer/consume) OK (comm-detail panel with all 5 type tags)
+    - 结算记录(月度/季度/年度)                      OK (comm-settle panel with monthly/quarterly/yearly)
+    - 退费扣回                                    OK (clawback item in detail list)
+  - 门店管理(SN/设备/区域保护)                      OK (screen-store, list + detail with devices + area map)
+  - 下级代理商                                     OK (screen-subagent, referral + list + commission details)
+  - 我的(合约/等级)                                OK (screen-profile, contract info + level reference + func list)
+  ============================================================
+-->
+</body>
+</html>
