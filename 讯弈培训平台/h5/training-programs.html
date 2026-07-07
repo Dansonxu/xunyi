@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>培训项目 - 学习考核平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+  <link rel="stylesheet" href="css/h5.css">
+</head>
+<body class="h5-body">
+  <div class="h5-page">
+    <div class="h5-section h5-mt-0" id="content"></div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    const programId = H5Common.getQueryParam("id");
+    const learner = H5Common.getCurrentLearner();
+
+    if (programId) {
+      H5Common.init({ activeTab: "training", showBack: true, title: "项目详情" });
+      renderDetail(programId);
+    } else {
+      H5Common.init({ activeTab: "training", showBack: false, title: "培训项目" });
+      renderList();
+    }
+
+    function renderList() {
+      const programs = H5Common.getVisibleTrainingPrograms().sort((a, b) => a.sortOrder - b.sortOrder);
+      const wrap = document.getElementById("content");
+
+      if (!programs.length) {
+        wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-graduation-cap"></i></div>暂无培训项目</div>`;
+        return;
+      }
+
+      wrap.innerHTML = programs.map(p => {
+        const progress = DataStore.getTrainingProgramProgress(p.id, learner.id);
+        return `
+          <a href="training-programs.html?id=${p.id}" class="h5-card">
+            <div class="h5-card-row">
+              <div class="h5-card-icon exam">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <div class="h5-card-body">
+                <div class="h5-card-title">${p.title}${p.isMandatory ? '<span class="badge badge-error badge-sm ml-8">必修</span>' : ''}</div>
+                <div class="h5-card-meta">
+                  <span>${p.materialIds.length} 个资料</span>
+                  <span>${p.examIds.length} 场考试</span>
+                  <span class="${progress.isComplete ? 'text-success' : 'text-warning'}">${progress.isComplete ? '已完成' : '进行中'}</span>
+                </div>
+                <div class="h5-card-status">
+                  <div class="h5-progress"><div class="h5-progress-bar" style="width: ${progress.progress}%"></div></div>
+                  <div class="h5-progress-text">${progress.progress}%</div>
+                </div>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+
+    function renderDetail(id) {
+      const program = DataStore.getTrainingProgramById(id);
+      const wrap = document.getElementById("content");
+
+      if (!program || !DataStore._isVisibleToLearner(program, learner.role)) {
+        wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-circle-exclamation"></i></div>项目不存在或无权限查看</div>`;
+        return;
+      }
+
+      const progress = DataStore.getTrainingProgramProgress(program.id, learner.id);
+      const materials = program.materialIds.map(mid => DataStore.getMaterialById(mid)).filter(Boolean);
+      const exams = program.examIds.map(eid => DataStore.getExamById(eid)).filter(Boolean);
+      const records = DataStore.getLearnerStudyRecords(learner.id);
+      const examRecords = DataStore.getLearnerExamRecords(learner.id);
+
+      let html = `
+        <div class="h5-card" style="margin-bottom: 12px;">
+          <div class="h5-card-body">
+            <div class="h5-card-title">${program.title}${program.isMandatory ? '<span class="badge badge-error badge-sm ml-8">必修</span>' : ''}</div>
+            <div class="text-sm text-muted mt-4">${program.description || ""}</div>
+            <div class="h5-card-status mt-12">
+              <div class="h5-progress"><div class="h5-progress-bar" style="width: ${progress.progress}%"></div></div>
+              <div class="h5-progress-text">${progress.progress}%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="h5-section-header">
+          <div class="h5-section-title">项目资料</div>
+        </div>
+      `;
+
+      if (materials.length) {
+        html += materials.map(m => {
+          const r = records.find(x => x.materialId === m.id);
+          const p = r ? r.progress : 0;
+          const statusText = r && r.status === "finished" ? "已完成" : "未学习";
+          return `
+            <a href="material-detail.html?id=${m.id}" class="h5-card">
+              <div class="h5-card-row">
+                <div class="h5-card-icon ${m.type}"><i class="fa-solid ${m.type === "video" ? "fa-play" : "fa-file"}"></i></div>
+                <div class="h5-card-body">
+                  <div class="h5-card-title">${m.title}</div>
+                  <div class="h5-card-meta">
+                    <span>${m.type.toUpperCase()}</span>
+                    <span class="${r && r.status === 'finished' ? 'text-success' : 'text-warning'}">${statusText}</span>
+                  </div>
+                  <div class="h5-card-status">
+                    <div class="h5-progress"><div class="h5-progress-bar" style="width: ${p}%"></div></div>
+                    <div class="h5-progress-text">${p}%</div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          `;
+        }).join("");
+      } else {
+        html += `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-book-open"></i></div>暂无资料</div>`;
+      }
+
+      html += `
+        <div class="h5-section-header" style="margin-top: 16px;">
+          <div class="h5-section-title">项目考试</div>
+        </div>
+      `;
+
+      if (exams.length) {
+        html += exams.map(e => {
+          const passed = examRecords.some(r => r.examId === e.id && r.status === "passed");
+          const count = examRecords.filter(r => r.examId === e.id).length;
+          const remaining = Math.max(0, e.maxAttempts - count);
+          return `
+            <a href="exam-intro.html?id=${e.id}" class="h5-card ${remaining === 0 ? 'opacity-70' : ''}">
+              <div class="h5-card-row">
+                <div class="h5-card-icon exam"><i class="fa-solid fa-file-pen"></i></div>
+                <div class="h5-card-body">
+                  <div class="h5-card-title">${e.title}</div>
+                  <div class="h5-card-meta">
+                    <span>${e.duration} 分钟</span>
+                    <span>${e.questionIds.length} 题</span>
+                    <span class="${passed ? 'text-success' : 'text-warning'}">${passed ? '已通过' : (remaining > 0 ? `剩余 ${remaining} 次` : '次数已用完')}</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          `;
+        }).join("");
+      } else {
+        html += `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-clipboard-check"></i></div>暂无考试</div>`;
+      }
+
+      wrap.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>考试须知 - 学习考核平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+  <style>
+    .h5-prerequisite { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .h5-prerequisite h4 { font-size: 14px; color: #92400E; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .h5-prerequisite ul { list-style: none; padding-left: 0; }
+    .h5-prerequisite li { font-size: 13px; color: #78350F; padding: 6px 0; border-bottom: 1px solid #FDE68A; display: flex; align-items: center; justify-content: space-between; }
+    .h5-prerequisite li:last-child { border-bottom: none; }
+    .h5-prerequisite .status { font-size: 12px; }
+    .h5-prerequisite .status.done { color: #059669; }
+    .h5-prerequisite .status.undone { color: #B45309; }
+  </style>
+</head>
+<body class="h5-body">
+  <div class="h5-page">
+    <div class="h5-exam-rules">
+      <h3><i class="fa-solid fa-circle-info text-primary"></i> 考试信息</h3>
+      <ul style="list-style: none; padding-left: 0;">
+        <li><strong>考试名称：</strong><span id="examTitle"></span></li>
+        <li><strong>考试时长：</strong><span id="examDuration"></span></li>
+        <li><strong>题目数量：</strong><span id="examCount"></span></li>
+        <li><strong>及格分数：</strong><span id="examPass"></span></li>
+        <li><strong>剩余次数：</strong><span id="examRemain"></span></li>
+      </ul>
+    </div>
+
+    <div class="h5-exam-rules">
+      <h3><i class="fa-solid fa-triangle-exclamation text-warning"></i> 考试规则</h3>
+      <ul style="list-style: decimal; padding-left: 18px;">
+        <li>请在规定时间内完成答题，超时将自动交卷。</li>
+        <li>答题过程中请保持页面打开，刷新页面可恢复已答题目。</li>
+        <li>交卷后可查看成绩与答案解析。</li>
+        <li>请诚信考试，独立完成。</li>
+      </ul>
+    </div>
+
+    <div id="prerequisiteWrap"></div>
+
+    <div class="p-16">
+      <button class="btn btn-primary btn-lg btn-block" id="startBtn">开始考试</button>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ activeTab: "exams", showBack: true, title: "考试须知", hideTabbar: true });
+
+    const learner = H5Common.getCurrentLearner();
+    const examId = H5Common.getQueryParam("id");
+    const exam = DataStore.getExamById(examId);
+
+    if (!exam || !DataStore._isVisibleToLearner(exam, learner.role)) {
+      H5Common.toast("考试不存在或无权限查看", "error");
+      setTimeout(() => history.back(), 1000);
+    }
+
+    const records = DataStore.getLearnerExamRecords(learner.id);
+    const count = records.filter(r => r.examId === examId).length;
+    const remain = exam.maxAttempts - count;
+
+    document.getElementById("examTitle").textContent = exam.title;
+    document.getElementById("examDuration").textContent = exam.duration + " 分钟";
+    document.getElementById("examCount").textContent = exam.questionIds.length + " 题";
+    document.getElementById("examPass").textContent = exam.passScore + " 分";
+    document.getElementById("examRemain").textContent = remain + " 次";
+
+    const startBtn = document.getElementById("startBtn");
+
+    // 检查关联资料完成状态
+    const materialIds = exam.materialIds || [];
+    let unfinishedMaterials = [];
+    if (materialIds.length) {
+      unfinishedMaterials = materialIds.map(id => {
+        const m = DataStore.getMaterialById(id);
+        const r = m ? DataStore.getStudyRecord(learner.id, m.id) : null;
+        return { material: m, finished: r && r.status === "finished" };
+      }).filter(item => item.material && !item.finished);
+    }
+
+    if (unfinishedMaterials.length) {
+      const wrap = document.getElementById("prerequisiteWrap");
+      wrap.innerHTML = `
+        <div class="h5-prerequisite">
+          <h4><i class="fa-solid fa-circle-exclamation"></i> 需先完成关联学习资料</h4>
+          <ul>
+            ${unfinishedMaterials.map(item => `
+              <li>
+                <span>${item.material.title}</span>
+                <span class="status undone">未完成</span>
+              </li>
+            `).join("")}
+          </ul>
+        </div>
+      `;
+      startBtn.disabled = true;
+      startBtn.textContent = "请先完成关联资料";
+      startBtn.onclick = () => {
+        const first = unfinishedMaterials[0].material;
+        location.href = `material-detail.html?id=${first.id}`;
+      };
+    } else if (remain <= 0) {
+      startBtn.disabled = true;
+      startBtn.textContent = "考试次数已用完";
+    } else {
+      startBtn.addEventListener("click", function() {
+        if (remain <= 0) return;
+        DataStore.clearExamSession();
+        DataStore.saveExamSession({ examId, startTime: Date.now() });
+        location.href = `exam-answer.html?id=${examId}`;
+      });
+    }
+  </script>
+</body>
+</html>

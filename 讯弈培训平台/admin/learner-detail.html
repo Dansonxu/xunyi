@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学员明细 - 学习考核平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">学员明细</h1>
+          <a href="learners.html" class="btn btn-ghost">返回列表</a>
+        </div>
+
+        <div class="card">
+          <div class="flex items-center gap-16">
+            <div class="admin-user-avatar" style="width: 64px; height: 64px; font-size: 24px;" id="learnerAvatar"></div>
+            <div>
+              <div class="font-xl font-bold" id="learnerName"></div>
+              <div class="text-secondary mt-8" id="learnerInfo"></div>
+              <div class="mt-8" id="learnerRole"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-16">
+          <div class="card-title">学习记录</div>
+          <div id="studyTimeline"></div>
+        </div>
+
+        <div class="card mt-16">
+          <div class="card-title">考试记录</div>
+          <div class="table-wrap">
+            <table class="table table-zebra" id="examRecordsTable">
+              <thead>
+                <tr>
+                  <th>考试</th>
+                  <th>得分</th>
+                  <th>答对/总题</th>
+                  <th>结果</th>
+                  <th>提交时间</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("learners.html");
+    AdminCommon.setPageTitle("学员明细");
+
+    const learnerId = AdminCommon.getQueryParam("id");
+    const learner = DataStore.getUserById(learnerId);
+    if (!learner) {
+      AdminCommon.toast("学员不存在", "error");
+      setTimeout(() => location.href = "learners.html", 1000);
+    }
+
+    document.getElementById("learnerAvatar").textContent = learner.name.charAt(0);
+    document.getElementById("learnerName").textContent = learner.name;
+    document.getElementById("learnerInfo").textContent = `账号：${learner.username || "-"}${learner.department ? ` · 部门：${learner.department}` : ""}`;
+
+    const roleBadge = (role) => {
+      if (role === "agent") return `<span class="badge badge-info">代理商</span>`;
+      if (role === "employee") return `<span class="badge badge-secondary">内部员工</span>`;
+      return "";
+    };
+    document.getElementById("learnerRole").innerHTML = roleBadge(learner.role);
+
+    const materials = DataStore.getMaterials();
+    const studyRecords = DataStore.getLearnerStudyRecords(learnerId);
+    const examRecords = DataStore.getLearnerExamRecords(learnerId);
+
+    const studyTimeline = document.getElementById("studyTimeline");
+    if (!studyRecords.length) {
+      studyTimeline.innerHTML = `<div class="empty-state">暂无学习记录</div>`;
+    } else {
+      studyTimeline.innerHTML = `<div class="timeline">` +
+        studyRecords.sort((a, b) => (b.finishTime || b.startTime).localeCompare(a.finishTime || a.startTime))
+          .map(r => {
+            const m = materials.find(x => x.id === r.materialId);
+            return `
+              <div class="timeline-item">
+                <div class="timeline-time">${r.finishTime || r.startTime}</div>
+                <div class="timeline-content">${m ? m.title : "未知资料"} · ${r.status === "finished" ? "已完成" : `学习中 ${r.progress}%`}</div>
+              </div>
+            `;
+          }).join("") +
+        `</div>`;
+    }
+
+    const tbody = document.querySelector("#examRecordsTable tbody");
+    if (!examRecords.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state">暂无考试记录</td></tr>`;
+    } else {
+      tbody.innerHTML = examRecords.sort((a, b) => b.submitTime.localeCompare(a.submitTime)).map(r => {
+        const exam = DataStore.getExamById(r.examId);
+        return `
+          <tr>
+            <td>${exam ? exam.title : "-"}</td>
+            <td>${r.score}</td>
+            <td>${r.correctCount}/${r.totalCount}</td>
+            <td><span class="badge ${r.status === 'passed' ? 'badge-success status-passed' : 'badge-error status-failed'}">${r.status === 'passed' ? '通过' : '未通过'}</span></td>
+            <td>${r.submitTime}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+  </script>
+</body>
+</html>

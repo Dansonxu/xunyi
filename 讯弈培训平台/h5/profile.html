@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的 - 学习考核平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+</head>
+<body class="h5-body">
+  <div class="h5-page">
+    <div class="h5-profile-header">
+      <div class="h5-avatar" id="userAvatar"></div>
+      <div class="h5-profile-info">
+        <div class="h5-profile-name" id="userName"></div>
+        <div class="mt-4" id="userRole"></div>
+      </div>
+    </div>
+
+    <div class="h5-menu-list">
+      <a href="my-study.html" class="h5-menu-item">
+        <i class="fa-solid fa-book-open"></i>
+        <span class="h5-menu-item-text">学习记录</span>
+        <i class="fa-solid fa-chevron-right"></i>
+      </a>
+      <a href="my-scores.html" class="h5-menu-item">
+        <i class="fa-solid fa-clipboard-check"></i>
+        <span class="h5-menu-item-text">我的成绩</span>
+        <i class="fa-solid fa-chevron-right"></i>
+      </a>
+    </div>
+
+    <div class="h5-section">
+      <button class="btn btn-ghost btn-lg btn-block" onclick="switchLearner()">切换演示用户</button>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ activeTab: "profile", showBack: false, title: "我的" });
+
+    function renderProfile() {
+      const learner = H5Common.getCurrentLearner();
+      if (!learner) return;
+      document.getElementById("userAvatar").textContent = learner.name.charAt(0);
+      document.getElementById("userName").textContent = learner.name;
+
+      const roleBadge = (role) => {
+        if (role === "agent") return `<span class="badge badge-info">代理商</span>`;
+        if (role === "employee") return `<span class="badge badge-secondary">内部员工</span>`;
+        return "";
+      };
+      document.getElementById("userRole").innerHTML = roleBadge(learner.role);
+    }
+
+    window.switchLearner = function() {
+      const learners = DataStore.getUsers().filter(u => u.role === "agent" || u.role === "employee");
+      const current = H5Common.getCurrentLearner();
+      const idx = learners.findIndex(a => a.id === current.id);
+      const next = learners[(idx + 1) % learners.length];
+      DataStore.setCurrentUser(next);
+      H5Common.toast(`已切换为：${next.name}`);
+      renderProfile();
+    };
+
+    renderProfile();
+  </script>
+</body>
+</html>

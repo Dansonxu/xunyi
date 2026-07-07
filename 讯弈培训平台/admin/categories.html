@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分类配置 - 讯弈培训平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">分类配置</h1>
+          <button class="btn btn-primary" onclick="showAddRow()"><i class="fa-solid fa-plus"></i>新增分类</button>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table class="table table-zebra" id="categoriesTable">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">排序</th>
+                  <th>分类名称</th>
+                  <th>资料数量</th>
+                  <th>题目数量</th>
+                  <th style="width: 180px;">操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("categories.html");
+    AdminCommon.setPageTitle("分类配置");
+
+    let isAdding = false;
+
+    function countMaterials(categoryName) {
+      return DataStore.getMaterials().filter(m => m.category === categoryName).length;
+    }
+
+    function countQuestions(categoryName) {
+      return DataStore.getQuestions().filter(q => q.category === categoryName).length;
+    }
+
+    function loadCategories() {
+      const categories = DataStore.getMaterialCategories();
+      const tbody = document.querySelector("#categoriesTable tbody");
+
+      if (!categories.length && !isAdding) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">暂无分类，请点击右上角新增分类</td></tr>`;
+        return;
+      }
+
+      let html = "";
+      if (isAdding) {
+        html += `
+          <tr>
+            <td>-</td>
+            <td><input type="text" class="form-control" id="addCategoryName" placeholder="请输入分类名称"></td>
+            <td>-</td>
+            <td>-</td>
+            <td class="actions">
+              <button class="btn btn-sm btn-primary" onclick="saveAdd()">保存</button>
+              <button class="btn btn-sm btn-ghost" onclick="cancelAdd()">取消</button>
+            </td>
+          </tr>`;
+      }
+
+      html += categories.map((c, index) => {
+        const editingId = document.getElementById("editCategoryId")?.value;
+        if (editingId === c.id) {
+          return `
+            <tr>
+              <td>${c.sortOrder}</td>
+              <td><input type="text" class="form-control" id="editCategoryName" value="${c.name}"></td>
+              <td>${countMaterials(c.name)}</td>
+              <td>${countQuestions(c.name)}</td>
+              <td class="actions">
+                <button class="btn btn-sm btn-primary" onclick="saveEdit('${c.id}')">保存</button>
+                <button class="btn btn-sm btn-ghost" onclick="cancelEdit()">取消</button>
+              </td>
+            </tr>`;
+        }
+        return `
+          <tr>
+            <td>
+              <div class="flex items-center gap-6">
+                <span>${c.sortOrder}</span>
+                <div class="flex flex-col">
+                  <button class="text-muted" onclick="moveCategory('${c.id}', -1)" ${index === 0 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}><i class="fa-solid fa-chevron-up" style="font-size:10px;"></i></button>
+                  <button class="text-muted" onclick="moveCategory('${c.id}', 1)" ${index === categories.length - 1 ? 'disabled style="opacity:0.3;cursor:not-allowed;"' : ''}><i class="fa-solid fa-chevron-down" style="font-size:10px;"></i></button>
+                </div>
+              </div>
+            </td>
+            <td>${c.name}</td>
+            <td>${countMaterials(c.name)}</td>
+            <td>${countQuestions(c.name)}</td>
+            <td class="actions">
+              <button class="btn btn-sm btn-ghost" onclick="startEdit('${c.id}')">编辑</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteCategory('${c.id}', '${c.name}')">删除</button>
+            </td>
+          </tr>`;
+      }).join("");
+
+      tbody.innerHTML = html;
+    }
+
+    function showAddRow() {
+      isAdding = true;
+      loadCategories();
+      const input = document.getElementById("addCategoryName");
+      if (input) input.focus();
+    }
+
+    function cancelAdd() {
+      isAdding = false;
+      loadCategories();
+    }
+
+    function saveAdd() {
+      const name = document.getElementById("addCategoryName").value.trim();
+      if (!name) {
+        AdminCommon.toast("请输入分类名称", "error");
+        return;
+      }
+      const categories = DataStore.getMaterialCategories();
+      if (categories.some(c => c.name === name)) {
+        AdminCommon.toast("分类名称已存在", "error");
+        return;
+      }
+      DataStore.addMaterialCategory({ name });
+      isAdding = false;
+      AdminCommon.toast("新增成功");
+      loadCategories();
+    }
+
+    function startEdit(id) {
+      const tbody = document.querySelector("#categoriesTable tbody");
+      tbody.insertAdjacentHTML("afterbegin", `<input type="hidden" id="editCategoryId" value="${id}">`);
+      loadCategories();
+      const input = document.getElementById("editCategoryName");
+      if (input) {
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      }
+    }
+
+    function cancelEdit() {
+      const el = document.getElementById("editCategoryId");
+      if (el) el.remove();
+      loadCategories();
+    }
+
+    function saveEdit(id) {
+      const name = document.getElementById("editCategoryName").value.trim();
+      if (!name) {
+        AdminCommon.toast("请输入分类名称", "error");
+        return;
+      }
+      const categories = DataStore.getMaterialCategories();
+      if (categories.some(c => c.id !== id && c.name === name)) {
+        AdminCommon.toast("分类名称已存在", "error");
+        return;
+      }
+      DataStore.updateMaterialCategory(id, { name });
+      cancelEdit();
+      AdminCommon.toast("保存成功");
+      loadCategories();
+    }
+
+    function moveCategory(id, direction) {
+      const categories = DataStore.getMaterialCategories();
+      const idx = categories.findIndex(c => c.id === id);
+      if (idx === -1) return;
+      const newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= categories.length) return;
+
+      [categories[idx], categories[newIdx]] = [categories[newIdx], categories[idx]];
+      categories.forEach((c, i) => {
+        c.sortOrder = i + 1;
+      });
+
+      const data = DataStore._getData();
+      data.materialCategories = categories;
+      DataStore._setData(data);
+      loadCategories();
+    }
+
+    window.deleteCategory = function(id, name) {
+      if (!confirm(`确定删除分类 "${name}" 吗？`)) return;
+      if (DataStore.isCategoryInUse(name)) {
+        AdminCommon.toast("该分类已被资料或题目使用，无法删除", "error");
+        return;
+      }
+      DataStore.deleteMaterialCategory(id);
+      AdminCommon.toast("删除成功");
+      loadCategories();
+    };
+
+    loadCategories();
+  </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>资料详情 - 学习考核平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+  <style>
+    #pdfViewer { width: 100%; height: 360px; border: none; }
+    .h5-study-progress { padding: 12px 16px; }
+    .h5-study-progress .label { font-size: 13px; color: #606266; margin-bottom: 8px; display: flex; justify-content: space-between; }
+    .h5-study-progress .label .status { color: #67c23a; font-weight: 600; }
+    .h5-study-progress .track { background: #e4e7ed; border-radius: 4px; height: 8px; overflow: hidden; }
+    .h5-study-progress .bar { height: 100%; background: #3B82F6; border-radius: 4px; transition: width 0.3s; }
+    .h5-study-progress .bar.done { background: #10B981; }
+  </style>
+</head>
+<body class="h5-body">
+  <div class="h5-page has-bottom-btn">
+    <div class="h5-material-preview" id="previewArea">
+      <i class="fa-solid fa-file" id="previewIcon"></i>
+      <div class="h5-material-name" id="materialName"></div>
+      <div class="h5-material-desc" id="materialDesc"></div>
+      <div id="previewContainer"></div>
+    </div>
+
+    <div class="h5-section">
+      <div class="h5-card">
+        <div class="h5-card-title">资料信息</div>
+        <div class="h5-card-meta" style="margin-top: 0; flex-direction: column; gap: 6px;">
+          <div>分类：<span id="infoCategory"></span></div>
+          <div>大小：<span id="infoSize"></span></div>
+          <div>上传时间：<span id="infoTime"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="h5-fixed-bottom">
+    <div class="h5-study-progress" id="studyProgressWrap">
+      <div class="label">
+        <span>学习进度</span>
+        <span class="status" id="progressStatus">0%</span>
+      </div>
+      <div class="track">
+        <div class="bar" id="progressBar" style="width: 0%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ activeTab: "materials", showBack: true, title: "资料详情" });
+
+    const learner = H5Common.getCurrentLearner();
+    const materialId = H5Common.getQueryParam("id");
+    const material = DataStore.getMaterialById(materialId);
+
+    if (!material || !DataStore._isVisibleToLearner(material, learner.role)) {
+      H5Common.toast("资料不存在或无权限查看", "error");
+      setTimeout(() => history.back(), 1000);
+    }
+
+    DataStore.startStudy(learner.id, materialId);
+
+    document.getElementById("materialName").textContent = material.title;
+    document.getElementById("materialDesc").textContent = material.description;
+    document.getElementById("infoCategory").textContent = material.category;
+    document.getElementById("infoSize").textContent = material.fileSize;
+    document.getElementById("infoTime").textContent = material.uploadTime;
+
+    const previewArea = document.getElementById("previewArea");
+    const previewContainer = document.getElementById("previewContainer");
+    const previewIcon = document.getElementById("previewIcon");
+
+    let currentProgress = 0;
+    let progressTimer = null;
+
+    function updateProgressUI(progress) {
+      currentProgress = progress;
+      document.getElementById("progressBar").style.width = progress + "%";
+      document.getElementById("progressStatus").textContent = progress + "%";
+      if (progress >= 100) {
+        document.getElementById("progressBar").classList.add("done");
+        document.getElementById("progressStatus").textContent = "已完成";
+      }
+    }
+
+    function updateProgress(progress) {
+      progress = Math.max(currentProgress, Math.min(100, progress));
+      if (progress <= currentProgress) return;
+      const shouldPersist = progress >= 100 || progress - currentProgress >= 5;
+      updateProgressUI(progress);
+      if (shouldPersist) {
+        DataStore.updateStudyProgress(learner.id, materialId, progress);
+      }
+      if (progress >= 100) {
+        clearInterval(progressTimer);
+        H5Common.toast("学习完成");
+      }
+    }
+
+    if (material.type === "video") {
+      previewArea.classList.add("video");
+      previewIcon.className = "fa-solid fa-play";
+      previewContainer.innerHTML = `<video class="h5-video-player" controls src="${material.fileUrl}"></video>`;
+      const video = previewContainer.querySelector("video");
+      video.addEventListener("timeupdate", () => {
+        const pct = video.duration ? (video.currentTime / video.duration) * 100 : 0;
+        updateProgress(pct);
+      });
+      video.addEventListener("ended", () => updateProgress(100));
+    } else if (material.type === "pdf") {
+      previewArea.classList.add("pdf");
+      previewIcon.className = "fa-solid fa-file-pdf";
+      previewContainer.innerHTML = `<iframe id="pdfViewer" src="${material.fileUrl}"></iframe>`;
+      // PDF 通过停留时长估算进度：30 秒视为完成
+      let seconds = 0;
+      progressTimer = setInterval(() => {
+        seconds++;
+        const pct = Math.min(100, (seconds / 30) * 100);
+        updateProgress(pct);
+      }, 1000);
+    } else {
+      previewArea.classList.add("word");
+      previewIcon.className = "fa-solid fa-file-word";
+      previewContainer.innerHTML = `<a href="${material.fileUrl}" class="btn btn-primary" id="wordDownloadBtn" download><i class="fa-solid fa-download"></i>下载查看</a>`;
+      document.getElementById("wordDownloadBtn").addEventListener("click", () => {
+        updateProgress(100);
+      });
+    }
+
+    // 页面可见性变化时清理 PDF 计时器
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = null;
+      } else if (!document.hidden && material.type === "pdf" && currentProgress < 100 && !progressTimer) {
+        let seconds = Math.round((currentProgress / 100) * 30);
+        progressTimer = setInterval(() => {
+          seconds++;
+          const pct = Math.min(100, (seconds / 30) * 100);
+          updateProgress(pct);
+        }, 1000);
+      }
+    });
+
+    // 初始化进度
+    const record = DataStore.getStudyRecord(learner.id, materialId);
+    updateProgressUI(record ? (record.progress || 0) : 0);
+  </script>
+</body>
+</html>

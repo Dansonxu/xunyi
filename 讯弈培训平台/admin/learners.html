@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学员管理 - 学习考核平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">学员管理</h1>
+        </div>
+
+        <div class="card">
+          <div class="admin-toolbar">
+            <div class="admin-toolbar-left">
+              <select class="form-control" id="roleFilter" style="width: 120px;">
+                <option value="">全部角色</option>
+                <option value="agent">代理商</option>
+                <option value="employee">内部员工</option>
+              </select>
+            </div>
+            <div class="admin-toolbar-right">
+              <input type="text" class="form-control admin-search" id="searchInput" placeholder="搜索学员名称">
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table table-zebra" id="learnersTable">
+              <thead>
+                <tr>
+                  <th>学员</th>
+                  <th>角色</th>
+                  <th>学习进度</th>
+                  <th>考试次数</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("learners.html");
+    AdminCommon.setPageTitle("学员管理");
+
+    function loadLearners() {
+      let learners = DataStore.getLearners();
+      const role = document.getElementById("roleFilter").value;
+      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      if (role) learners = learners.filter(u => u.role === role);
+      if (keyword) learners = learners.filter(a => a.name.toLowerCase().includes(keyword));
+
+      const materials = DataStore.getMaterials();
+      const tbody = document.querySelector("#learnersTable tbody");
+      if (!learners.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">暂无数据</td></tr>`;
+        return;
+      }
+
+      const roleBadge = (role) => {
+        if (role === "agent") return `<span class="badge badge-info">代理商</span>`;
+        if (role === "employee") return `<span class="badge badge-secondary">内部员工</span>`;
+        return `<span class="badge badge-neutral">${role}</span>`;
+      };
+
+      tbody.innerHTML = learners.map(a => {
+        const studyRecords = DataStore.getLearnerStudyRecords(a.id);
+        const examRecords = DataStore.getLearnerExamRecords(a.id);
+        const finished = studyRecords.filter(r => r.status === "finished").length;
+        const progress = materials.length ? Math.round((finished / materials.length) * 100) : 0;
+        return `
+          <tr>
+            <td>
+              <div class="flex items-center gap-8">
+                <div class="admin-user-avatar">${a.name.charAt(0)}</div>
+                <span>${a.name}</span>
+              </div>
+            </td>
+            <td>${roleBadge(a.role)}</td>
+            <td>${progress}%（${finished}/${materials.length}）</td>
+            <td>${examRecords.length}</td>
+            <td class="actions">
+              <a href="learner-detail.html?id=${a.id}" class="btn btn-sm btn-ghost">查看明细</a>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    document.getElementById("roleFilter").addEventListener("change", loadLearners);
+    document.getElementById("searchInput").addEventListener("input", loadLearners);
+    loadLearners();
+  </script>
+</body>
+</html>

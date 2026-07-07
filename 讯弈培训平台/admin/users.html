@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账号管理 - 讯弈培训平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">账号管理</h1>
+          <button class="btn btn-primary" onclick="openModal()"><i class="fa-solid fa-plus"></i>新增账号</button>
+        </div>
+
+        <div class="card">
+          <div class="admin-toolbar">
+            <div class="admin-toolbar-left">
+              <select class="form-control" id="typeFilter" style="width: 140px;">
+                <option value="">全部类型</option>
+                <option value="agent">代理运营</option>
+                <option value="employee">员工运营</option>
+              </select>
+            </div>
+            <div class="admin-toolbar-right">
+              <input type="text" class="form-control admin-search" id="searchInput" placeholder="搜索姓名/账号">
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table table-zebra" id="usersTable">
+              <thead>
+                <tr>
+                  <th>姓名</th>
+                  <th>账号</th>
+                  <th>类型</th>
+                  <th>部门</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="userModal" style="display: none;">
+    <div class="admin-modal">
+      <div class="admin-modal-header"><span id="modalTitle">新增账号</span></div>
+      <div class="admin-modal-body">
+        <form id="userForm">
+          <input type="hidden" id="userId">
+          <div class="form-group">
+            <label class="form-label"><span class="required">姓名</span></label>
+            <input type="text" class="form-control" id="uName" placeholder="请输入姓名">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="required">登录账号</span></label>
+            <input type="text" class="form-control" id="uUsername" placeholder="请输入登录账号">
+          </div>
+          <div class="flex gap-12">
+            <div class="form-group flex-1">
+              <label class="form-label"><span class="required">账号类型</span></label>
+              <select class="form-control" id="uRole">
+                <option value="agent">代理运营</option>
+                <option value="employee">员工运营</option>
+              </select>
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">部门</label>
+              <input type="text" class="form-control" id="uDepartment" placeholder="选填">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="required" id="pwdRequired">登录密码</span></label>
+            <input type="text" class="form-control" id="uPassword" placeholder="请输入密码">
+            <div class="form-hint" id="pwdHint" style="display:none;">留空则不修改密码</div>
+          </div>
+        </form>
+      </div>
+      <div class="admin-modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveUser()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("users.html");
+    AdminCommon.setPageTitle("账号管理");
+
+    const roleLabels = { agent: "代理运营", employee: "员工运营" };
+    let editingId = null;
+
+    function loadUsers() {
+      // Backend operator accounts only (exclude the admin account itself).
+      let list = DataStore.getBackendUsers().filter(u => u.role !== "admin");
+      const type = document.getElementById("typeFilter").value;
+      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+      if (type) list = list.filter(u => u.role === type);
+      if (keyword) list = list.filter(u =>
+        (u.name || "").toLowerCase().includes(keyword) ||
+        (u.username || "").toLowerCase().includes(keyword));
+
+      const tbody = document.querySelector("#usersTable tbody");
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">暂无数据</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(u => `
+        <tr>
+          <td>
+            <div class="flex items-center gap-8">
+              <div class="admin-user-avatar">${u.name.charAt(0)}</div>
+              <span>${u.name}</span>
+            </div>
+          </td>
+          <td>${u.username}</td>
+          <td><span class="badge ${u.role === "agent" ? "badge-info" : "badge-secondary"}">${roleLabels[u.role] || u.role}</span></td>
+          <td>${u.department || "-"}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-ghost" onclick="openModal('${u.id}')">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">删除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    window.openModal = function(id) {
+      editingId = id || null;
+      document.getElementById("userForm").reset();
+      document.getElementById("modalTitle").textContent = id ? "编辑账号" : "新增账号";
+      document.getElementById("userId").value = id || "";
+      document.getElementById("pwdRequired").classList.toggle("required", !id);
+      document.getElementById("pwdHint").style.display = id ? "block" : "none";
+
+      if (id) {
+        const u = DataStore.getUserById(id);
+        if (u) {
+          document.getElementById("uName").value = u.name || "";
+          document.getElementById("uUsername").value = u.username || "";
+          document.getElementById("uRole").value = u.role || "agent";
+          document.getElementById("uDepartment").value = u.department || "";
+        }
+      }
+      document.getElementById("userModal").style.display = "flex";
+    };
+
+    window.closeModal = function() {
+      document.getElementById("userModal").style.display = "none";
+    };
+
+    window.saveUser = function() {
+      const name = document.getElementById("uName").value.trim();
+      const username = document.getElementById("uUsername").value.trim();
+      const role = document.getElementById("uRole").value;
+      const department = document.getElementById("uDepartment").value.trim();
+      const password = document.getElementById("uPassword").value;
+
+      if (!name) { AdminCommon.toast("请输入姓名", "error"); return; }
+      if (!username) { AdminCommon.toast("请输入登录账号", "error"); return; }
+
+      // Username must be unique across all accounts.
+      const dup = DataStore.getUserByUsername(username);
+      if (dup && dup.id !== editingId) { AdminCommon.toast("登录账号已存在", "error"); return; }
+
+      if (editingId) {
+        const updates = { name, username, role, department };
+        if (password) updates.password = password;
+        DataStore.updateUser(editingId, updates);
+      } else {
+        if (!password) { AdminCommon.toast("请输入登录密码", "error"); return; }
+        DataStore.addUser({ name, username, role, department, password, isBackendUser: true });
+      }
+      closeModal();
+      AdminCommon.toast("保存成功");
+      loadUsers();
+    };
+
+    window.deleteUser = function(id) {
+      if (!confirm("确定删除该账号吗？")) return;
+      DataStore.deleteUser(id);
+      AdminCommon.toast("删除成功");
+      loadUsers();
+    };
+
+    document.getElementById("typeFilter").addEventListener("change", loadUsers);
+    document.getElementById("searchInput").addEventListener("input", loadUsers);
+    loadUsers();
+  </script>
+</body>
+</html>

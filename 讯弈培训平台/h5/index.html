@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>首页 - 讯弈培训平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+</head>
+<body class="h5-body">
+  <div class="h5-page">
+    <div class="h5-home-banner">
+      <div class="h5-home-welcome" id="welcomeText">欢迎回来</div>
+      <div class="h5-home-sub">继续学习，提升业务知识</div>
+      <div class="h5-home-stats">
+        <div class="h5-home-stat">
+          <div class="h5-home-stat-value" id="statMaterial">0</div>
+          <div class="h5-home-stat-label">待学资料</div>
+        </div>
+        <div class="h5-home-stat">
+          <div class="h5-home-stat-value" id="statExam">0</div>
+          <div class="h5-home-stat-label">待考考试</div>
+        </div>
+        <div class="h5-home-stat">
+          <div class="h5-home-stat-value" id="statScore">0</div>
+          <div class="h5-home-stat-label">最近成绩</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h5-section">
+      <div class="h5-announcement">
+        <i class="fa-solid fa-bullhorn"></i>
+        <div class="h5-announcement-text" id="announcementText">暂无公告</div>
+      </div>
+    </div>
+
+    <div class="h5-section h5-mt-0">
+      <div class="h5-section-header">
+        <div class="h5-section-title">最新资料</div>
+        <a href="materials.html" class="h5-section-more">查看更多 <i class="fa-solid fa-chevron-right"></i></a>
+      </div>
+      <div id="latestMaterials"></div>
+    </div>
+
+    <div class="h5-section h5-mt-0">
+      <div class="h5-section-header">
+        <div class="h5-section-title">待考考试</div>
+        <a href="exams.html" class="h5-section-more">查看更多 <i class="fa-solid fa-chevron-right"></i></a>
+      </div>
+      <div id="pendingExams"></div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ activeTab: "index" });
+
+    const learner = H5Common.getCurrentLearner();
+    if (learner) {
+      const roleText = H5Common.isEmployee() ? "员工" : "代理";
+      document.getElementById("welcomeText").textContent = `欢迎，${learner.name}`;
+      document.querySelector(".h5-home-sub").textContent = `继续学习，提升${roleText}业务知识`;
+    }
+
+    function loadHome() {
+      const materials = H5Common.getVisibleMaterials();
+      const exams = H5Common.getVisibleExams();
+      const programs = H5Common.getVisibleTrainingPrograms();
+      const records = DataStore.getLearnerStudyRecords(learner.id);
+      const examRecords = DataStore.getLearnerExamRecords(learner.id);
+
+      const pendingMaterials = materials.filter(m => {
+        const r = records.find(x => x.materialId === m.id);
+        return !r || r.status !== "finished";
+      });
+
+      const pendingExams = exams.filter(e => {
+        const count = DataStore.getAgentExamRecordCount(learner.id, e.id);
+        return count < e.maxAttempts;
+      });
+
+      document.getElementById("statMaterial").textContent = pendingMaterials.length;
+      document.getElementById("statExam").textContent = pendingExams.length;
+      document.getElementById("statScore").textContent = examRecords.length ? examRecords[examRecords.length - 1].score : "-";
+
+      const announcements = DataStore.getAnnouncements();
+      if (announcements.length) {
+        document.getElementById("announcementText").textContent = announcements[0].title;
+      }
+
+      const latestWrap = document.getElementById("latestMaterials");
+      latestWrap.innerHTML = materials.slice(0, 3).map(m => {
+        const r = records.find(x => x.materialId === m.id);
+        const progress = r ? r.progress : 0;
+        return `
+          <a href="material-detail.html?id=${m.id}" class="h5-card">
+            <div class="h5-card-row">
+              <div class="h5-card-icon ${m.type}"><i class="fa-solid ${m.type === "video" ? "fa-play" : "fa-file"}"></i></div>
+              <div class="h5-card-body">
+                <div class="h5-card-title">${m.title}</div>
+                <div class="h5-card-meta"><span>${m.type.toUpperCase()}</span><span>${m.category}</span></div>
+                <div class="h5-card-status">
+                  <div class="h5-progress"><div class="h5-progress-bar" style="width: ${progress}%"></div></div>
+                  <div class="h5-progress-text">${progress}%</div>
+                </div>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+
+      if (!materials.length) {
+        latestWrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-book-open"></i></div>暂无资料</div>`;
+      }
+
+      const examWrap = document.getElementById("pendingExams");
+      examWrap.innerHTML = pendingExams.slice(0, 3).map(e => `
+        <a href="exam-intro.html?id=${e.id}" class="h5-card">
+          <div class="h5-card-row">
+            <div class="h5-card-icon exam"><i class="fa-solid fa-file-pen"></i></div>
+            <div class="h5-card-body">
+              <div class="h5-card-title">${e.title}</div>
+              <div class="h5-card-meta"><span>${e.duration} 分钟</span><span>${e.questionIds.length} 题</span><span>${e.passScore} 分及格</span></div>
+            </div>
+          </div>
+        </a>
+      `).join("");
+
+      if (!pendingExams.length) {
+        examWrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-clipboard-check"></i></div>暂无待考考试</div>`;
+      }
+
+      // Training programs section (insert before announcements)
+      const existingProgramsSection = document.getElementById("trainingProgramsSection");
+      if (existingProgramsSection) existingProgramsSection.remove();
+
+      if (programs.length) {
+        const programsHtml = `
+          <div class="h5-section h5-mt-0" id="trainingProgramsSection">
+            <div class="h5-section-header">
+              <div class="h5-section-title">我的培训项目</div>
+              <a href="training-programs.html" class="h5-section-more">查看更多 <i class="fa-solid fa-chevron-right"></i></a>
+            </div>
+            <div id="homePrograms">${programs.slice(0, 2).map(p => {
+              const progress = DataStore.getTrainingProgramProgress(p.id, learner.id);
+              return `
+                <a href="training-programs.html?id=${p.id}" class="h5-card">
+                  <div class="h5-card-row">
+                    <div class="h5-card-icon exam"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <div class="h5-card-body">
+                      <div class="h5-card-title">${p.title}${p.isMandatory ? '<span class="badge badge-error badge-sm ml-8">必修</span>' : ''}</div>
+                      <div class="h5-card-meta"><span>${p.materialIds.length} 个资料</span><span>${p.examIds.length} 场考试</span></div>
+                      <div class="h5-card-status">
+                        <div class="h5-progress"><div class="h5-progress-bar" style="width: ${progress.progress}%"></div></div>
+                        <div class="h5-progress-text">${progress.progress}%</div>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              `;
+            }).join("")}</div>
+          </div>`;
+        document.querySelector(".h5-home-banner").insertAdjacentHTML("afterend", programsHtml);
+      }
+    }
+
+    loadHome();
+  </script>
+</body>
+</html>

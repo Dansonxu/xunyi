@@ -693,6 +693,78 @@
   }
   .func-item-label { font-size: 14px; color: #333; }
   .func-arrow { color: #ccc; font-size: 14px; }
+  .func-badge {
+    font-size: 12px;
+    color: #909399;
+    margin-left: auto;
+    margin-right: 8px;
+  }
+  .func-badge-red {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    background: #f44336;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 50%;
+    margin-left: auto;
+    margin-right: 8px;
+    padding: 0 5px;
+  }
+  .profile-avatar-img {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.4);
+    flex-shrink: 0;
+  }
+  .contract-section {
+    margin: 0 16px;
+    padding: 14px 0;
+  }
+  .contract-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .contract-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+  }
+  .contract-section-link {
+    font-size: 13px;
+    color: #4a8eff;
+    cursor: pointer;
+  }
+  .contract-flat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .contract-flat-row:last-child { border: none; }
+  .contract-flat-row .lbl { color: #333; }
+  .contract-flat-row .val { color: #666; font-weight: 500; }
+  .contract-flat-row .val-blue { color: #4a8eff; font-weight: 600; }
+  .logout-btn-red {
+    width: calc(100% - 32px);
+    margin: 16px;
+    padding: 12px;
+    background: #fff;
+    color: #f44336;
+    border: 1px solid #f44336;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+  }
 
   /* Tab sub-panels */
   .comm-panel { display: none; }
@@ -702,6 +774,423 @@
 
   /* Scrollable body bg for certain screens */
   .screen-bg-gray { background: #f5f5f5; min-height: 100%; }
+
+  /* ======== Customer Management ======== */
+  .cust-header {
+    background: #fff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .cust-header .back { font-size: 18px; color: #333; cursor: pointer; }
+  .cust-header .title { font-size: 17px; font-weight: 600; color: #333; flex: 1; text-align: center; margin-right: 28px; }
+  .cust-store-card {
+    margin: 12px 16px;
+    background: linear-gradient(135deg, #e8f0fe, #d2e3fc);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #c7d8f5;
+  }
+  .cust-store-card .left { display: flex; align-items: center; gap: 10px; }
+  .cust-store-card .icon { width: 40px; height: 40px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .cust-store-card .label { font-size: 12px; color: #5b8def; }
+  .cust-store-card .name { font-size: 16px; font-weight: 700; color: #1a3a6e; }
+  .cust-store-card .switch { font-size: 13px; color: #5b8def; font-weight: 500; cursor: pointer; }
+  .cust-data-card {
+    margin: 0 16px 12px;
+    background: linear-gradient(135deg, #4a8eff, #2563eb);
+    border-radius: 12px;
+    padding: 16px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+  }
+  .cust-data-card .left {}
+  .cust-data-card .left .label { font-size: 12px; opacity: .85; }
+  .cust-data-card .left .num { font-size: 36px; font-weight: 700; line-height: 1; margin: 4px 0; }
+  .cust-data-card .left .unit { font-size: 13px; opacity: .8; }
+  .cust-data-card .right { text-align: right; }
+  .cust-data-card .right .item { margin-bottom: 8px; }
+  .cust-data-card .right .item:last-child { margin: 0; }
+  .cust-data-card .right .item .num { font-size: 20px; font-weight: 700; }
+  .cust-data-card .right .item .lbl { font-size: 11px; opacity: .8; }
+  .cust-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    padding: 14px 16px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cust-section-title .sub { font-size: 12px; color: #999; font-weight: 400; }
+  .cust-pay-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 16px 12px;
+  }
+  .cust-pay-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cust-pay-card .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .cust-pay-card .info {}
+  .cust-pay-card .num { font-size: 20px; font-weight: 700; color: #333; }
+  .cust-pay-card .lbl { font-size: 12px; color: #999; }
+  .cust-toolbar {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cust-search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 20px;
+    padding: 8px 12px;
+  }
+  .cust-search input { border: none; outline: none; font-size: 13px; flex: 1; background: transparent; }
+  .cust-search input::placeholder { color: #bbb; }
+  .cust-add-btn {
+    background: #4a8eff;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .cust-filter-row {
+    display: flex;
+    gap: 8px;
+    padding: 4px 16px 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cust-filter-row::-webkit-scrollbar { display: none; }
+  .cust-filter-pill {
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 13px;
+    color: #666;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .cust-filter-pill.active {
+    background: #4a8eff;
+    color: #fff;
+    border-color: #4a8eff;
+  }
+  .cust-list-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    padding: 10px 16px;
+  }
+  .cust-card {
+    background: #fff;
+    margin: 0 16px 10px;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #eee;
+  }
+  .cust-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .cust-card-name { font-size: 15px; font-weight: 700; color: #333; }
+  .cust-card-tags { display: flex; gap: 6px; }
+  .cust-tag-purple { background: #f3e5f5; color: #7b1fa2; padding: 1px 7px; border-radius: 4px; font-size: 11px; }
+  .cust-tag-green { background: #e8f5e9; color: #2e7d32; padding: 1px 7px; border-radius: 4px; font-size: 11px; }
+  .cust-tag-orange { background: #fff3e0; color: #ef6c00; padding: 1px 7px; border-radius: 4px; font-size: 11px; }
+  .cust-card-meta {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cust-card-meta .phone { color: #666; }
+  .cust-card-meta .status-green { color: #2e7d32; }
+  .cust-card-time {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 10px;
+  }
+  .cust-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+  }
+  .cust-card-actions .btn-send {
+    background: #4a8eff;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 5px 14px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .cust-card-actions .btn-expand {
+    color: #4a8eff;
+    font-size: 13px;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .cust-expand-panel {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+    display: none;
+  }
+  .cust-expand-panel.open { display: block; }
+
+  /* ======== Coupon Send Modal (full screen overlay) ======== */
+  .coupon-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .coupon-modal-overlay.open { display: flex; }
+  .coupon-modal-sheet {
+    background: #fff;
+    width: 375px;
+    max-height: 70%;
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .coupon-modal-header {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .coupon-modal-header .title { font-size: 16px; font-weight: 600; }
+  .coupon-modal-header .close { font-size: 20px; color: #999; cursor: pointer; background: none; border: none; }
+  .coupon-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+  }
+  .coupon-option {
+    border: 1.5px solid #e5e5e5;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .coupon-option.selected { border-color: #4a8eff; background: #f5f9ff; }
+  .coupon-option .radio { width: 18px; height: 18px; border: 2px solid #ccc; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .coupon-option.selected .radio { border-color: #4a8eff; }
+  .coupon-option.selected .radio::after { content: ""; width: 10px; height: 10px; background: #4a8eff; border-radius: 50%; }
+  .coupon-option .info { flex: 1; }
+  .coupon-option .name { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 2px; }
+  .coupon-option .rule { font-size: 12px; color: #999; }
+  .coupon-option .quota { font-size: 12px; color: #4a8eff; }
+  .coupon-modal-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .coupon-modal-footer .btn {
+    width: 100%;
+    padding: 12px;
+    background: #4a8eff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .coupon-modal-footer .btn:disabled { background: #ccc; }
+  .coupon-date-section {
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .coupon-date-section .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  .coupon-date-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .coupon-date-row .lbl {
+    font-size: 13px;
+    color: #666;
+    width: 60px;
+    flex-shrink: 0;
+  }
+  .coupon-date-row input {
+    flex: 1;
+    height: 36px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 0 10px;
+    font-size: 13px;
+    outline: none;
+  }
+  .coupon-date-hint {
+    font-size: 11px;
+    color: #999;
+    margin-top: 4px;
+  }
+  .coupon-date-hint.error {
+    color: #f44336;
+  }
+
+  /* ======== Coupon Records ======== */
+  .rec-header {
+    background: #fff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .rec-header .back { font-size: 18px; color: #333; cursor: pointer; }
+  .rec-header .title { font-size: 17px; font-weight: 600; color: #333; flex: 1; text-align: center; margin-right: 28px; }
+  .rec-filter-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rec-filter-row::-webkit-scrollbar { display: none; }
+  .rec-filter-pill {
+    padding: 5px 12px;
+    border-radius: 14px;
+    font-size: 13px;
+    color: #666;
+    background: #f5f5f5;
+    border: 1px solid #e5e5e5;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .rec-filter-pill.active {
+    background: #4a8eff;
+    color: #fff;
+    border-color: #4a8eff;
+  }
+  .rec-list { padding: 10px 16px; }
+  .rec-item {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1px solid #eee;
+  }
+  .rec-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .rec-item-user { font-size: 14px; font-weight: 600; color: #333; }
+  .rec-item-status {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .rec-item-status.used { background: #e8f5e9; color: #2e7d32; }
+  .rec-item-status.unused { background: #fff3e0; color: #ef6c00; }
+  .rec-item-status.expired { background: #fce4ec; color: #c62828; }
+  .rec-item-coupon { font-size: 13px; color: #666; margin-bottom: 4px; }
+  .rec-item-time { font-size: 12px; color: #999; }
+
+  /* ====== Record Detail Modal ====== */
+  .detail-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .detail-modal-overlay.open { display: flex; }
+  .detail-modal-sheet {
+    background: #fff;
+    width: 375px;
+    max-height: 80%;
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .detail-modal-header {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .detail-modal-header .title { font-size: 16px; font-weight: 600; }
+  .detail-modal-header .close { font-size: 20px; color: #999; cursor: pointer; background: none; border: none; }
+  .detail-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .detail-block { margin-bottom: 16px; }
+  .detail-block-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 10px; }
+  .detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #f8f8f8; }
+  .detail-row:last-child { border: none; }
+  .detail-row .lbl { color: #999; }
+  .detail-row .val { color: #333; font-weight: 500; }
+  .detail-timeline-mp { padding-left: 16px; position: relative; }
+  .detail-timeline-mp::before { content: ""; position: absolute; left: 4px; top: 4px; bottom: 4px; width: 2px; background: #e4e7ed; }
+  .tl-item { position: relative; margin-bottom: 14px; }
+  .tl-item:last-child { margin: 0; }
+  .tl-item::before { content: ""; position: absolute; left: -14px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: #4a8eff; border: 2px solid #fff; }
+  .tl-item.done::before { background: #4caf50; }
+  .tl-item.danger::before { background: #f44336; }
+  .tl-item.gray::before { background: #bdbdbd; }
+  .tl-time { font-size: 11px; color: #999; }
+  .tl-label { font-size: 13px; color: #333; font-weight: 500; }
+  .tl-desc { font-size: 11px; color: #999; }
 
   /* Login screen has no tab bar - override content height */
   .screen-content.login-content {
@@ -722,6 +1211,8 @@
   <button onclick="showScreen('store')">门店管理</button>
   <button onclick="showScreen('subagent')">下级代理商</button>
   <button onclick="showScreen('profile')">我的</button>
+  <button onclick="showScreen('customer')">客户管理</button>
+  <button onclick="showScreen('coupon-records')">发券记录</button>
 </div>
 
 <div class="phone-frame">
@@ -1378,100 +1869,366 @@
     <div class="screen active">
       <div class="screen-bg-gray" style="padding-bottom:10px;">
         <div class="profile-header">
-          <div class="profile-avatar">&#128100;</div>
+          <div class="profile-avatar-img" style="background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:24px;">&#127912;</div>
           <div>
-            <div class="profile-name">杭州弈星教育</div>
-            <div class="profile-meta">观云代理 | 联系人: 张经理 | 138****6789</div>
+            <div class="profile-name">杭州讯弈代理</div>
+            <div class="profile-meta">登峰代理 · 徐嘉彬 · 182****1834</div>
           </div>
         </div>
 
-        <!-- Contract card -->
-        <div class="contract-card">
-          <div class="contract-title">&#128196; 合约信息</div>
-          <div class="contract-row">
+        <!-- Contract section -->
+        <div class="contract-section">
+          <div class="contract-section-header">
+            <span class="contract-section-title">合约与席位管理</span>
+            <span class="contract-section-link">查看权益 / 升级 &#8250;</span>
+          </div>
+          <div class="contract-flat-row">
             <span class="lbl">合约编号</span>
-            <span class="val">AG-2025-HZ-008</span>
+            <span class="val">CT-20260527-0001</span>
           </div>
-          <div class="contract-row">
+          <div class="contract-flat-row">
             <span class="lbl">代理等级</span>
-            <span class="val">&#11088; 观云代理</span>
+            <span class="val val-blue">登峰代理</span>
           </div>
-          <div class="contract-row">
+          <div class="contract-flat-row">
             <span class="lbl">席位数</span>
-            <span class="val">20 席 (0.9万/席)</span>
+            <span class="val">8 席 (1.2万/席)</span>
           </div>
-          <div class="contract-row">
-            <span class="lbl">授权区域</span>
-            <span class="val">杭州市西湖区 / 滨江区</span>
-          </div>
-          <div class="contract-row">
+          <div class="contract-flat-row">
             <span class="lbl">有效期</span>
-            <span class="val">2025-07-01 至 2027-06-30</span>
+            <span class="val">2026-05-27 至 2027-05-31</span>
           </div>
-          <div class="contract-row">
-            <span class="lbl">C端分润</span>
-            <span class="val">月40% + 季5% + 年5%</span>
-          </div>
-          <div class="contract-row">
+          <div class="contract-flat-row">
             <span class="lbl">可开门店</span>
-            <span class="val">2 家 (已开 2 家)</span>
+            <span class="val">1 家 (已开 1 家)</span>
           </div>
         </div>
 
-        <!-- Agent levels reference -->
-        <div class="contract-card">
-          <div class="contract-title">&#127942; 代理等级说明</div>
-          <div style="font-size:12px; line-height:2.2; color:#666;">
-            <div style="display:flex; justify-content:space-between; padding:0 4px; background:#fff8e1; border-radius:4px; margin-bottom:2px;">
-              <span><b style="color:#f57f17;">登峰</b></span>
-              <span>1万/席 | &ge;6席 | 1店</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:0 4px; background:#e8eaf6; border-radius:4px; margin-bottom:2px;">
-              <span><b style="color:#283593;">观云</b></span>
-              <span>0.9万/席 | &ge;20席 | 2店</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding:0 4px; background:#fce4ec; border-radius:4px;">
-              <span><b style="color:#ad1457;">揽星</b></span>
-              <span>0.8万/席 | &ge;30席 | 3店</span>
-            </div>
-          </div>
-        </div>
+        <div class="wf-divider"></div>
 
         <!-- Function list -->
         <div class="func-list">
-          <div class="func-item" onclick="showScreen('subagent')" style="cursor:pointer;">
+          <div class="func-item" onclick="showScreen('customer')" style="cursor:pointer;">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#e8f0fe;">&#128100;</div>
+              <span class="func-item-label">客户管理</span>
+            </div>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+          <div class="func-item" style="cursor:pointer;">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#e8f5e9;">&#127775;</div>
+              <span class="func-item-label">成功推荐</span>
+            </div>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+          <div class="func-item" style="cursor:pointer;">
             <div class="func-item-left">
               <div class="func-icon" style="background:#f3e5f5;">&#128101;</div>
-              <span class="func-item-label">下级代理商</span>
+              <span class="func-item-label">员工管理</span>
+            </div>
+            <span class="func-badge">已开启</span>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+          <div class="func-item" style="cursor:pointer;">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#fff3e0;">&#128241;</div>
+              <span class="func-item-label">设备管理</span>
             </div>
             <span class="func-arrow">&#8250;</span>
           </div>
-          <div class="func-item">
+          <div class="func-item" style="cursor:pointer;">
             <div class="func-item-left">
-              <div class="func-icon" style="background:#fff3e0;">&#128276;</div>
-              <span class="func-item-label">消息通知</span>
+              <div class="func-icon" style="background:#e3f2fd;">&#127380;</div>
+              <span class="func-item-label">学员测试账号</span>
             </div>
             <span class="func-arrow">&#8250;</span>
           </div>
-          <div class="func-item">
+          <div class="func-item" onclick="showScreen('coupon-records')" style="cursor:pointer;">
             <div class="func-item-left">
-              <div class="func-icon" style="background:#e3f2fd;">&#10068;</div>
+              <div class="func-icon" style="background:#fff3e0;">&#127915;</div>
+              <span class="func-item-label">发券记录</span>
+            </div>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+          <div class="func-item" style="cursor:pointer;">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#fce4ec;">&#128276;</div>
+              <span class="func-item-label">待办通知</span>
+            </div>
+            <span class="func-badge-red">2</span>
+            <span class="func-arrow">&#8250;</span>
+          </div>
+          <div class="func-item" style="cursor:pointer;">
+            <div class="func-item-left">
+              <div class="func-icon" style="background:#f0f9eb;">&#128214;</div>
               <span class="func-item-label">帮助中心</span>
             </div>
             <span class="func-arrow">&#8250;</span>
           </div>
-          <div class="func-item">
+          <div class="func-item" style="cursor:pointer;">
             <div class="func-item-left">
-              <div class="func-icon" style="background:#e8f5e9;">&#128222;</div>
+              <div class="func-icon" style="background:#e8f5e9;">&#9993;</div>
               <span class="func-item-label">联系总部</span>
             </div>
             <span class="func-arrow">&#8250;</span>
           </div>
         </div>
 
-        <div style="padding:16px; text-align:center;">
-          <button class="wf-btn" style="background:#f5f5f5; color:#999;" onclick="showScreen('login')">退出登录</button>
+        <button class="logout-btn-red" onclick="showScreen('login')">退出登录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Customer Management ====== -->
+  <div class="screen-content" id="screen-customer" style="display:none;">
+    <div class="screen-bg-gray">
+      <!-- Header -->
+      <div class="cust-header">
+        <span class="back" onclick="showScreen('profile')">&#8592;</span>
+        <span class="title">客户管理</span>
+      </div>
+
+      <!-- Store Card -->
+      <div class="cust-store-card">
+        <div class="left">
+          <div class="icon">&#127970;</div>
+          <div>
+            <div class="label">当前门店</div>
+            <div class="name">讯弈国际总店</div>
+          </div>
         </div>
+        <span class="switch">切换 &#8250;</span>
+      </div>
+
+      <!-- Customer Data -->
+      <div class="cust-data-card">
+        <div class="left">
+          <div class="label">客户数据</div>
+          <div class="num">5</div>
+          <div class="unit">累计客户</div>
+        </div>
+        <div class="right">
+          <div class="item">
+            <div class="num">2</div>
+            <div class="lbl">本月新增</div>
+          </div>
+          <div class="item">
+            <div class="num">1</div>
+            <div class="lbl">转介绍</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Status -->
+      <div class="cust-section-title">
+        <span>付费情况</span>
+        <span class="sub">总 5 人</span>
+      </div>
+      <div class="cust-pay-grid">
+        <div class="cust-pay-card">
+          <div class="dot" style="background:#4caf50;"></div>
+          <div class="info">
+            <div class="num">5</div>
+            <div class="lbl">已付费</div>
+          </div>
+        </div>
+        <div class="cust-pay-card">
+          <div class="dot" style="background:#ff9800;"></div>
+          <div class="info">
+            <div class="num">0</div>
+            <div class="lbl">待续费</div>
+          </div>
+        </div>
+        <div class="cust-pay-card">
+          <div class="dot" style="background:#f44336;"></div>
+          <div class="info">
+            <div class="num">0</div>
+            <div class="lbl">已过期</div>
+          </div>
+        </div>
+        <div class="cust-pay-card">
+          <div class="dot" style="background:#9e9e9e;"></div>
+          <div class="info">
+            <div class="num">0</div>
+            <div class="lbl">未付费</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search + Add -->
+      <div class="cust-toolbar">
+        <div class="cust-search">
+          <span style="font-size:14px;color:#bbb;">&#128269;</span>
+          <input type="text" placeholder="搜索姓名 / 手机号">
+        </div>
+        <button class="cust-add-btn">+ 添加客户</button>
+      </div>
+
+      <!-- Filter Row 1 -->
+      <div class="cust-filter-row">
+        <span class="cust-filter-pill active">全部</span>
+        <span class="cust-filter-pill">手动添加</span>
+        <span class="cust-filter-pill">转介绍</span>
+        <span class="cust-filter-pill">扫码</span>
+      </div>
+
+      <!-- Filter Row 2 -->
+      <div class="cust-filter-row">
+        <span class="cust-filter-pill active">全部</span>
+        <span class="cust-filter-pill">已付费</span>
+        <span class="cust-filter-pill">待续费</span>
+        <span class="cust-filter-pill">已过期</span>
+        <span class="cust-filter-pill">未付费</span>
+      </div>
+
+      <!-- List Title -->
+      <div class="cust-list-title">客户列表（5）</div>
+
+      <!-- Customer Card 1 -->
+      <div class="cust-card">
+        <div class="cust-card-header">
+          <span class="cust-card-name">转介绍的家长（被介绍人）</span>
+          <div class="cust-card-tags">
+            <span class="cust-tag-purple">转介绍</span>
+            <span class="cust-tag-green">已付费</span>
+          </div>
+        </div>
+        <div class="cust-card-meta">
+          <span class="phone">182****0999</span>
+          <span>关联学员 0</span>
+          <span class="status-green">在用</span>
+        </div>
+        <div class="cust-card-time">绑定时间 2026-06-09</div>
+        <div class="cust-card-actions">
+          <button class="btn-send" onclick="openCouponModal('转介绍的家长')">发券</button>
+          <button class="btn-expand" onclick="toggleExpand(this)">查看学员 &#9662;</button>
+        </div>
+        <div class="cust-expand-panel">
+          <div style="font-size:13px;color:#666;padding:6px 0;">暂无关联学员</div>
+        </div>
+      </div>
+
+      <!-- Customer Card 2 -->
+      <div class="cust-card">
+        <div class="cust-card-header">
+          <span class="cust-card-name">家长1</span>
+          <div class="cust-card-tags">
+            <span class="cust-tag-orange">手动</span>
+            <span class="cust-tag-green">已付费</span>
+          </div>
+        </div>
+        <div class="cust-card-meta">
+          <span class="phone">181****1001</span>
+          <span>关联学员 0</span>
+          <span class="status-green">在用</span>
+        </div>
+        <div class="cust-card-time">绑定时间 2026-06-06</div>
+        <div class="cust-card-actions">
+          <button class="btn-send" onclick="openCouponModal('家长1')">发券</button>
+          <button class="btn-expand" onclick="toggleExpand(this)">查看学员 &#9662;</button>
+        </div>
+        <div class="cust-expand-panel">
+          <div style="font-size:13px;color:#666;padding:6px 0;">暂无关联学员</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Coupon Records ====== -->
+  <div class="screen-content" id="screen-coupon-records" style="display:none;">
+    <div class="screen-bg-gray">
+      <div class="rec-header">
+        <span class="back" onclick="showScreen('profile')">&#8592;</span>
+        <span class="title">发券记录</span>
+      </div>
+
+      <div class="rec-filter-row">
+        <span class="rec-filter-pill active" onclick="switchRecFilter(this,'all')">全部</span>
+        <span class="rec-filter-pill" onclick="switchRecFilter(this,'used')">已使用</span>
+        <span class="rec-filter-pill" onclick="switchRecFilter(this,'unused')">未使用</span>
+        <span class="rec-filter-pill" onclick="switchRecFilter(this,'expired')">已过期</span>
+      </div>
+
+      <div class="rec-list" id="rec-list">
+        <div class="rec-item" data-status="used">
+          <div class="rec-item-header">
+            <span class="rec-item-user">家长1</span>
+            <span class="rec-item-status used">已使用</span>
+          </div>
+          <div class="rec-item-coupon">E2E券-满200减30-411360</div>
+          <div class="rec-item-time">发放时间 2026-06-08 14:32</div>
+        </div>
+
+        <div class="rec-item" data-status="unused">
+          <div class="rec-item-header">
+            <span class="rec-item-user">转介绍的家长</span>
+            <span class="rec-item-status unused">未使用</span>
+          </div>
+          <div class="rec-item-coupon">E2E券-件数2档-411360</div>
+          <div class="rec-item-time">发放时间 2026-06-09 10:15</div>
+        </div>
+
+        <div class="rec-item" data-status="unused">
+          <div class="rec-item-header">
+            <span class="rec-item-user">家长2</span>
+            <span class="rec-item-status unused">未使用</span>
+          </div>
+          <div class="rec-item-coupon">E2E券-阿尔法蛋专享200-411360</div>
+          <div class="rec-item-time">发放时间 2026-06-09 11:00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coupon Send Modal -->
+  <div class="coupon-modal-overlay" id="couponModalOverlay" onclick="closeCouponModal(event)">
+    <div class="coupon-modal-sheet" onclick="event.stopPropagation()">
+      <div class="coupon-modal-header">
+        <span class="title">选择代金券</span>
+        <button class="close" onclick="closeCouponModal()">&times;</button>
+      </div>
+      <div class="coupon-modal-body">
+        <div class="coupon-option" onclick="selectCoupon(this)" data-max-days="30">
+          <div class="radio"></div>
+          <div class="info">
+            <div class="name">E2E券-件数2档-411360</div>
+            <div class="rule">满 2 件 减¥50.00 / 满 5 件 减¥200.00</div>
+          </div>
+          <span class="quota">剩余 50 张</span>
+        </div>
+        <div class="coupon-option" onclick="selectCoupon(this)" data-max-days="30">
+          <div class="radio"></div>
+          <div class="info">
+            <div class="name">E2E券-阿尔法蛋专享200-411360</div>
+            <div class="rule">减 ¥200.00</div>
+          </div>
+          <span class="quota">剩余 120 张</span>
+        </div>
+        <div class="coupon-option" onclick="selectCoupon(this)" data-max-days="30">
+          <div class="radio"></div>
+          <div class="info">
+            <div class="name">E2E券-满200减30-411360</div>
+            <div class="rule">满 ¥200.00 减 ¥30.00</div>
+          </div>
+          <span class="quota">剩余 200 张</span>
+        </div>
+
+        <div class="coupon-date-section" id="couponDateSection" style="display:none;">
+          <div class="label">设置有效期</div>
+          <div class="coupon-date-row">
+            <span class="lbl">开始日期</span>
+            <input type="text" id="couponStartDate" placeholder="请选择开始日期" value="2026-06-11">
+          </div>
+          <div class="coupon-date-row">
+            <span class="lbl">结束日期</span>
+            <input type="text" id="couponEndDate" placeholder="请选择结束日期" value="2026-07-11">
+          </div>
+          <div class="coupon-date-hint" id="couponDateHint">该券最长有效期为 30 天</div>
+        </div>
+      </div>
+      <div class="coupon-modal-footer">
+        <button class="btn" id="couponConfirmBtn" onclick="confirmSendCoupon()">确认发放</button>
       </div>
     </div>
   </div>
@@ -1503,7 +2260,7 @@
 
 <script>
   // All screen IDs
-  const screens = ['login', 'dashboard', 'promo', 'commission', 'store', 'subagent', 'profile'];
+  const screens = ['login', 'dashboard', 'promo', 'commission', 'store', 'subagent', 'profile', 'customer', 'coupon-records'];
   // Screens that show the tab bar
   const tabScreens = ['dashboard', 'promo', 'commission', 'store', 'subagent', 'profile'];
   // Tab-bar mapped screens (index order matches tab-bar items)
@@ -1524,7 +2281,7 @@
     tabBar.style.display = tabScreens.includes(id) ? 'flex' : 'none';
 
     // Update screen-content height based on tab bar
-    if (id === 'login') {
+    if (id === 'login' || !tabScreens.includes(id)) {
       target.style.height = 'calc(100% - 44px)';
     } else {
       target.style.height = 'calc(100% - 44px - 50px)';
@@ -1566,6 +2323,103 @@
 
   // Handle "下级代理商" via screen nav (it's not a tab-bar item, needs special handling)
   // Add click for sub-agent from profile or other screens
+
+  // ====== Customer Management Functions ======
+  let currentSendTarget = '';
+
+  function openCouponModal(userName) {
+    currentSendTarget = userName;
+    document.getElementById('couponModalOverlay').classList.add('open');
+    document.querySelectorAll('.coupon-option').forEach(opt => opt.classList.remove('selected'));
+    document.getElementById('couponDateSection').style.display = 'none';
+    document.getElementById('couponConfirmBtn').disabled = true;
+    const today = new Date();
+    const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    document.getElementById('couponStartDate').value = formatDate(today);
+    document.getElementById('couponEndDate').value = formatDate(nextMonth);
+    document.getElementById('couponDateHint').classList.remove('error');
+    document.getElementById('couponDateHint').textContent = '请先选择代金券';
+  }
+
+  function closeCouponModal(event) {
+    if (!event || event.target.id === 'couponModalOverlay' || event.target.classList.contains('close')) {
+      document.getElementById('couponModalOverlay').classList.remove('open');
+    }
+  }
+
+  function selectCoupon(el) {
+    document.querySelectorAll('.coupon-option').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('couponConfirmBtn').disabled = false;
+    document.getElementById('couponDateSection').style.display = 'block';
+    const maxDays = parseInt(el.dataset.maxDays) || 30;
+    document.getElementById('couponDateHint').classList.remove('error');
+    document.getElementById('couponDateHint').textContent = '该券最长有效期为 ' + maxDays + ' 天';
+  }
+
+  function formatDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  function parseDate(str) {
+    const parts = str.split('-');
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  }
+
+  function dayDiff(start, end) {
+    return Math.round((end - start) / (1000 * 60 * 60 * 24));
+  }
+
+  function confirmSendCoupon() {
+    const selected = document.querySelector('.coupon-option.selected');
+    if (!selected) return;
+    const name = selected.querySelector('.name').textContent;
+    const maxDays = parseInt(selected.dataset.maxDays) || 30;
+    const startStr = document.getElementById('couponStartDate').value;
+    const endStr = document.getElementById('couponEndDate').value;
+    if (!startStr || !endStr) {
+      alert('请设置有效期起止日期');
+      return;
+    }
+    const start = parseDate(startStr);
+    const end = parseDate(endStr);
+    if (end <= start) {
+      alert('结束日期必须晚于开始日期');
+      return;
+    }
+    const diff = dayDiff(start, end);
+    if (diff > maxDays) {
+      alert('有效期跨度不能超过 ' + maxDays + ' 天（当前 ' + diff + ' 天）');
+      return;
+    }
+    alert('已向「' + currentSendTarget + '」发放「' + name + '」\n有效期：' + startStr + ' ~ ' + endStr);
+    closeCouponModal();
+  }
+
+  function toggleExpand(btn) {
+    const card = btn.closest('.cust-card');
+    const panel = card.querySelector('.cust-expand-panel');
+    panel.classList.toggle('open');
+    btn.innerHTML = panel.classList.contains('open') ? '收起 &#9652;' : '查看学员 &#9662;';
+  }
+
+  // ====== Coupon Records Functions ======
+  function switchRecFilter(el, status) {
+    document.querySelectorAll('.rec-filter-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+
+    const items = document.querySelectorAll('.rec-item');
+    items.forEach(item => {
+      if (status === 'all') {
+        item.style.display = 'block';
+      } else {
+        item.style.display = item.dataset.status === status ? 'block' : 'none';
+      }
+    });
+  }
 </script>
 
 <!--

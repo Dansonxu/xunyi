@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资料管理 - 代理商学习考核平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <!-- Page Header -->
+        <div class="admin-page-header-enhanced">
+          <div class="admin-page-header-left">
+            <h1 class="admin-page-header-title">资料管理</h1>
+            <p class="admin-page-header-desc">管理培训资料，支持按类型、受众、分类和状态筛选</p>
+          </div>
+          <a href="material-upload.html" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i>上传资料
+          </a>
+        </div>
+
+        <!-- Main Card -->
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div class="admin-card-title">
+              <i class="fa-solid fa-list"></i>
+              资料列表
+            </div>
+            <div class="text-sm text-secondary" id="listCount">共 0 条</div>
+          </div>
+
+          <div class="admin-card-body">
+            <!-- Filter Bar -->
+            <div class="admin-filter-bar">
+              <div class="admin-filter-group">
+                <div class="admin-filter-item">
+                  <label class="admin-filter-label">资料类型</label>
+                  <select class="form-control" id="typeFilter">
+                    <option value="">全部类型</option>
+                    <option value="pdf">PDF</option>
+                    <option value="word">Word</option>
+                    <option value="video">视频</option>
+                  </select>
+                </div>
+                <div class="admin-filter-item" id="audienceFilterWrap">
+                  <label class="admin-filter-label">适用受众</label>
+                  <select class="form-control" id="audienceFilter">
+                    <option value="">全部受众</option>
+                    <option value="agent">代理商</option>
+                    <option value="employee">内部员工</option>
+                    <option value="all">全部</option>
+                  </select>
+                </div>
+                <div class="admin-filter-item">
+                  <label class="admin-filter-label">资料分类</label>
+                  <select class="form-control" id="categoryFilter">
+                    <option value="">全部分类</option>
+                  </select>
+                </div>
+                <div class="admin-filter-item">
+                  <label class="admin-filter-label">发布状态</label>
+                  <select class="form-control" id="statusFilter">
+                    <option value="">全部状态</option>
+                    <option value="published">已发布</option>
+                    <option value="draft">草稿</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="admin-filter-group">
+                <div class="admin-search-box">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" class="form-control" id="searchInput" placeholder="搜索资料名称">
+                </div>
+                <button class="btn btn-ghost" id="refreshBtn" title="刷新">
+                  <i class="fa-solid fa-rotate-right"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="admin-table-wrap">
+              <table class="admin-table" id="materialsTable">
+                <thead>
+                  <tr>
+                    <th style="width: 40px;">
+                      <input type="checkbox" class="checkbox checkbox-sm" id="selectAll">
+                    </th>
+                    <th>资料名称</th>
+                    <th>类型</th>
+                    <th>分类</th>
+                    <th>受众</th>
+                    <th>上传人</th>
+                    <th>文件大小</th>
+                    <th>上传时间</th>
+                    <th>状态</th>
+                    <th class="text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="admin-pagination" id="paginationWrap" style="display: none;">
+              <div class="admin-pagination-info" id="paginationInfo"></div>
+              <div class="admin-pagination-pages" id="pagination"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("materials.html");
+    AdminCommon.setPageTitle("资料管理");
+
+    const currentUser = DataStore.getCurrentUser();
+    const scope = DataStore.getScopeAudience(currentUser);
+
+    // Operators are locked to their own type — hide the audience filter.
+    if (scope) {
+      const af = document.getElementById("audienceFilterWrap");
+      if (af) af.style.display = "none";
+    }
+
+    function uploaderName(id) {
+      const u = id ? DataStore.getUserById(id) : null;
+      return u ? u.name : "-";
+    }
+
+    let currentPage = 1;
+    const pageSize = 10;
+    let selectedIds = new Set();
+
+    function formatFileSize(size) {
+      return size || "-";
+    }
+
+    function typeTag(type) {
+      const cls = { pdf: "pdf", word: "word", video: "video" }[type] || "word";
+      const icon = { pdf: "fa-file-pdf", word: "fa-file-word", video: "fa-file-video" }[type] || "fa-file";
+      const label = { pdf: "PDF", word: "Word", video: "视频" }[type] || type.toUpperCase();
+      return `<span class="admin-type-tag ${cls}"><i class="fa-solid ${icon}"></i>${label}</span>`;
+    }
+
+    function audienceBadge(audience) {
+      const aud = DataStore.normalizeAudience(audience);
+      if (aud.mode === "role") {
+        const map = { agent: "代理商", employee: "内部员工", all: "全部" };
+        const cls = { agent: "badge-info", employee: "badge-secondary", all: "badge-neutral" };
+        return `<span class="badge ${cls[aud.role] || 'badge-neutral'} badge-sm">${map[aud.role] || aud.role}</span>`;
+      }
+      const label = DataStore.formatAudienceLabel(aud);
+      return `<span class="badge badge-primary badge-sm" title="${label}">指定人员</span>`;
+    }
+
+    function statusBadge(status) {
+      return `<span class="admin-status ${status}">${status === "published" ? "已发布" : "草稿"}</span>`;
+    }
+
+    function loadCategories() {
+      const categories = DataStore.getMaterialCategories();
+      const select = document.getElementById("categoryFilter");
+      const current = select.value;
+      select.innerHTML = '<option value="">全部分类</option>';
+      categories.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.name;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+      });
+      select.value = current;
+    }
+
+    function loadMaterials() {
+      let list = DataStore.filterByScope(DataStore.getMaterials(), currentUser);
+      const type = document.getElementById("typeFilter").value;
+      const audience = document.getElementById("audienceFilter").value;
+      const category = document.getElementById("categoryFilter").value;
+      const status = document.getElementById("statusFilter").value;
+      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      if (type) list = list.filter(m => m.type === type);
+      if (audience) {
+        list = list.filter(m => {
+          const aud = DataStore.normalizeAudience(m.audience);
+          if (aud.mode === "role") return aud.role === audience;
+          const learners = DataStore.getLearners().filter(u => u.role === audience);
+          const userMatch = learners.some(u => aud.userIds.includes(u.id));
+          const deptMatch = learners.some(u => u.department && aud.departments.includes(u.department));
+          return userMatch || deptMatch;
+        });
+      }
+      if (category) list = list.filter(m => m.category === category);
+      if (status) list = list.filter(m => m.status === status);
+      if (keyword) list = list.filter(m => m.title.toLowerCase().includes(keyword));
+
+      document.getElementById("listCount").textContent = `共 ${list.length} 条`;
+
+      const total = list.length;
+      const totalPages = Math.ceil(total / pageSize);
+      currentPage = Math.min(currentPage, Math.max(1, totalPages));
+      const start = (currentPage - 1) * pageSize;
+      const pageData = list.slice(start, start + pageSize);
+
+      const tbody = document.querySelector("#materialsTable tbody");
+      if (!pageData.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10">
+              <div class="admin-empty">
+                <div class="admin-empty-icon"><i class="fa-solid fa-inbox"></i></div>
+                <div class="admin-empty-title">暂无资料</div>
+                <div class="admin-empty-desc">当前筛选条件下没有符合条件的资料</div>
+                <a href="material-upload.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i>上传资料</a>
+              </div>
+            </td>
+          </tr>
+        `;
+        document.getElementById("paginationWrap").style.display = "none";
+        return;
+      }
+
+      tbody.innerHTML = pageData.map(m => {
+        const checked = selectedIds.has(m.id) ? "checked" : "";
+        return `
+          <tr>
+            <td><input type="checkbox" class="checkbox checkbox-sm row-checkbox" value="${m.id}" ${checked}></td>
+            <td>
+              <div class="cell-title" title="${escapeHtml(m.title)}">${escapeHtml(m.title)}</div>
+              <div class="cell-muted">${m.viewCount || 0} 次浏览 / ${m.finishCount || 0} 次完成</div>
+            </td>
+            <td>${typeTag(m.type)}</td>
+            <td>${escapeHtml(m.category || "-")}</td>
+            <td>${audienceBadge(m.audience)}</td>
+            <td>${escapeHtml(uploaderName(m.uploaderId))}</td>
+            <td>${formatFileSize(m.fileSize)}</td>
+            <td class="cell-muted">${m.uploadTime || "-"}</td>
+            <td>${statusBadge(m.status)}</td>
+            <td class="cell-actions">
+              <div class="admin-action-group">
+                <a href="material-upload.html?id=${m.id}" class="admin-action-btn" title="编辑"><i class="fa-solid fa-pencil"></i></a>
+                <button class="admin-action-btn danger" onclick="deleteMaterial('${m.id}')" title="删除"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      bindRowCheckboxes();
+      renderPagination(total);
+      if (typeof window.replaceHeroicons === "function") window.replaceHeroicons();
+    }
+
+    function escapeHtml(str) {
+      if (str == null) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderPagination(total) {
+      const totalPages = Math.ceil(total / pageSize);
+      const paginationWrap = document.getElementById("paginationWrap");
+      const paginationInfo = document.getElementById("paginationInfo");
+      const pagination = document.getElementById("pagination");
+
+      if (totalPages <= 1) {
+        paginationWrap.style.display = total === 0 ? "none" : "flex";
+        pagination.innerHTML = "";
+        if (total > 0) {
+          paginationInfo.innerHTML = `显示第 <strong>1</strong> 到 <strong>${total}</strong> 条，共 <strong>${total}</strong> 条`;
+        }
+        return;
+      }
+
+      paginationWrap.style.display = "flex";
+      const start = (currentPage - 1) * pageSize + 1;
+      const end = Math.min(currentPage * pageSize, total);
+      paginationInfo.innerHTML = `显示第 <strong>${start}</strong> 到 <strong>${end}</strong> 条，共 <strong>${total}</strong> 条`;
+
+      let html = "";
+      html += `<button class="admin-pagination-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? "disabled" : ""}><i class="fa-solid fa-chevron-left"></i></button>`;
+
+      const maxVisible = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+      if (endPage - startPage + 1 < maxVisible) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+      }
+
+      if (startPage > 1) {
+        html += `<button class="admin-pagination-btn" onclick="goPage(1)">1</button>`;
+        if (startPage > 2) html += `<span class="admin-pagination-btn" style="border:none;cursor:default;">...</span>`;
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="admin-pagination-btn ${i === currentPage ? "active" : ""}" onclick="goPage(${i})">${i}</button>`;
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) html += `<span class="admin-pagination-btn" style="border:none;cursor:default;">...</span>`;
+        html += `<button class="admin-pagination-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
+      }
+
+      html += `<button class="admin-pagination-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? "disabled" : ""}><i class="fa-solid fa-chevron-right"></i></button>`;
+      pagination.innerHTML = html;
+    }
+
+    function bindRowCheckboxes() {
+      document.querySelectorAll(".row-checkbox").forEach(cb => {
+        cb.addEventListener("change", () => {
+          if (cb.checked) selectedIds.add(cb.value);
+          else selectedIds.delete(cb.value);
+          updateSelectAllState();
+        });
+      });
+    }
+
+    function updateSelectAllState() {
+      const allRowCbs = document.querySelectorAll(".row-checkbox");
+      const selectAll = document.getElementById("selectAll");
+      if (!allRowCbs.length) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+      }
+      const checkedCount = document.querySelectorAll(".row-checkbox:checked").length;
+      selectAll.checked = checkedCount === allRowCbs.length;
+      selectAll.indeterminate = checkedCount > 0 && checkedCount < allRowCbs.length;
+    }
+
+    window.goPage = function(page) {
+      const total = DataStore.filterByScope(DataStore.getMaterials(), currentUser).length;
+      const totalPages = Math.ceil(total / pageSize);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      loadMaterials();
+    };
+
+    window.deleteMaterial = function(id) {
+      if (!confirm("确定删除该资料吗？")) return;
+      DataStore.deleteMaterial(id);
+      selectedIds.delete(id);
+      AdminCommon.toast("删除成功");
+      loadMaterials();
+    };
+
+    document.getElementById("typeFilter").addEventListener("change", () => { currentPage = 1; loadMaterials(); });
+    document.getElementById("audienceFilter").addEventListener("change", () => { currentPage = 1; loadMaterials(); });
+    document.getElementById("categoryFilter").addEventListener("change", () => { currentPage = 1; loadMaterials(); });
+    document.getElementById("statusFilter").addEventListener("change", () => { currentPage = 1; loadMaterials(); });
+    document.getElementById("searchInput").addEventListener("input", () => { currentPage = 1; loadMaterials(); });
+    document.getElementById("refreshBtn").addEventListener("click", () => { loadMaterials(); AdminCommon.toast("已刷新"); });
+
+    document.getElementById("selectAll").addEventListener("change", function() {
+      document.querySelectorAll(".row-checkbox").forEach(cb => {
+        cb.checked = this.checked;
+        if (this.checked) selectedIds.add(cb.value);
+        else selectedIds.delete(cb.value);
+      });
+    });
+
+    loadCategories();
+    loadMaterials();
+  </script>
+</body>
+</html>

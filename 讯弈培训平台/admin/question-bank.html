@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>题库管理 - 代理商学习考核平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">题库管理</h1>
+          <div class="flex gap-12">
+            <button class="btn btn-ghost" onclick="openBatchModal()"><i class="fa-solid fa-file-import"></i>批量新增</button>
+            <button class="btn btn-primary" onclick="openQuestionModal()"><i class="fa-solid fa-plus"></i>新增题目</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="admin-toolbar">
+            <div class="admin-toolbar-left">
+              <select class="form-control" id="typeFilter" style="width: 140px;">
+                <option value="">全部题型</option>
+                <option value="single">单选题</option>
+                <option value="multiple">多选题</option>
+                <option value="judge">判断题</option>
+              </select>
+            </div>
+            <div class="admin-toolbar-right">
+              <input type="text" class="form-control admin-search" id="searchInput" placeholder="搜索题干">
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table table-zebra" id="questionsTable">
+              <thead>
+                <tr>
+                  <th>题型</th>
+                  <th>题干</th>
+                  <th>正确答案</th>
+                  <th>分值</th>
+                  <th>分类</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Single question modal -->
+  <div class="modal-overlay" id="questionModal" style="display: none;">
+    <div class="admin-modal">
+      <div class="admin-modal-header"><span id="modalTitle">新增题目</span></div>
+      <div class="admin-modal-body">
+        <form id="questionForm">
+          <input type="hidden" id="questionId">
+          <div class="form-group">
+            <label class="form-label"><span class="required">题型</span></label>
+            <select class="form-control" id="qType">
+              <option value="single">单选题</option>
+              <option value="multiple">多选题</option>
+              <option value="judge">判断题</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="required">题干</span></label>
+            <textarea class="form-control" id="qContent" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="required">选项</span></label>
+            <div id="optionsWrap"></div>
+            <button type="button" class="btn btn-ghost btn-sm mt-8" id="addOptionBtn" onclick="addOption()">+ 添加选项</button>
+          </div>
+          <div class="flex gap-12">
+            <div class="form-group flex-1">
+              <label class="form-label"><span class="required">分值</span></label>
+              <input type="number" class="form-control" id="qScore" value="5" min="1">
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">分类</label>
+              <input type="text" class="form-control" id="qCategory" placeholder="例如：产品知识">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="admin-modal-footer">
+        <button class="btn btn-ghost" onclick="closeQuestionModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveQuestion()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch import modal -->
+  <div class="modal-overlay" id="batchModal" style="display: none;">
+    <div class="admin-modal wide">
+      <div class="admin-modal-header">批量导入题目</div>
+      <div class="admin-modal-body">
+        <div class="form-group">
+          <label class="form-label">1. 下载模板</label>
+          <div style="display: flex; align-items: center; gap: 16px; padding: 14px 16px; background: var(--bg); border: 1px dashed var(--border); border-radius: 10px;">
+            <i class="fa-solid fa-file-csv" style="font-size: 28px; color: var(--primary); flex-shrink: 0;"></i>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 14px; color: var(--text-main); font-weight: 500;">题目导入模板.csv</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">按模板格式填写后上传，支持单选、多选、判断三种题型</div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="downloadTemplate()" style="flex-shrink: 0;"><i class="fa-solid fa-download"></i>下载模板</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">2. 上传文件</label>
+          <input type="file" class="hidden" id="batchFileInput" accept=".csv">
+          <div class="admin-batch-zone" id="batchUploadZone">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <div class="admin-batch-zone-text">点击上传或拖拽 CSV 文件到此处</div>
+            <div class="admin-batch-zone-hint">仅支持 .csv 格式，编码建议 UTF-8</div>
+          </div>
+        </div>
+
+        <div id="batchPreviewArea" style="display: none;">
+          <div class="admin-batch-summary">
+            <span>共解析 <span class="num" id="batchTotal">0</span> 条，有效 <span class="num success" id="batchValid">0</span> 条，无效 <span class="num error" id="batchInvalid">0</span> 条</span>
+          </div>
+          <div class="admin-batch-preview">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40px;">状态</th>
+                  <th>题型</th>
+                  <th>题干</th>
+                  <th>正确答案</th>
+                  <th>分值</th>
+                  <th>分类</th>
+                  <th>提示</th>
+                </tr>
+              </thead>
+              <tbody id="batchPreviewBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="admin-modal-footer">
+        <button class="btn btn-ghost" onclick="closeBatchModal()">取消</button>
+        <button class="btn btn-primary" id="batchImportBtn" onclick="importBatch()" disabled><i class="fa-solid fa-file-import"></i>确认导入</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("question-bank.html");
+    AdminCommon.setPageTitle("题库管理");
+
+    const currentUser = DataStore.getCurrentUser();
+
+    const typeLabels = { single: "单选题", multiple: "多选题", judge: "判断题" };
+
+    function formatCorrectAnswer(q) {
+      const answers = Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer];
+      if (q.type === "judge") {
+        return answers.map(a => a === "A" ? "正确" : (a === "B" ? "错误" : a)).join("、");
+      }
+      return answers.join("、");
+    }
+
+    let editingId = null;
+
+    /* ========== Single question editor ========== */
+    function renderOptionsEditor(type, options = [], correct = []) {
+      const wrap = document.getElementById("optionsWrap");
+      const inputType = type === "multiple" ? "checkbox" : "radio";
+      wrap.innerHTML = options.map((opt, idx) => `
+        <div class="option-row">
+          <input type="${inputType}" name="correctOption" value="${opt.id}" ${correct.includes(opt.id) ? "checked" : ""}>
+          <input type="text" class="form-control" data-opt-id="${opt.id}" value="${opt.text}" placeholder="选项内容">
+          <button type="button" class="btn btn-sm btn-danger" onclick="removeOption(this)">删除</button>
+        </div>
+      `).join("");
+
+      if (type === "judge") {
+        document.getElementById("addOptionBtn").style.display = "none";
+        if (options.length === 0) {
+          wrap.innerHTML = `
+            <div class="option-row">
+              <input type="radio" name="correctOption" value="A" ${correct.includes("A") ? "checked" : ""}>
+              <input type="text" class="form-control" data-opt-id="A" value="正确" readonly>
+            </div>
+            <div class="option-row">
+              <input type="radio" name="correctOption" value="B" ${correct.includes("B") ? "checked" : ""}>
+              <input type="text" class="form-control" data-opt-id="B" value="错误" readonly>
+            </div>
+          `;
+        }
+      } else {
+        document.getElementById("addOptionBtn").style.display = "inline-flex";
+      }
+    }
+
+    let currentOptions = [];
+    let currentType = "single";
+
+    document.getElementById("qType").addEventListener("change", function() {
+      currentType = this.value;
+      if (currentType === "judge") {
+        currentOptions = [{ id: "A", text: "正确" }, { id: "B", text: "错误" }];
+      }
+      renderOptionsEditor(currentType, currentOptions, []);
+    });
+
+    window.addOption = function() {
+      const nextId = String.fromCharCode(65 + currentOptions.length);
+      currentOptions.push({ id: nextId, text: "" });
+      renderOptionsEditor(currentType, currentOptions, getCheckedOptions());
+    };
+
+    window.removeOption = function(btn) {
+      const row = btn.closest(".option-row");
+      const optId = row.querySelector("[data-opt-id]").dataset.optId;
+      currentOptions = currentOptions.filter(o => o.id !== optId);
+      currentOptions.forEach((o, idx) => o.id = String.fromCharCode(65 + idx));
+      renderOptionsEditor(currentType, currentOptions, getCheckedOptions());
+    };
+
+    function getCheckedOptions() {
+      return Array.from(document.querySelectorAll("[name='correctOption']:checked")).map(el => el.value);
+    }
+
+    window.openQuestionModal = function(id) {
+      editingId = id || null;
+      document.getElementById("modalTitle").textContent = id ? "编辑题目" : "新增题目";
+      document.getElementById("questionForm").reset();
+      currentType = "single";
+      currentOptions = [
+        { id: "A", text: "" },
+        { id: "B", text: "" },
+        { id: "C", text: "" },
+        { id: "D", text: "" }
+      ];
+      let correct = [];
+
+      if (id) {
+        const q = DataStore.getQuestionById(id);
+        if (q) {
+          document.getElementById("questionId").value = q.id;
+          document.getElementById("qType").value = q.type;
+          document.getElementById("qContent").value = q.content;
+          document.getElementById("qScore").value = q.score;
+          document.getElementById("qCategory").value = q.category || "";
+          currentType = q.type;
+          currentOptions = JSON.parse(JSON.stringify(q.options));
+          correct = Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer];
+        }
+      } else {
+        document.getElementById("qScore").value = "5";
+        document.getElementById("qCategory").value = "";
+      }
+
+      renderOptionsEditor(currentType, currentOptions, correct);
+      document.getElementById("questionModal").style.display = "flex";
+    };
+
+    window.closeQuestionModal = function() {
+      document.getElementById("questionModal").style.display = "none";
+    };
+
+    window.saveQuestion = function() {
+      const type = document.getElementById("qType").value;
+      const content = document.getElementById("qContent").value.trim();
+      const score = parseInt(document.getElementById("qScore").value) || 0;
+      const category = document.getElementById("qCategory").value.trim();
+      const correctAnswer = getCheckedOptions();
+
+      if (!content) { AdminCommon.toast("请填写题干", "error"); return; }
+      if (correctAnswer.length === 0) { AdminCommon.toast("请选择正确答案", "error"); return; }
+
+      const options = [];
+      document.querySelectorAll("#optionsWrap .option-row").forEach(row => {
+        const id = row.querySelector("[data-opt-id]").dataset.optId;
+        const text = row.querySelector("input[type='text']").value.trim();
+        if (text) options.push({ id, text });
+      });
+
+      const data = { type, content, options, correctAnswer, score, category };
+      if (editingId) {
+        DataStore.updateQuestion(editingId, data);
+      } else {
+        data.creatorId = currentUser.id;
+        DataStore.addQuestion(data);
+      }
+
+      closeQuestionModal();
+      AdminCommon.toast("保存成功");
+      loadQuestions();
+    };
+
+    window.deleteQuestion = function(id) {
+      if (!confirm("确定删除该题目吗？")) return;
+      DataStore.deleteQuestion(id);
+      AdminCommon.toast("删除成功");
+      loadQuestions();
+    };
+
+    function loadQuestions() {
+      let list = DataStore.getQuestions();
+      const type = document.getElementById("typeFilter").value;
+      const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+      if (type) list = list.filter(q => q.type === type);
+      if (keyword) list = list.filter(q => q.content.toLowerCase().includes(keyword));
+
+      const tbody = document.querySelector("#questionsTable tbody");
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">暂无数据</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(q => `
+        <tr>
+          <td>${typeLabels[q.type]}</td>
+          <td>${q.content}</td>
+          <td>${formatCorrectAnswer(q)}</td>
+          <td>${q.score}</td>
+          <td>${q.category || "-"}</td>
+          <td class="actions">
+            <button class="btn btn-sm btn-ghost" onclick="openQuestionModal('${q.id}')">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteQuestion('${q.id}')">删除</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    document.getElementById("typeFilter").addEventListener("change", loadQuestions);
+    document.getElementById("searchInput").addEventListener("input", loadQuestions);
+
+    /* ========== Batch import ========== */
+    let batchRows = [];
+
+    window.openBatchModal = function() {
+      document.getElementById("batchModal").style.display = "flex";
+      resetBatchUI();
+    };
+
+    window.closeBatchModal = function() {
+      document.getElementById("batchModal").style.display = "none";
+      resetBatchUI();
+    };
+
+    function resetBatchUI() {
+      batchRows = [];
+      document.getElementById("batchFileInput").value = "";
+      document.getElementById("batchPreviewArea").style.display = "none";
+      document.getElementById("batchImportBtn").disabled = true;
+      document.getElementById("batchUploadZone").style.display = "block";
+    }
+
+    const batchFileInput = document.getElementById("batchFileInput");
+    const batchUploadZone = document.getElementById("batchUploadZone");
+
+    batchUploadZone.addEventListener("click", () => batchFileInput.click());
+
+    batchUploadZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      batchUploadZone.classList.add("dragover");
+    });
+
+    batchUploadZone.addEventListener("dragleave", () => {
+      batchUploadZone.classList.remove("dragover");
+    });
+
+    batchUploadZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      batchUploadZone.classList.remove("dragover");
+      if (e.dataTransfer.files.length) {
+        batchFileInput.files = e.dataTransfer.files;
+        handleBatchFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    batchFileInput.addEventListener("change", function(e) {
+      if (e.target.files.length) handleBatchFile(e.target.files[0]);
+    });
+
+    function handleBatchFile(file) {
+      if (!file.name.toLowerCase().endsWith(".csv")) {
+        AdminCommon.toast("请上传 CSV 文件", "error");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        batchRows = parseBatchCSV(text);
+        renderBatchPreview();
+      };
+      reader.readAsText(file);
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (inQuotes) {
+          if (char === '"') {
+            if (next === '"') {
+              cell += '"';
+              i++;
+            } else {
+              inQuotes = false;
+            }
+          } else {
+            cell += char;
+          }
+        } else {
+          if (char === '"') {
+            inQuotes = true;
+          } else if (char === ',') {
+            row.push(cell);
+            cell = "";
+          } else if (char === '\n') {
+            row.push(cell);
+            if (row.some(c => c.trim())) rows.push(row);
+            row = [];
+            cell = "";
+          } else if (char === '\r') {
+            // skip
+          } else {
+            cell += char;
+          }
+        }
+      }
+
+      if (cell || row.length) {
+        row.push(cell);
+        if (row.some(c => c.trim())) rows.push(row);
+      }
+
+      return rows;
+    }
+
+    function parseBatchCSV(text) {
+      const rows = parseCSV(text);
+      if (rows.length < 2) return [];
+
+      const headers = rows[0].map(h => h.trim());
+      const idx = {
+        type: headers.indexOf("题型"),
+        content: headers.indexOf("题干"),
+        optA: headers.indexOf("选项A"),
+        optB: headers.indexOf("选项B"),
+        optC: headers.indexOf("选项C"),
+        optD: headers.indexOf("选项D"),
+        correct: headers.indexOf("正确答案"),
+        score: headers.indexOf("分值"),
+        category: headers.indexOf("分类")
+      };
+
+      return rows.slice(1).map((cells, rowIndex) => {
+        const raw = {
+          type: (cells[idx.type] || "").trim(),
+          content: (cells[idx.content] || "").trim(),
+          optA: (cells[idx.optA] || "").trim(),
+          optB: (cells[idx.optB] || "").trim(),
+          optC: (cells[idx.optC] || "").trim(),
+          optD: (cells[idx.optD] || "").trim(),
+          correct: (cells[idx.correct] || "").trim(),
+          score: (cells[idx.score] || "").trim(),
+          category: (cells[idx.category] || "").trim()
+        };
+
+        const result = { rowIndex: rowIndex + 2, raw, valid: false, errors: [], question: null };
+        validateRow(result);
+        return result;
+      });
+    }
+
+    function validateRow(result) {
+      const raw = result.raw;
+      const errors = [];
+
+      const typeMap = { "单选": "single", "多选": "multiple", "判断": "judge", "single": "single", "multiple": "multiple", "judge": "judge" };
+      const type = typeMap[raw.type];
+      if (!type) errors.push("题型必须是：单选/多选/判断");
+
+      if (!raw.content) errors.push("题干不能为空");
+
+      let options = [];
+      if (type === "judge") {
+        options = [{ id: "A", text: "正确" }, { id: "B", text: "错误" }];
+      } else {
+        if (raw.optA) options.push({ id: "A", text: raw.optA });
+        if (raw.optB) options.push({ id: "B", text: raw.optB });
+        if (raw.optC) options.push({ id: "C", text: raw.optC });
+        if (raw.optD) options.push({ id: "D", text: raw.optD });
+        if (options.length < 2) errors.push("单选/多选题至少需要 2 个选项");
+      }
+
+      const correctAnswers = raw.correct.split(/[,，]/).map(s => s.trim().toUpperCase()).filter(Boolean);
+      if (!correctAnswers.length) {
+        errors.push("正确答案不能为空");
+      } else if (type !== "multiple" && correctAnswers.length > 1) {
+        errors.push("单选/判断题只能有 1 个正确答案");
+      } else {
+        const validOptions = options.map(o => o.id);
+        const invalid = correctAnswers.find(c => !validOptions.includes(c));
+        if (invalid) errors.push(`正确答案 ${invalid} 不在选项中`);
+      }
+
+      const score = parseInt(raw.score, 10);
+      if (!raw.score || isNaN(score) || score <= 0) errors.push("分值必须是大于 0 的数字");
+
+      if (!errors.length) {
+        result.valid = true;
+        result.question = {
+          type,
+          content: raw.content,
+          options,
+          correctAnswer: correctAnswers,
+          score,
+          category: raw.category || "未分类"
+        };
+      } else {
+        result.errors = errors;
+      }
+    }
+
+    function renderBatchPreview() {
+      const previewArea = document.getElementById("batchPreviewArea");
+      const tbody = document.getElementById("batchPreviewBody");
+      const importBtn = document.getElementById("batchImportBtn");
+
+      if (!batchRows.length) {
+        previewArea.style.display = "none";
+        importBtn.disabled = true;
+        return;
+      }
+
+      const validCount = batchRows.filter(r => r.valid).length;
+      const invalidCount = batchRows.length - validCount;
+
+      document.getElementById("batchTotal").textContent = batchRows.length;
+      document.getElementById("batchValid").textContent = validCount;
+      document.getElementById("batchInvalid").textContent = invalidCount;
+
+      tbody.innerHTML = batchRows.slice(0, 50).map(r => `
+        <tr>
+          <td><i class="fa-solid ${r.valid ? 'fa-check-circle status-ok' : 'fa-circle-xmark status-err'}"></i></td>
+          <td>${r.raw.type}</td>
+          <td>${r.raw.content || "-"}</td>
+          <td>${r.raw.correct || "-"}</td>
+          <td>${r.raw.score || "-"}</td>
+          <td>${r.raw.category || "-"}</td>
+          <td>
+            ${r.valid ? '<span class="status-ok">有效</span>' : `<span class="status-err">无效</span><div class="err-msg">${r.errors.join("；")}</div>`}
+          </td>
+        </tr>
+      `).join("");
+
+      if (batchRows.length > 50) {
+        tbody.innerHTML += `<tr><td colspan="7" class="text-center" style="padding: 12px; color: var(--text-muted); font-size: 12px;">仅显示前 50 条，共 ${batchRows.length} 条</td></tr>`;
+      }
+
+      previewArea.style.display = "block";
+      importBtn.disabled = validCount === 0;
+    }
+
+    window.downloadTemplate = function() {
+      const headers = ["题型", "题干", "选项A", "选项B", "选项C", "选项D", "正确答案", "分值", "分类"];
+      const sample1 = ["单选", "2024 新产品的核心升级点是什么？", "性能提升 30%", "价格降低 20%", "外观颜色增加", "保修期延长", "A", "5", "产品知识"];
+      const sample2 = ["多选", "代理商可享受的支持包括？", "培训支持", "物料支持", "价格保护", "售后支持", "ABCD", "5", "销售政策"];
+      const sample3 = ["判断", "代理商最低提货量为 100 台", "", "", "", "", "B", "2", "销售政策"];
+      const csv = [headers, sample1, sample2, sample3].map(row => row.map(escapeCsvCell).join(",")).join("\r\n");
+
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "题目导入模板.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    };
+
+    function escapeCsvCell(cell) {
+      if (cell == null) return "";
+      const str = String(cell);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    }
+
+    window.importBatch = function() {
+      const validQuestions = batchRows.filter(r => r.valid).map(r => r.question);
+      if (!validQuestions.length) return;
+
+      validQuestions.forEach(q => DataStore.addQuestion({ ...q, creatorId: currentUser.id }));
+      AdminCommon.toast(`成功导入 ${validQuestions.length} 道题目`);
+      closeBatchModal();
+      loadQuestions();
+    };
+
+    loadQuestions();
+  </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学习统计 - 代理商学习考核平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">学习统计</h1>
+          <select class="form-control" id="audienceFilter" style="width: 140px;">
+            <option value="">全部学员</option>
+            <option value="agent">代理商</option>
+            <option value="employee">内部员工</option>
+          </select>
+        </div>
+
+        <div class="admin-stats" id="studyStats"></div>
+
+        <div class="card">
+          <div class="card-title">资料热度排行</div>
+          <div class="chart-container">
+            <canvas id="materialChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("stats-study.html");
+    AdminCommon.setPageTitle("学习统计");
+
+    let materialChart = null;
+
+    function renderStats() {
+      const role = document.getElementById("audienceFilter").value;
+      const stats = DataStore.getStudyStats(role || null);
+      const cards = [
+        { icon: "fa-book", color: "blue", value: stats.materialCount, label: "资料总数" },
+        { icon: "fa-eye", color: "green", value: stats.totalView, label: "总浏览次数" },
+        { icon: "fa-check-circle", color: "orange", value: stats.totalFinish, label: "总完成次数" },
+        { icon: "fa-percent", color: "red", value: stats.finishRate + "%", label: "完成率" }
+      ];
+      if (role) {
+        cards.push({ icon: "fa-users", color: "purple", value: stats.learnerCount, label: role === "agent" ? "代理商数" : "员工数" });
+      } else {
+        cards.push({ icon: "fa-users", color: "purple", value: stats.learnerCount, label: "学员总数" });
+      }
+
+      document.getElementById("studyStats").innerHTML = cards.map(c => `
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon ${c.color}"><i class="fa-solid ${c.icon}"></i></div>
+          <div class="admin-stat-info">
+            <div class="admin-stat-value">${c.value}</div>
+            <div class="admin-stat-label">${c.label}</div>
+          </div>
+        </div>
+      `).join("");
+
+      const materials = DataStore.getMaterials().filter(m => !role || DataStore._isVisibleToRole(m, role));
+      const ctx = document.getElementById("materialChart").getContext("2d");
+      if (materialChart) materialChart.destroy();
+      materialChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: materials.map(m => m.title.length > 8 ? m.title.slice(0, 8) + "..." : m.title),
+          datasets: [
+            { label: "浏览次数", data: materials.map(m => m.viewCount || 0), backgroundColor: "#1677ff" },
+            { label: "完成次数", data: materials.map(m => m.finishCount || 0), backgroundColor: "#52c41a" }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    document.getElementById("audienceFilter").addEventListener("change", renderStats);
+    renderStats();
+  </script>
+</body>
+</html>

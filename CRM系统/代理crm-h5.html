@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>讯弈围棋·代理 CRM（H5）</title>
+<link rel="stylesheet" href="assets/css/h5-style.css">
+</head>
+<body>
+
+<div id="toast-wrap"></div>
+
+<div class="h5-app">
+
+  <!-- 顶部导航 -->
+  <header class="h5-header" id="h5-header">
+    <div class="left">
+      <button class="back" id="h5-back" style="display:none;" onclick="popPage()">&#8249;</button>
+    </div>
+    <div class="title" id="h5-title">CRM 工作台</div>
+    <div class="right" id="h5-actions"></div>
+  </header>
+
+  <!-- 页面：工作台 -->
+  <div class="h5-page active" id="page-dashboard-h5">
+    <div class="h5-stat-grid">
+      <div class="h5-stat-card" onclick="switchTab('customers')">
+        <div class="label">客户总数</div>
+        <div class="value" id="dash-total">386</div>
+        <div class="sub">本月新增 42</div>
+      </div>
+      <div class="h5-stat-card" onclick="switchTab('customers')">
+        <div class="label">本月新增线索</div>
+        <div class="value" id="dash-new">42</div>
+        <div class="sub">较上月 +18%</div>
+      </div>
+      <div class="h5-stat-card" onclick="switchTab('tasks')">
+        <div class="label">待跟进（含逾期）</div>
+        <div class="value" id="dash-pending">15</div>
+        <div class="sub">逾期 4 条</div>
+      </div>
+      <div class="h5-stat-card" onclick="switchTab('funnel')">
+        <div class="label">本月转化（→在读）</div>
+        <div class="value" id="dash-active">9</div>
+        <div class="sub">转化率 21.4%</div>
+      </div>
+    </div>
+
+    <div class="h5-section">
+      <div class="h5-section-title">
+        今日待办
+        <span class="more" onclick="switchTab('tasks')">查看全部 &#8250;</span>
+      </div>
+      <div class="h5-todo-list" id="dash-todos"></div>
+    </div>
+
+    <div class="h5-section">
+      <div class="h5-section-title">
+        转化漏斗（本月）
+        <span class="more" onclick="switchTab('funnel')">详情 &#8250;</span>
+      </div>
+      <div class="h5-section-body">
+        <div class="h5-funnel" id="dash-funnel"></div>
+      </div>
+    </div>
+
+    <div class="h5-section">
+      <div class="h5-section-title">近期新增客户</div>
+      <div class="h5-customer-list" id="dash-recent" style="padding:0 14px 14px;"></div>
+    </div>
+  </div>
+
+  <!-- 页面：客户列表 -->
+  <div class="h5-page" id="page-customers-h5">
+    <div class="h5-search-bar">
+      <input type="text" id="cust-search-h5" placeholder="搜手机号 / 家长 / 孩子姓名" onkeydown="if(event.key==='Enter')renderCustomers()">
+      <button class="h5-btn filter-btn" onclick="toggleFilter()">&#128269;</button>
+    </div>
+
+    <div class="h5-filter-panel" id="h5-filter-panel">
+      <div class="h5-filter-row">
+        <label>来源</label>
+        <select id="cust-source-h5" onchange="renderCustomers()">
+          <option value="">全部来源</option>
+          <option>抖音直播</option>
+          <option>转介绍</option>
+          <option>地推扫码</option>
+          <option>美团/点评</option>
+          <option>到店咨询</option>
+        </select>
+      </div>
+      <div class="h5-filter-row" id="filter-owner-row">
+        <label>负责人</label>
+        <select id="cust-owner-h5" onchange="renderCustomers()">
+          <option value="">全部负责人</option>
+          <option>王店长</option>
+          <option>李老师</option>
+          <option>张老师</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="h5-btn h5-btn-block" onclick="resetFilter()">重置</button>
+        <button class="h5-btn h5-btn-primary h5-btn-block" onclick="toggleFilter()">完成</button>
+      </div>
+    </div>
+
+    <div class="h5-stage-scroll" id="cust-stage-scroll"></div>
+
+    <div class="h5-customer-list" id="customers-list-h5"></div>
+
+    <button class="h5-fab" onclick="openSheet('sheet-new-customer')">+</button>
+  </div>
+
+  <!-- 页面：任务 -->
+  <div class="h5-page" id="page-tasks-h5">
+    <div class="h5-task-tabs" id="task-tabs-h5">
+      <div class="tab active" onclick="switchTaskTab('pending')">待跟进</div>
+      <div class="tab" onclick="switchTaskTab('overdue')">逾期</div>
+      <div class="tab" onclick="switchTaskTab('done')">今日完成</div>
+    </div>
+    <div class="h5-customer-list" id="tasks-list-h5"></div>
+  </div>
+
+  <!-- 页面：数据看板 -->
+  <div class="h5-page" id="page-funnel-h5">
+    <div class="h5-section">
+      <div class="h5-section-title">转化漏斗</div>
+      <div class="h5-section-body">
+        <div class="h5-funnel" id="board-funnel"></div>
+      </div>
+    </div>
+
+    <div class="h5-section">
+      <div class="h5-section-title">来源分析</div>
+      <div class="h5-section-body" id="board-source"></div>
+    </div>
+
+    <div class="h5-section">
+      <div class="h5-section-title">各阶段停留与流失</div>
+      <div class="h5-section-body">
+        <div style="font-size:12px;color:#606266;margin-bottom:12px;">平均停留天数 / 流失人数</div>
+        <div id="board-dwell"></div>
+      </div>
+    </div>
+
+    <div class="h5-section">
+      <div class="h5-section-title">流失原因分布</div>
+      <div class="h5-section-body" id="board-reason"></div>
+    </div>
+  </div>
+
+  <!-- 页面：我的 -->
+  <div class="h5-page" id="page-mine-h5">
+    <div class="h5-mine-header">
+      <div class="avatar" id="mine-avatar">王</div>
+      <div class="info">
+        <div class="name" id="mine-name">王老板</div>
+        <div class="role" id="mine-role">代理老板 · 全部门店</div>
+      </div>
+    </div>
+
+    <div class="h5-section" style="margin-bottom:12px;">
+      <div class="h5-section-title">切换演示角色</div>
+      <div class="h5-section-body">
+        <div class="h5-stage-scroll">
+          <button class="h5-stage-tab" onclick="setRoleH5('boss')">代理老板</button>
+          <button class="h5-stage-tab" onclick="setRoleH5('manager')">店长</button>
+          <button class="h5-stage-tab" onclick="setRoleH5('staff')">店员</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="h5-menu-list">
+      <div class="h5-menu-item" onclick="openSheet('sheet-source-setting')">
+        <div class="left"><span class="icon">&#127991;</span> 客户来源标签</div>
+        <span class="arrow">&#8250;</span>
+      </div>
+      <div class="h5-menu-item" onclick="openSheet('sheet-result-setting')">
+        <div class="left"><span class="icon">&#128221;</span> 跟进结果模板</div>
+        <span class="arrow">&#8250;</span>
+      </div>
+      <div class="h5-menu-item" onclick="openSheet('sheet-integration')">
+        <div class="left"><span class="icon">&#128279;</span> 数据对接说明</div>
+        <span class="arrow">&#8250;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全屏页：客户详情 -->
+  <div class="h5-fullpage" id="page-customer-detail-h5">
+    <div class="h5-header">
+      <div class="left"><button class="back" onclick="popPage()">&#8249;</button></div>
+      <div class="title">客户详情</div>
+      <div class="right"></div>
+    </div>
+    <div class="h5-fullpage-body" id="customer-detail-body"></div>
+  </div>
+
+  <!-- 底部 Sheet：新建客户 -->
+  <div class="h5-sheet-overlay" id="sheet-new-customer" onclick="if(event.target===this)closeSheet('sheet-new-customer')">
+    <div class="h5-sheet">
+      <div class="h5-sheet-header">
+        <div class="h5-sheet-title">新建客户</div>
+        <button class="h5-sheet-close" onclick="closeSheet('sheet-new-customer')">&times;</button>
+      </div>
+      <div class="h5-sheet-body">
+        <div class="h5-form">
+          <div class="h5-form-row">
+            <label class="label"><span class="req">*</span>家长手机</label>
+            <input type="tel" id="nc-phone" placeholder="11 位手机号" maxlength="11">
+          </div>
+          <div class="h5-form-row">
+            <label class="label"><span class="req">*</span>家长称呼</label>
+            <input type="text" id="nc-name" placeholder="如：张妈妈 / 李先生">
+          </div>
+          <div class="h5-form-row">
+            <label class="label">微信号</label>
+            <input type="text" id="nc-wechat" placeholder="选填">
+          </div>
+          <div class="h5-form-row">
+            <label class="label"><span class="req">*</span>来源</label>
+            <select id="nc-source"></select>
+          </div>
+          <div class="h5-form-row" id="nc-owner-row">
+            <label class="label">负责人</label>
+            <select id="nc-owner"></select>
+          </div>
+          <div class="h5-form-row">
+            <label class="label">孩子姓名</label>
+            <input type="text" id="nc-kid" placeholder="选填，可稍后补充">
+          </div>
+          <div class="h5-form-row">
+            <label class="label">孩子年龄</label>
+            <input type="number" id="nc-age" placeholder="如：6">
+          </div>
+          <div class="h5-form-row">
+            <label class="label">备注</label>
+            <textarea id="nc-remark" placeholder="首次沟通要点"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="h5-sheet-footer">
+        <button class="h5-btn h5-btn-block" onclick="closeSheet('sheet-new-customer')">取消</button>
+        <button class="h5-btn h5-btn-primary h5-btn-block" onclick="createCustomerH5()">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet：添加跟进 -->
+  <div class="h5-sheet-overlay" id="sheet-follow" onclick="if(event.target===this)closeSheet('sheet-follow')">
+    <div class="h5-sheet">
+      <div class="h5-sheet-header">
+        <div class="h5-sheet-title">添加跟进</div>
+        <button class="h5-sheet-close" onclick="closeSheet('sheet-follow')">&times;</button>
+      </div>
+      <div class="h5-sheet-body">
+        <div class="h5-form">
+          <div class="h5-form-row">
+            <label class="label">客户</label>
+            <input type="text" id="fl-customer" readonly style="background:#f5f7fa;">
+          </div>
+          <div class="h5-form-row">
+            <label class="label"><span class="req">*</span>跟进渠道</label>
+            <div class="radio-group">
+              <label><input type="radio" name="fl-ch" value="phone" checked> 电话</label>
+              <label><input type="radio" name="fl-ch" value="wechat"> 微信</label>
+              <label><input type="radio" name="fl-ch" value="visit"> 到店</label>
+            </div>
+          </div>
+          <div class="h5-form-row">
+            <label class="label">结果模板</label>
+            <select id="fl-tpl" onchange="applyFollowTpl()"><option value="">选填</option></select>
+          </div>
+          <div class="h5-form-row">
+            <label class="label"><span class="req">*</span>跟进结果</label>
+            <textarea id="fl-result" placeholder="本次沟通内容与结果"></textarea>
+          </div>
+          <div class="h5-form-row">
+            <label class="label">下次回访</label>
+            <input type="date" id="fl-next">
+          </div>
+        </div>
+      </div>
+      <div class="h5-sheet-footer">
+        <button class="h5-btn h5-btn-block" onclick="closeSheet('sheet-follow')">取消</button>
+        <button class="h5-btn h5-btn-primary h5-btn-block" onclick="saveFollowH5()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet：推进阶段 -->
+  <div class="h5-sheet-overlay" id="sheet-stage" onclick="if(event.target===this)closeSheet('sheet-stage')">
+    <div class="h5-sheet" style="max-height:50vh;">
+      <div class="h5-sheet-header">
+        <div class="h5-sheet-title">推进阶段</div>
+        <button class="h5-sheet-close" onclick="closeSheet('sheet-stage')">&times;</button>
+      </div>
+      <div class="h5-sheet-body">
+        <div style="font-size:13px;color:#606266;margin-bottom:14px;">当前阶段：<span id="stage-current"></span></div>
+        <div class="h5-form">
+          <div class="h5-form-row">
+            <label class="label">目标阶段</label>
+            <select id="stage-target"></select>
+          </div>
+          <div class="h5-form-row">
+            <label class="label">备注</label>
+            <textarea id="stage-remark" placeholder="推进原因"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="h5-sheet-footer">
+        <button class="h5-btn h5-btn-block" onclick="closeSheet('sheet-stage')">取消</button>
+        <button class="h5-btn h5-btn-success h5-btn-block" onclick="promoteStageH5()">确认推进</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet：分配负责人 -->
+  <div class="h5-sheet-overlay" id="sheet-assign" onclick="if(event.target===this)closeSheet('sheet-assign')">
+    <div class="h5-sheet" style="max-height:55vh;">
+      <div class="h5-sheet-header">
+        <div class="h5-sheet-title">分配负责人</div>
+        <button class="h5-sheet-close" onclick="closeSheet('sheet-assign')">&times;</button>
+      </div>
+      <div class="h5-sheet-body">
+        <div class="h5-form">
+          <div class="h5-form-row">
+            <label class="label">客户</label>
+            <input type="text" id="asg-customer-h5" readonly style="background:#f5f7fa;">
+          </div>
+          <div class="h5-form-row">
+            <label class="label">当前负责人</label>
+            <input type="text" id="asg-current-h5" readonly style="background:#f5f7fa;">
+          </div>
+          <div class="h5-form-row">
+            <label class="label"><span class="req">*</span>分配给</label>
+            <select id="asg-owner-h5"></select>
+          </div>
+        </div>
+      </div>
+      <div class="h5-sheet-footer">
+        <button class="h5-btn h5-btn-block" onclick="closeSheet('sheet-assign')">取消</button>
+        <button class="h5-btn h5-btn-primary h5-btn-block" onclick="assignCustomerH5()">确认分配</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet：添加孩子 -->
+  <div class="h5-sheet-overlay" id="sheet-kid" onclick="if(event.target===this)closeSheet('sheet-kid')">
+    <div class="h5-sheet" style="max-height:55vh;">
+      <div class="h5-sheet-header">
+        <div class="h5-sheet-title">添加孩子</div>
+        <button class="h5-sheet-close" onclick="closeSheet('sheet-kid')">&times;</button>
+      </div>
+      <div class="h5-sheet-body">
+        <div class="h5-form">
+          <div class="h5-form-row">
+            <label class="label"><span class="req">*</span>姓名</label>
+            <input type="text" id="kid-name" placeholder="孩子姓名">
+          </div>
+          <div class="h5-form-row">
+            <label class="label">性别</label>
+            <select id="kid-sex"><option>男</option><option>女</option></select>
+          </div>
+          <div class="h5-form-row">
+            <label class="label">年龄</label>
+            <input type="number" id="kid-age" placeholder="如：6">
+          </div>
+          <div class="h5-form-row">
+            <label class="label">基础</label>
+            <select id="kid-base"><option>零基础</option><option>有基础</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="h5-sheet-footer">
+        <button class="h5-btn h5-btn-block" onclick="closeSheet('sheet-kid')">取消</button>
+        <button class="h5-btn h5-btn-primary h5-btn-block" onclick="addKidH5()">添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet：设置 - 客户来源标签 -->
+  <div class="h5-sheet-overlay" id="sheet-source-setting" onclick="if(event.target===this)closeSheet('sheet-source-setting')">
+    <div class="h5-sheet">
+      <div class="h5-sheet-header">
+        <div class="h5-sheet-title">客户来源标签</div>
+        <button class="h5-sheet-close" onclick="closeSheet('sheet-source-setting')">&times;</button>
+      </div>
+      <div class="h5-sheet-body" id="source-setting-body"></div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet：设置 - 跟进结果模板 -->
+  <div class="h5-sheet-overlay" id="sheet-result-setting" onclick="if(event.target===this)closeSheet('sheet-result-setting')">
+    <div class="h5-sheet">
+      <div class="h5-sheet-header">
+        <div class="h5-sheet-title">跟进结果模板</div>
+        <button class="h5-sheet-close" onclick="closeSheet('sheet-result-setting')">&times;</button>
+      </div>
+      <div class="h5-sheet-body" id="result-setting-body"></div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet：数据对接说明 -->
+  <div class="h5-sheet-overlay" id="sheet-integration" onclick="if(event.target===this)closeSheet('sheet-integration')">
+    <div class="h5-sheet">
+      <div class="h5-sheet-header">
+        <div class="h5-sheet-title">数据对接说明</div>
+        <button class="h5-sheet-close" onclick="closeSheet('sheet-integration')">&times;</button>
+      </div>
+      <div class="h5-sheet-body">
+        <div style="background:#fdf6ec;border:1px solid #faecd8;border-left:3px solid #e6a23c;border-radius:4px;padding:10px 14px;font-size:13px;color:#b45309;margin-bottom:14px;line-height:1.7;">
+          <b>核心原则：CRM 对主系统数据只读，绝不写回 / 修改。</b><br>
+          CRM 仅写自有数据（客户、跟进记录、阶段、来源标签、结果模板）；家长 / 学员 / 订单 / 合约 / 门店 / 账号等主系统数据一律只读引用。
+        </div>
+        <table style="font-size:12px;">
+          <thead><tr><th>CRM 数据</th><th>对接方式</th></tr></thead>
+          <tbody>
+            <tr><td>家长（手机号主体）</td><td>复用主系统，手机号唯一键</td></tr>
+            <tr><td>学员（孩子）</td><td>复用主系统</td></tr>
+            <tr><td>订单 / 合约</td><td>复用主系统（只读）</td></tr>
+            <tr><td>阶段＝在读</td><td>合约审批通过自动跳「在读」</td></tr>
+            <tr><td>所属门店</td><td>复用主系统组织架构</td></tr>
+            <tr><td>负责人 / 角色</td><td>复用代理端账号体系</td></tr>
+            <tr><td>来源标签 / 跟进模板</td><td>CRM 新建</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 Tabbar -->
+  <nav class="h5-tabbar" id="h5-tabbar">
+    <div class="tab-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+      <div class="icon">&#128202;</div>
+      <div>工作台</div>
+    </div>
+    <div class="tab-item" data-tab="customers" onclick="switchTab('customers')">
+      <div class="icon">&#128101;</div>
+      <div>客户</div>
+    </div>
+    <div class="tab-item" data-tab="tasks" onclick="switchTab('tasks')">
+      <div class="icon">&#9201;</div>
+      <div>任务</div>
+    </div>
+    <div class="tab-item" data-tab="funnel" onclick="switchTab('funnel')">
+      <div class="icon">&#128200;</div>
+      <div>看板</div>
+    </div>
+    <div class="tab-item" data-tab="mine" onclick="switchTab('mine')">
+      <div class="icon">&#128100;</div>
+      <div>我的</div>
+    </div>
+  </nav>
+
+</div>
+
+<script>
+/* ========== 工具函数 ========== */
+function toast(msg, type) {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 2200);
+}
+
+function maskPhone(phone) {
+  if (!phone || phone.length !== 11) return phone;
+  return phone.slice(0, 3) + '****' + phone.slice(7);
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function nowStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + ' '
+    + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+function addDays(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+/* ========== 配置数据 ========== */
+const STAGE_ORDER = ['lead','contact','intent','trial','active','lost'];
+const STAGE_CN = { lead:'线索', contact:'联系中', intent:'意向', trial:'试听', active:'在读', lost:'流失' };
+const STAGE_CLASS = { lead:'h5-stage-lead', contact:'h5-stage-contact', intent:'h5-stage-intent', trial:'h5-stage-trial', active:'h5-stage-active', lost:'h5-stage-lost' };
+const FOLLOW_TITLE = { phone:'电话跟进', wechat:'微信跟进', visit:'到店跟进' };
+const FOLLOW_CLASS = { phone:'phone', wechat:'', visit:'visit' };
+
+const STAFF = {
+  '王店长': { role: '店长', store: '城东旗舰店' },
+  '李老师': { role: '店员', store: '城东旗舰店' },
+  '张老师': { role: '店员', store: '城西店' },
+  '孙店长': { role: '店长', store: '高新店' }
+};
+
+const ROLES = {
+  boss: { name: '王老板', avatar: '王', tag: '代理老板', store: null, owner: null, menus: { team: true, board: true, settings: true } },
+  manager: { name: '王店长', avatar: '王', tag: '店长', store: '城东旗舰店', owner: null, menus: { team: true, board: true, settings: false } },
+  staff: { name: '李老师', avatar: '李', tag: '店员', store: '城东旗舰店', owner: '李老师', menus: { team: false, board: false, settings: false } }
+};
+
+let sources = ['抖音直播','转介绍','地推扫码','美团/点评','到店咨询','电话咨询'];
+let sourceEnabled = { '抖音直播':true,'转介绍':true,'地推扫码':true,'美团/点评':true,'到店咨询':true,'电话咨询':false };
+let resultTemplates = [
+  { text:'已接通，有意向', channel:'电话', enabled:true },
+  { text:'未接通，待改约', channel:'电话', enabled:true },
+  { text:'已加微信，发资料', channel:'微信', enabled:true },
+  { text:'到店试听完成', channel:'到店', enabled:true },
+  { text:'暂无意向，标记流失', channel:'通用', enabled:true }
+];
+
+let currentRole = 'boss';
+let currentTab = 'dashboard';
+let currentTaskTab = 'pending';
+let currentStageFilter = 'all';
+let currentCustomerId = null;
+let customerSeq = 0;
+
+/* ========== 初始客户数据 ========== */
+let customers = [];
+function initCustomers() {
+  const seed = [
+    { name:'张妈妈', phone:'13712342210', kidName:'朵朵', kidAge:'6岁', stage:'intent', source:'转介绍', owner:'王店长', store:'城东旗舰店', next:'2026-05-23', nextNote:'电话回访', overdue:1 },
+    { name:'李先生', phone:'13512348841', kidName:'乐乐', kidAge:'5岁', stage:'trial', source:'美团/点评', owner:'李老师', store:'城东旗舰店', next:'2026-05-23', nextNote:'确认试听时间', overdue:0 },
+    { name:'陈女士', phone:'13812346621', kidName:'豆豆', kidAge:'5岁', stage:'lead', source:'抖音直播', owner:'王店长', store:'城东旗舰店', next:'', nextNote:'待首联', overdue:0 },
+    { name:'周爸爸', phone:'13612341199', kidName:'果果', kidAge:'7岁', stage:'contact', source:'地推扫码', owner:'张老师', store:'城西店', next:'2026-05-24', nextNote:'改约通话', overdue:0 },
+    { name:'吴妈妈', phone:'13912344452', kidName:'多多', kidAge:'6岁', stage:'active', source:'转介绍', owner:'李老师', store:'城东旗舰店', next:'', nextNote:'', overdue:0 },
+    { name:'郑先生', phone:'13712347763', kidName:'淼淼', kidAge:'8岁', stage:'lost', source:'美团/点评', owner:'孙店长', store:'高新店', next:'', nextNote:'', overdue:0 }
+  ];
+  seed.forEach(r => addCustomerData(r.name, r.phone, r.source, r.owner, r.store, r.kidName, r.kidAge, r.stage, r.next, r.nextNote, true));
+  // 补充默认跟进记录
+  customers[0].follows = [
+    { ch:'phone', text:'试听后回访，家长说孩子挺喜欢，但要和爸爸商量学费。已发优惠政策。', time:'2026-05-20 15:30', next:'2026-05-23', by:'王店长' },
+    { ch:'visit', text:'朵朵参加入门体验课，课堂表现积极，老师评价手感好。', time:'2026-05-18 10:00', next:'', by:'李老师' },
+    { ch:'wechat', text:'介绍课程体系和价格，家长有意向，约定本周末到店试听。', time:'2026-05-12 19:40', next:'', by:'王店长' },
+    { ch:'phone', text:'吴妈妈转介绍，电话接通，孩子 6 岁，对围棋感兴趣。', time:'2026-05-10 14:30', next:'', by:'王店长' }
+  ];
+}
+
+function addCustomerData(name, phone, source, owner, store, kidName, kidAge, stage, next, nextNote, init) {
+  customerSeq++;
+  const c = {
+    id: 'c_' + customerSeq,
+    name: name,
+    phone: phone,
+    maskedPhone: maskPhone(phone),
+    wechat: '',
+    stage: stage || 'lead',
+    source: source,
+    owner: owner,
+    store: store,
+    createdAt: init ? '2026-05-10 14:22' : nowStr(),
+    nextFollow: next || '',
+    nextNote: nextNote || '',
+    follows: [],
+    kids: kidName ? [{ name: kidName, age: kidAge, sex:'', base:'零基础', main:true }] : []
+  };
+  customers.unshift(c);
+  return c.id;
+}
+
+function getCustomer(id) { return customers.find(c => c.id === id); }
+
+/* ========== 角色与权限 ========== */
+function setRoleH5(role) {
+  currentRole = role;
+  const r = ROLES[role];
+  document.getElementById('mine-name').textContent = r.name;
+  document.getElementById('mine-avatar').textContent = r.avatar;
+  document.getElementById('mine-role').textContent = r.tag + (r.store ? ' · ' + r.store : ' · 全部门店');
+
+  // 控制 Tab 可见性
+  document.querySelectorAll('#h5-tabbar .tab-item').forEach(t => t.style.display = '');
+  if (!r.menus.board) document.querySelector('#h5-tabbar .tab-item[data-tab="funnel"]').style.display = 'none';
+
+  // 控制「我的」页面设置入口
+  const menuList = document.querySelector('#page-mine-h5 .h5-menu-list');
+  if (menuList) menuList.style.display = r.menus.settings ? 'block' : 'none';
+
+  // 若当前 tab 不可见，切回工作台
+  if (!r.menus.board && currentTab === 'funnel') switchTab('dashboard');
+
+  renderAll();
+  toast('已切换到「' + r.tag + '」视角', 'info');
+}
+
+function visibleCustomers() {
+  const r = ROLES[currentRole];
+  return customers.filter(c => {
+    if (r.store && c.store !== r.store) return false;
+    if (r.owner && c.owner !== r.owner) return false;
+    return true;
+  });
+}
+
+function assignableOwners() {
+  if (currentRole === 'boss') return Object.keys(STAFF);
+  const r = ROLES[currentRole];
+  return Object.keys(STAFF).filter(n => STAFF[n].store === r.store);
+}
+
+/* ========== 导航与路由 ========== */
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.h5-page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + tab + '-h5');
+  if (page) page.classList.add('active');
+
+  document.querySelectorAll('#h5-tabbar .tab-item').forEach(t => t.classList.remove('active'));
+  const tabEl = document.querySelector('#h5-tabbar .tab-item[data-tab="' + tab + '"]');
+  if (tabEl) tabEl.classList.add('active');
+
+  const titles = { dashboard:'CRM 工作台', customers:'客户', tasks:'跟进任务', funnel:'数据看板', mine:'我的' };
+  setHeader(titles[tab] || 'CRM', false, '');
+
+  renderAll();
+  window.scrollTo(0, 0);
+}
+
+let routeStack = [];
+function pushPage(pageId, title) {
+  routeStack.push({ tab: currentTab, title: document.getElementById('h5-title').textContent });
+  document.querySelectorAll('.h5-page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById(pageId);
+  if (page) {
+    page.classList.add('active');
+    if (page.classList.contains('h5-fullpage')) page.classList.add('open');
+  }
+  setHeader(title, true, '');
+  window.scrollTo(0, 0);
+}
+
+function popPage() {
+  if (routeStack.length === 0) return;
+  const prev = routeStack.pop();
+  document.querySelectorAll('.h5-page').forEach(p => {
+    p.classList.remove('active');
+    if (p.classList.contains('h5-fullpage')) p.classList.remove('open');
+  });
+  const page = document.getElementById('page-' + prev.tab + '-h5');
+  if (page) page.classList.add('active');
+  setHeader(prev.title, routeStack.length > 0, '');
+  currentTab = prev.tab;
+  document.querySelectorAll('#h5-tabbar .tab-item').forEach(t => t.classList.remove('active'));
+  const tabEl = document.querySelector('#h5-tabbar .tab-item[data-tab="' + currentTab + '"]');
+  if (tabEl) tabEl.classList.add('active');
+  renderAll();
+}
+
+function setHeader(title, showBack, rightHtml) {
+  document.getElementById('h5-title').textContent = title;
+  document.getElementById('h5-back').style.display = showBack ? 'block' : 'none';
+  document.getElementById('h5-actions').innerHTML = rightHtml || '';
+}
+
+/* ========== Sheet 弹窗 ========== */
+function openSheet(id) { document.getElementById(id).classList.add('open'); }
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+
+/* ========== 渲染工作台 ========== */
+function renderDashboard() {
+  const list = visibleCustomers();
+  const total = list.length;
+  const newLeads = list.filter(c => c.stage === 'lead').length;
+  const pending = list.filter(c => c.nextFollow && c.stage !== 'active' && c.stage !== 'lost').length;
+  const active = list.filter(c => c.stage === 'active').length;
+
+  document.getElementById('dash-total').textContent = total;
+  document.getElementById('dash-new').textContent = newLeads;
+  document.getElementById('dash-pending').textContent = pending;
+  document.getElementById('dash-active').textContent = active;
+
+  // 今日待办
+  const todoWrap = document.getElementById('dash-todos');
+  todoWrap.innerHTML = '';
+  const todos = list.filter(c => c.nextFollow && c.stage !== 'active' && c.stage !== 'lost').slice(0, 4);
+  if (todos.length === 0) { todoWrap.innerHTML = '<div class="h5-empty">今日暂无待办</div>'; }
+  else todos.forEach(c => todoWrap.appendChild(buildTodoItem(c)));
+
+  // 漏斗
+  renderFunnelBars('dash-funnel', list);
+
+  // 近期新增
+  const recentWrap = document.getElementById('dash-recent');
+  recentWrap.innerHTML = '';
+  list.slice(0, 4).forEach(c => recentWrap.appendChild(buildCustomerCard(c, true)));
+}
+
+function buildTodoItem(c) {
+  const overdue = c.nextFollow < todayStr();
+  const today = c.nextFollow === todayStr();
+  const item = el('div', 'h5-todo-item');
+  const dot = el('span', 'h5-todo-dot ' + (overdue ? 'red' : (today ? 'orange' : 'blue')));
+  const main = el('div', 'h5-todo-main');
+  const name = el('div', 'h5-todo-name', '回访 ' + c.name + (c.kids[0] ? '（' + c.kids[0].name + '）' : ''));
+  const meta = el('div', 'h5-todo-meta', STAGE_CN[c.stage] + ' · ' + c.nextNote + (overdue ? ' · 逾期' : ''));
+  main.appendChild(name); main.appendChild(meta);
+  const btn = el('button', 'h5-btn h5-btn-primary h5-btn-sm', '去跟进');
+  btn.onclick = () => openFollowH5(c.id);
+  item.appendChild(dot); item.appendChild(main); item.appendChild(btn);
+  return item;
+}
+
+/* ========== 渲染漏斗 ========== */
+function renderFunnelBars(containerId, list) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  const counts = {};
+  STAGE_ORDER.forEach(s => counts[s] = 0);
+  list.forEach(c => counts[c.stage]++);
+  const max = Math.max(...STAGE_ORDER.map(s => counts[s])) || 1;
+  STAGE_ORDER.forEach(s => {
+    const row = el('div', 'funnel-row');
+    const bar = el('div', 'h5-funnel-bar');
+    bar.style.width = Math.max(20, (counts[s] / max) * 100) + '%';
+    bar.style.background = getStageColor(s);
+    bar.innerHTML = STAGE_CN[s] + ' ' + counts[s];
+    bar.onclick = () => { switchTab('customers'); currentStageFilter = s; renderCustomers(); };
+    row.appendChild(bar);
+    wrap.appendChild(row);
+  });
+}
+
+function getStageColor(s) {
+  const map = { lead:'#909399', contact:'#4080FF', intent:'#e6a23c', trial:'#9b59b6', active:'#67c23a', lost:'#f56c6c' };
+  return map[s] || '#909399';
+}
+
+/* ========== 渲染客户列表 ========== */
+function renderCustomers() {
+  const wrap = document.getElementById('customers-list-h5');
+  wrap.innerHTML = '';
+  const r = ROLES[currentRole];
+
+  // 阶段标签
+  const stageWrap = document.getElementById('cust-stage-scroll');
+  stageWrap.innerHTML = '';
+  const list = visibleCustomers();
+  const counts = {};
+  STAGE_ORDER.forEach(s => counts[s] = 0);
+  list.forEach(c => counts[c.stage]++);
+  const tabs = [{k:'all',n:'全部'}].concat(STAGE_ORDER.map(s => ({k:s,n:STAGE_CN[s]})));
+  tabs.forEach(t => {
+    const btn = el('div', 'h5-stage-tab' + (currentStageFilter === t.k ? ' active' : ''));
+    btn.textContent = t.n;
+    if (t.k !== 'all') {
+      const cnt = el('span', 'cnt', counts[t.k]);
+      btn.appendChild(cnt);
+    }
+    btn.onclick = () => { currentStageFilter = t.k; renderCustomers(); };
+    stageWrap.appendChild(btn);
+  });
+
+  // 筛选
+  const kw = document.getElementById('cust-search-h5').value.trim().toLowerCase();
+  const src = document.getElementById('cust-source-h5').value;
+  const owner = document.getElementById('cust-owner-h5').value;
+  document.getElementById('filter-owner-row').style.display = r.owner ? 'none' : 'block';
+
+  let filtered = list.filter(c => {
+    if (currentStageFilter !== 'all' && c.stage !== currentStageFilter) return false;
+    if (src && c.source !== src) return false;
+    if (owner && c.owner !== owner) return false;
+    if (kw) {
+      const hit = c.name.toLowerCase().includes(kw) || c.phone.includes(kw) || c.maskedPhone.includes(kw) || c.kids.some(k => k.name.toLowerCase().includes(kw));
+      if (!hit) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) { wrap.innerHTML = '<div class="h5-empty">暂无匹配客户</div>'; return; }
+  filtered.forEach(c => wrap.appendChild(buildCustomerCard(c, false)));
+}
+
+function buildMetaItem(label, value) {
+  const item = el('div', 'meta-item');
+  const labelEl = el('span', 'm-label', label);
+  const valueEl = el('span', '', value);
+  item.appendChild(labelEl);
+  item.appendChild(valueEl);
+  return item;
+}
+
+function buildCustomerCard(c, simple) {
+  const card = el('div', 'h5-customer-card');
+  const top = el('div', 'top');
+  const nameWrap = el('div', 'name-wrap');
+  const name = el('div', 'name', c.name);
+  const stage = el('span', 'h5-stage ' + STAGE_CLASS[c.stage], STAGE_CN[c.stage]);
+  nameWrap.appendChild(name); nameWrap.appendChild(stage);
+  const phone = el('div', 'phone', c.maskedPhone);
+  const left = el('div');
+  left.appendChild(nameWrap); left.appendChild(phone);
+  top.appendChild(left);
+  card.appendChild(top);
+
+  if (!simple) {
+    const grid = el('div', 'meta-grid');
+    const kidText = c.kids.map(k => k.name + (k.age ? '/' + k.age : '')).join('、') || '—';
+    const nextText = c.nextFollow ? (c.nextFollow < todayStr() ? '逾期' : c.nextFollow) : '—';
+    grid.appendChild(buildMetaItem('孩子：', kidText));
+    grid.appendChild(buildMetaItem('来源：', c.source));
+    grid.appendChild(buildMetaItem('负责人：', c.owner));
+    grid.appendChild(buildMetaItem('下次回访：', nextText));
+    card.appendChild(grid);
+
+    const actions = el('div', 'actions');
+    const detailBtn = el('button', 'h5-btn h5-btn-sm', '详情');
+    detailBtn.onclick = () => openCustomerDetail(c.id);
+    const followBtn = el('button', 'h5-btn h5-btn-primary h5-btn-sm', '跟进');
+    followBtn.onclick = () => openFollowH5(c.id);
+    actions.appendChild(detailBtn); actions.appendChild(followBtn);
+    card.appendChild(actions);
+  } else {
+    card.style.cursor = 'pointer';
+    card.onclick = () => openCustomerDetail(c.id);
+  }
+  return card;
+}
+
+function toggleFilter() {
+  document.getElementById('h5-filter-panel').classList.toggle('open');
+}
+function resetFilter() {
+  document.getElementById('cust-search-h5').value = '';
+  document.getElementById('cust-source-h5').value = '';
+  document.getElementById('cust-owner-h5').value = '';
+  renderCustomers();
+}
+
+/* ========== 客户详情 ========== */
+function openCustomerDetail(id) {
+  currentCustomerId = id;
+  const c = getCustomer(id);
+  if (!c) return;
+  pushPage('page-customer-detail-h5', '客户详情');
+
+  const body = document.getElementById('customer-detail-body');
+  body.innerHTML = '';
+
+  // 头部信息卡
+  const headerCard = el('div', 'h5-detail-header');
+  const dhTop = el('div', 'dh-top');
+  const nameBlock = el('div');
+  nameBlock.appendChild(el('div','dh-name', c.name));
+  const phoneBlock = el('div','dh-phone');
+  phoneBlock.appendChild(el('span', '', c.maskedPhone));
+  const revealBtn = el('button', 'h5-btn-text', '查看');
+  revealBtn.onclick = () => {
+    phoneBlock.innerHTML = '';
+    phoneBlock.appendChild(el('span', '', c.phone));
+    toast('已显示完整号码，本次查看已记录', 'warn');
+  };
+  phoneBlock.appendChild(revealBtn);
+  nameBlock.appendChild(phoneBlock);
+  dhTop.appendChild(nameBlock);
+  dhTop.appendChild(el('span', 'h5-stage ' + STAGE_CLASS[c.stage], STAGE_CN[c.stage]));
+  headerCard.appendChild(dhTop);
+
+  const dhActions = el('div', 'dh-actions');
+  const followBtn = el('button', 'h5-btn h5-btn-primary h5-btn-block', '+ 添加跟进');
+  followBtn.onclick = () => openFollowH5(c.id);
+  const stageBtn = el('button', 'h5-btn h5-btn-success h5-btn-block', '推进阶段');
+  stageBtn.onclick = () => openStageSheet(c.id);
+  dhActions.appendChild(followBtn); dhActions.appendChild(stageBtn);
+  headerCard.appendChild(dhActions);
+  body.appendChild(headerCard);
+
+  // 基本信息
+  const infoCard = el('div', 'h5-section');
+  infoCard.appendChild(el('div','h5-section-title','基本信息'));
+  const infoBody = el('div', 'h5-info-list');
+  const rows = [
+    ['家长称呼', c.name],
+    ['手机号', c.maskedPhone],
+    ['当前阶段', STAGE_CN[c.stage]],
+    ['来源', c.source],
+    ['负责人', c.owner],
+    ['所属门店', c.store],
+    ['录入时间', c.createdAt]
+  ];
+  rows.forEach(([k,v]) => {
+    const row = el('div','h5-info-row');
+    row.appendChild(el('div','label', k));
+    row.appendChild(el('div','value', v));
+    infoBody.appendChild(row);
+  });
+  infoCard.appendChild(infoBody);
+  body.appendChild(infoCard);
+
+  // 下次回访
+  if (c.nextFollow && c.stage !== 'active' && c.stage !== 'lost') {
+    const nextCard = el('div', 'h5-section');
+    nextCard.appendChild(el('div','h5-section-title','下次回访'));
+    const nextBody = el('div', 'h5-section-body');
+    const overdue = c.nextFollow < todayStr();
+    nextBody.appendChild(el('div', '', c.nextFollow));
+    const nextText = el('div', '', (overdue ? '已逾期 · ' : '') + c.nextNote);
+    nextText.style.cssText = 'font-size:12px;color:' + (overdue?'#f56c6c':'#909399') + ';margin-top:4px;';
+    nextBody.appendChild(nextText);
+    const btn = el('button', 'h5-btn h5-btn-primary h5-btn-sm', '立即跟进');
+    btn.onclick = () => openFollowH5(c.id);
+    nextBody.appendChild(btn);
+    nextCard.appendChild(nextBody);
+    body.appendChild(nextCard);
+  }
+
+  // 学员
+  const kidCard = el('div', 'h5-section');
+  kidCard.appendChild(el('div','h5-section-title','学员（孩子）'));
+  const kidBody = el('div', 'h5-kid-list');
+  if (c.kids.length === 0) kidBody.innerHTML = '<div class="h5-empty">暂无孩子信息</div>';
+  else c.kids.forEach(k => {
+    const card = el('div','h5-kid-card');
+    const left = el('div');
+    left.appendChild(el('div','kc-name', k.name + (k.main ? '' : '')));
+    left.appendChild(el('div','kc-meta', (k.sex||'—') + ' · ' + (k.age||'?岁') + ' · ' + (k.base||'零基础')));
+    card.appendChild(left);
+    if (k.main) card.appendChild(el('span','h5-tag h5-tag-blue','主要意向'));
+    kidBody.appendChild(card);
+  });
+  kidCard.appendChild(kidBody);
+  const addKidBtn = el('button', 'h5-btn h5-btn-sm', '+ 添加孩子');
+  addKidBtn.style.margin = '0 14px 14px';
+  addKidBtn.onclick = () => openSheet('sheet-kid');
+  kidCard.appendChild(addKidBtn);
+  body.appendChild(kidCard);
+
+  // 订单/合约
+  const orderCard = el('div', 'h5-section');
+  orderCard.appendChild(el('div','h5-section-title','订单 / 合约'));
+  const orderBody = el('div', 'h5-section-body');
+  orderBody.innerHTML = '<div class="h5-empty">暂无订单<br><span style="font-size:12px;">报名后自动同步</span></div>';
+  orderCard.appendChild(orderBody);
+  body.appendChild(orderCard);
+
+  // 分配（老板/店长）
+  if (currentRole !== 'staff') {
+    const assignCard = el('div', 'h5-section');
+    assignCard.appendChild(el('div','h5-section-title','负责人管理'));
+    const assignBody = el('div', 'h5-section-body');
+    const assignBtn = el('button', 'h5-btn h5-btn-block', '分配负责人');
+    assignBtn.onclick = () => openAssignSheet(c.id);
+    assignBody.appendChild(assignBtn);
+    assignCard.appendChild(assignBody);
+    body.appendChild(assignCard);
+  }
+
+  // 跟进时间线
+  const tlCard = el('div', 'h5-section');
+  tlCard.appendChild(el('div','h5-section-title','跟进时间线'));
+  const tlBody = el('div', 'h5-section-body');
+  const timeline = el('div', 'h5-timeline');
+  if (c.follows.length === 0) timeline.innerHTML = '<div class="h5-empty">暂无跟进记录</div>';
+  else c.follows.forEach(f => timeline.appendChild(buildTimelineNode(f)));
+  tlBody.appendChild(timeline);
+  tlCard.appendChild(tlBody);
+  body.appendChild(tlCard);
+}
+
+function buildTimelineNode(f) {
+  const node = el('div', 'h5-tl-node ' + (FOLLOW_CLASS[f.ch] || ''));
+  const head = el('div','h5-tl-head', FOLLOW_TITLE[f.ch] || '跟进');
+  head.appendChild(el('span','h5-tag h5-tag-gray', f.by || '我'));
+  node.appendChild(head);
+  node.appendChild(el('div','h5-tl-time', f.time));
+  node.appendChild(el('div','h5-tl-body', f.text));
+  if (f.next) node.appendChild(el('div','h5-tl-next', '下次回访：' + f.next));
+  return node;
+}
+
+/* ========== 新建客户 ========== */
+function initNewCustomerSheet() {
+  const srcSel = document.getElementById('nc-source');
+  srcSel.innerHTML = '';
+  sources.filter(s => sourceEnabled[s]).forEach(s => {
+    const opt = document.createElement('option'); opt.value = s; opt.textContent = s; srcSel.appendChild(opt);
+  });
+  const ownerSel = document.getElementById('nc-owner');
+  ownerSel.innerHTML = '';
+  assignableOwners().forEach(n => {
+    const opt = document.createElement('option'); opt.value = n; opt.textContent = n; ownerSel.appendChild(opt);
+  });
+  const r = ROLES[currentRole];
+  document.getElementById('nc-owner-row').style.display = r.owner ? 'none' : 'block';
+}
+
+function createCustomerH5() {
+  const phone = document.getElementById('nc-phone').value.trim();
+  const name = document.getElementById('nc-name').value.trim();
+  const wechat = document.getElementById('nc-wechat').value.trim();
+  const source = document.getElementById('nc-source').value;
+  const owner = document.getElementById('nc-owner').value;
+  const kid = document.getElementById('nc-kid').value.trim();
+  const age = document.getElementById('nc-age').value.trim();
+  const remark = document.getElementById('nc-remark').value.trim();
+
+  let err = false;
+  if (!/^\d{11}$/.test(phone)) { document.getElementById('nc-phone').classList.add('field-err'); err = true; }
+  else document.getElementById('nc-phone').classList.remove('field-err');
+  if (!name) { document.getElementById('nc-name').classList.add('field-err'); err = true; }
+  else document.getElementById('nc-name').classList.remove('field-err');
+  if (err) { toast('请填写必填项', 'err'); return; }
+
+  if (customers.some(c => c.phone === phone)) { toast('该手机号已存在', 'err'); return; }
+
+  const r = ROLES[currentRole];
+  const finalOwner = r.owner || owner || r.name;
+  const store = STAFF[finalOwner] ? STAFF[finalOwner].store : (r.store || '城东旗舰店');
+  const id = addCustomerData(name, phone, source, finalOwner, store, kid, age ? age + '岁' : '', 'lead', '', '待首联', false);
+  const c = getCustomer(id);
+  c.wechat = wechat;
+  if (remark) c.follows.push({ ch:'phone', text:'首次录入备注：' + remark, time: nowStr(), next:'', by: r.name });
+
+  closeSheet('sheet-new-customer');
+  ['nc-phone','nc-name','nc-wechat','nc-kid','nc-age','nc-remark'].forEach(id => document.getElementById(id).value = '');
+  switchTab('customers');
+  toast('客户「' + name + '」已创建', 'success');
+}
+
+/* ========== 跟进 ========== */
+function openFollowH5(id) {
+  const c = getCustomer(id);
+  if (!c) return;
+  currentCustomerId = id;
+  document.getElementById('fl-customer').value = c.name + (c.kids[0] ? '（' + c.kids[0].name + '）' : '');
+  document.getElementById('fl-result').value = '';
+  document.getElementById('fl-result').classList.remove('field-err');
+  document.getElementById('fl-next').value = '';
+  document.querySelector('input[name="fl-ch"][value="phone"]').checked = true;
+
+  const tplSel = document.getElementById('fl-tpl');
+  tplSel.innerHTML = '<option value="">选填</option>';
+  resultTemplates.filter(t => t.enabled).forEach(t => {
+    const opt = document.createElement('option'); opt.value = t.text; opt.textContent = t.text; tplSel.appendChild(opt);
+  });
+  openSheet('sheet-follow');
+}
+
+function applyFollowTpl() {
+  const tpl = document.getElementById('fl-tpl').value;
+  const ta = document.getElementById('fl-result');
+  if (tpl && !ta.value.trim()) ta.value = tpl;
+}
+
+function saveFollowH5() {
+  const ta = document.getElementById('fl-result');
+  if (!ta.value.trim()) { ta.classList.add('field-err'); toast('请填写跟进结果', 'err'); return; }
+  ta.classList.remove('field-err');
+  const ch = (document.querySelector('input[name="fl-ch"]:checked') || {}).value || 'phone';
+  const next = document.getElementById('fl-next').value;
+  const c = getCustomer(currentCustomerId);
+  if (!c) return;
+  c.follows.unshift({ ch:ch, text: ta.value.trim(), time: nowStr(), next: next, by: ROLES[currentRole].name });
+  c.lastFollow = nowStr();
+  c.nextFollow = next;
+  c.nextNote = next ? '回访' : '';
+  closeSheet('sheet-follow');
+  renderAll();
+  toast('跟进记录已保存', 'success');
+}
+
+/* ========== 推进阶段 ========== */
+function openStageSheet(id) {
+  const c = getCustomer(id);
+  if (!c) return;
+  currentCustomerId = id;
+  const curSpan = document.getElementById('stage-current');
+  curSpan.className = 'h5-stage ' + STAGE_CLASS[c.stage];
+  curSpan.textContent = STAGE_CN[c.stage];
+
+  const sel = document.getElementById('stage-target');
+  sel.innerHTML = '';
+  const idx = STAGE_ORDER.indexOf(c.stage);
+  STAGE_ORDER.slice(idx + 1).forEach(s => {
+    const opt = document.createElement('option'); opt.value = s; opt.textContent = STAGE_CN[s]; sel.appendChild(opt);
+  });
+  document.getElementById('stage-remark').value = '';
+  openSheet('sheet-stage');
+}
+
+function promoteStageH5() {
+  const c = getCustomer(currentCustomerId);
+  if (!c) return;
+  const target = document.getElementById('stage-target').value;
+  if (target === 'active') { toast('「在读」需报名合约审批通过后自动跳转', 'warn'); return; }
+  c.stage = target;
+  closeSheet('sheet-stage');
+  renderAll();
+  toast('阶段已推进至「' + STAGE_CN[target] + '」', 'success');
+}
+
+/* ========== 分配负责人 ========== */
+function openAssignSheet(id) {
+  const c = getCustomer(id);
+  if (!c) return;
+  currentCustomerId = id;
+  document.getElementById('asg-customer-h5').value = c.name;
+  document.getElementById('asg-current-h5').value = c.owner;
+  const sel = document.getElementById('asg-owner-h5');
+  sel.innerHTML = '';
+  assignableOwners().forEach(n => {
+    const opt = document.createElement('option'); opt.value = n; opt.textContent = n; sel.appendChild(opt);
+  });
+  openSheet('sheet-assign');
+}
+
+function assignCustomerH5() {
+  const c = getCustomer(currentCustomerId);
+  if (!c) return;
+  const newOwner = document.getElementById('asg-owner-h5').value;
+  c.owner = newOwner;
+  c.store = STAFF[newOwner] ? STAFF[newOwner].store : c.store;
+  closeSheet('sheet-assign');
+  renderAll();
+  toast('已分配给 ' + newOwner, 'success');
+}
+
+/* ========== 添加孩子 ========== */
+function addKidH5() {
+  const c = getCustomer(currentCustomerId);
+  if (!c) return;
+  const name = document.getElementById('kid-name').value.trim();
+  if (!name) { toast('请填写孩子姓名', 'err'); return; }
+  const sex = document.getElementById('kid-sex').value;
+  const age = document.getElementById('kid-age').value.trim();
+  const base = document.getElementById('kid-base').value;
+  c.kids.push({ name: name, sex: sex, age: age ? age + '岁' : '', base: base, main: c.kids.length === 0 });
+  document.getElementById('kid-name').value = '';
+  document.getElementById('kid-age').value = '';
+  closeSheet('sheet-kid');
+  if (document.getElementById('page-customer-detail-h5').classList.contains('open')) openCustomerDetail(c.id);
+  renderAll();
+  toast('已添加孩子「' + name + '」', 'success');
+}
+
+/* ========== 任务 ========== */
+function renderTasks() {
+  const wrap = document.getElementById('tasks-list-h5');
+  wrap.innerHTML = '';
+  let list = [];
+  if (currentTaskTab === 'pending') {
+    list = visibleCustomers().filter(c => c.nextFollow && c.nextFollow >= todayStr() && c.stage !== 'active' && c.stage !== 'lost');
+  } else if (currentTaskTab === 'overdue') {
+    list = visibleCustomers().filter(c => c.nextFollow && c.nextFollow < todayStr() && c.stage !== 'active' && c.stage !== 'lost');
+  } else {
+    list = visibleCustomers().filter(c => c.lastFollow && c.lastFollow.startsWith(todayStr()));
+  }
+  if (list.length === 0) { wrap.innerHTML = '<div class="h5-empty">暂无任务</div>'; return; }
+  list.forEach(c => wrap.appendChild(buildTaskCard(c)));
+}
+
+function switchTaskTab(tab) {
+  currentTaskTab = tab;
+  document.querySelectorAll('#task-tabs-h5 .tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderTasks();
+}
+
+function buildTaskCard(c) {
+  const card = el('div','h5-task-card');
+  const top = el('div','top');
+  const left = el('div');
+  const nameEl = el('div','', c.name + (c.kids[0] ? '（' + c.kids[0].name + '）' : ''));
+  left.appendChild(nameEl);
+  left.appendChild(el('div','h5-todo-meta', STAGE_CN[c.stage] + ' · ' + c.nextNote));
+  top.appendChild(left);
+  top.appendChild(el('span', 'h5-stage ' + STAGE_CLASS[c.stage], STAGE_CN[c.stage]));
+  card.appendChild(top);
+  const time = el('div','time', currentTaskTab === 'done' ? '今日已跟进' : ('回访时间：' + (c.nextFollow || '—')));
+  card.appendChild(time);
+  const actions = el('div','actions');
+  const btn = el('button', 'h5-btn h5-btn-primary h5-btn-sm', currentTaskTab === 'done' ? '查看' : '跟进');
+  btn.onclick = () => currentTaskTab === 'done' ? openCustomerDetail(c.id) : openFollowH5(c.id);
+  actions.appendChild(btn);
+  card.appendChild(actions);
+  return card;
+}
+
+/* ========== 数据看板 ========== */
+function renderBoard() {
+  const list = visibleCustomers();
+  renderFunnelBars('board-funnel', list);
+
+  // 来源分析
+  const srcWrap = document.getElementById('board-source');
+  srcWrap.innerHTML = '';
+  const srcMap = {};
+  sources.forEach(s => srcMap[s] = { lead:0, active:0 });
+  list.forEach(c => { if (srcMap[c.source]) srcMap[c.source].lead++; if (c.stage === 'active' && srcMap[c.source]) srcMap[c.source].active++; });
+  Object.keys(srcMap).filter(s => srcMap[s].lead > 0).sort((a,b) => srcMap[b].lead - srcMap[a].lead).forEach(s => {
+    const row = el('div','h5-source-row');
+    row.appendChild(el('div','name', s));
+    const rate = srcMap[s].lead ? Math.round(srcMap[s].active / srcMap[s].lead * 100) : 0;
+    row.appendChild(el('div','nums', srcMap[s].lead + ' / ' + srcMap[s].active));
+    const tag = el('span', 'h5-tag ' + (rate >= 25 ? 'h5-tag-green' : (rate >= 10 ? 'h5-tag-orange' : 'h5-tag-red')), rate + '%');
+    row.appendChild(tag);
+    srcWrap.appendChild(row);
+  });
+
+  // 停留
+  const dwellWrap = document.getElementById('board-dwell');
+  dwellWrap.innerHTML = '';
+  const dwellData = { lead:1.2, contact:3.5, intent:4.8, trial:6.2 };
+  const lostData = { lead:30, contact:47, intent:37, trial:24 };
+  const max = 6.2;
+  STAGE_ORDER.slice(0,4).forEach(s => {
+    const row = el('div','h5-dwell-row');
+    row.appendChild(el('span','h5-stage ' + STAGE_CLASS[s], STAGE_CN[s]));
+    const track = el('div','h5-dwell-track');
+    const bar = el('div','h5-dwell-bar');
+    bar.style.width = Math.max(20, (dwellData[s]/max)*100) + '%';
+    bar.style.background = getStageColor(s);
+    bar.textContent = dwellData[s] + ' 天';
+    track.appendChild(bar);
+    row.appendChild(track);
+    row.appendChild(el('span','h5-dwell-lost', '流失 ' + lostData[s]));
+    dwellWrap.appendChild(row);
+  });
+
+  // 流失原因
+  const reasonWrap = document.getElementById('board-reason');
+  reasonWrap.innerHTML = '';
+  const reasons = [['价格超预算',32],['接送不便/没时间',24],['选了其他机构',18],['多次失联',15],['孩子兴趣不足',11]];
+  reasons.forEach(([label, pct]) => {
+    const row = el('div','h5-reason-row');
+    row.appendChild(el('div','label', label));
+    const track = el('div','h5-reason-track');
+    const bar = el('div','h5-reason-bar');
+    bar.style.width = pct + '%';
+    track.appendChild(bar);
+    row.appendChild(track);
+    row.appendChild(el('div','h5-reason-pct', pct + '%'));
+    reasonWrap.appendChild(row);
+  });
+}
+
+/* ========== 我的页面设置 ========== */
+function renderMine() {
+  // 来源标签
+  const srcBody = document.getElementById('source-setting-body');
+  srcBody.innerHTML = '';
+  const list = el('div', 'h5-menu-list');
+  sources.forEach(s => {
+    const item = el('div','h5-menu-item');
+    const left = el('div','left');
+    left.appendChild(el('span', '', s));
+    left.appendChild(el('span', 'h5-tag ' + (sourceEnabled[s] ? 'h5-tag-green' : 'h5-tag-gray'), sourceEnabled[s] ? '启用' : '停用'));
+    item.appendChild(left);
+    const btn = el('button', 'h5-btn-text' + (sourceEnabled[s] ? ' danger' : ''), sourceEnabled[s] ? '停用' : '启用');
+    btn.onclick = () => { sourceEnabled[s] = !sourceEnabled[s]; renderMine(); toast(sourceEnabled[s] ? '已启用' : '已停用', 'info'); };
+    item.appendChild(btn);
+    list.appendChild(item);
+  });
+  srcBody.appendChild(list);
+
+  // 结果模板
+  const resBody = document.getElementById('result-setting-body');
+  resBody.innerHTML = '';
+  const rlist = el('div', 'h5-menu-list');
+  resultTemplates.forEach((t, i) => {
+    const item = el('div','h5-menu-item');
+    const left = el('div','left');
+    left.appendChild(el('span', '', t.text));
+    left.appendChild(el('span', 'h5-tag h5-tag-gray', t.channel));
+    left.appendChild(el('span', 'h5-tag ' + (t.enabled ? 'h5-tag-green' : 'h5-tag-gray'), t.enabled ? '启用' : '停用'));
+    item.appendChild(left);
+    const btn = el('button', 'h5-btn-text' + (t.enabled ? ' danger' : ''), t.enabled ? '停用' : '启用');
+    btn.onclick = () => { resultTemplates[i].enabled = !resultTemplates[i].enabled; renderMine(); toast(resultTemplates[i].enabled ? '已启用' : '已停用', 'info'); };
+    item.appendChild(btn);
+    rlist.appendChild(item);
+  });
+  resBody.appendChild(rlist);
+}
+
+/* ========== 统一渲染 ========== */
+function renderAll() {
+  renderDashboard();
+  renderCustomers();
+  renderTasks();
+  renderBoard();
+  renderMine();
+  initNewCustomerSheet();
+}
+
+/* ========== 初始化 ========== */
+function initH5() {
+  initCustomers();
+  setRoleH5('boss');
+}
+
+initH5();
+
+</script>
+</body>
+</html>

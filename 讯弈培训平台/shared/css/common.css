@@ -1,0 +1,372 @@
+/* Tailwind + DaisyUI 共享样式补充层
+ * DaisyUI 负责 .btn/.card/.table/.badge/.modal/.form-control 等组件
+ * 本文件负责颜色变量、间距工具、Toast、状态色等补充
+ */
+
+:root {
+  --primary: #3B82F6;
+  --primary-hover: #2563EB;
+  --primary-light: #EBF4FF;
+  --secondary: #10B981;
+  --secondary-light: #ECFDF5;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --text-main: #1F2937;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --border: #E2E8F0;
+  --border-light: #F1F5F9;
+  --bg: #F8FAFC;
+  --bg-white: #FFFFFF;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.03);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+}
+
+body {
+  font-family: var(--font);
+  color: var(--text-main);
+  background: var(--bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* 图标通用对齐 */
+.heroicon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 文字色工具 */
+.text-primary { color: var(--primary); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-error { color: var(--error); }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+
+/* 布局工具（兼容旧 HTML，覆盖 Tailwind 同名默认值） */
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.flex-1 { flex: 1; }
+.gap-8 { gap: 8px; }
+.gap-10 { gap: 10px; }
+.gap-12 { gap: 12px; }
+.gap-16 { gap: 16px; }
+.gap-20 { gap: 20px; }
+
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.ml-8 { margin-left: 8px; }
+.mr-8 { margin-right: 8px; }
+
+.p-16 { padding: 16px; }
+.p-24 { padding: 24px; }
+
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.font-bold { font-weight: 600; }
+.font-lg { font-size: 16px; }
+.font-xl { font-size: 20px; }
+
+/* 状态标签背景 */
+.status-published {
+  color: var(--success);
+  background: #ECFDF5;
+}
+
+.status-draft {
+  color: var(--text-muted);
+  background: #F3F4F6;
+}
+
+.status-finished {
+  color: var(--success);
+  background: #ECFDF5;
+}
+
+.status-reading {
+  color: var(--warning);
+  background: #FFFBEB;
+}
+
+.status-passed {
+  color: var(--success);
+  background: #ECFDF5;
+}
+
+.status-failed {
+  color: var(--error);
+  background: #FEF2F2;
+}
+
+/* Toast */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 240px;
+  animation: toastIn 0.3s ease;
+}
+
+.toast-success { border-left: 4px solid var(--success); }
+.toast-error { border-left: 4px solid var(--error); }
+.toast-warning { border-left: 4px solid var(--warning); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* H5 辅助 */
+.h5-body {
+  background: var(--bg);
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.04);
+}
+
+/* 后台布局补充 */
+.admin-body {
+  min-width: auto;
+}
+
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 64px;
+  }
+  .admin-sidebar .admin-logo span,
+  .admin-sidebar .admin-menu-title,
+  .admin-sidebar .admin-menu-item span {
+    display: none;
+  }
+  .admin-main {
+    margin-left: 64px;
+  }
+  .admin-logo {
+    justify-content: center;
+    padding: 0;
+  }
+  .admin-menu-item {
+    justify-content: center;
+    padding: 12px;
+  }
+  .admin-menu-item i {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-body {
+    min-width: auto;
+  }
+  .admin-sidebar {
+    display: none;
+  }
+  .admin-main {
+    margin-left: 0;
+  }
+}
+
+/* 表格斑马纹增强（DaisyUI table-zebra 已提供，此处补充悬停） */
+.table tbody tr:hover td {
+  background: #F8FAFC;
+}
+
+/* 表格横向滚动 */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.table-wrap .table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 按钮动效补充 */
+.btn {
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.btn-secondary:hover {
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-ghost:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* 卡片圆角统一 */
+.card {
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+/* 表单聚焦 */
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+/* 空状态 */
+.empty-state {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  color: var(--border);
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 20px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.timeline-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.timeline-content {
+  margin-top: 4px;
+}
+
+/* 进度条 */
+.progress {
+  height: 8px;
+  border-radius: 4px;
+  background: #E2E8F0;
+}
+
+.progress-primary::-webkit-progress-value {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+/* 选项行 */
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.option-row input[type="text"] {
+  flex: 1;
+}
+
+.question-selector {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.question-selector-item {
+  padding: 10px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.question-selector-item:last-child {
+  border-bottom: none;
+}
+
+.question-selector-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Chart */
+.chart-container {
+  position: relative;
+  height: 300px;
+}

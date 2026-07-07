@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>考试中心 - 学习考核平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+</head>
+<body class="h5-body">
+  <div class="h5-page">
+    <div class="h5-section" id="examsList"></div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ activeTab: "exams", showBack: false, title: "考试中心" });
+
+    const learner = H5Common.getCurrentLearner();
+
+    function loadExams() {
+      const exams = H5Common.getVisibleExams();
+      const records = DataStore.getLearnerExamRecords(learner.id);
+      const wrap = document.getElementById("examsList");
+
+      if (!exams.length) {
+        wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-clipboard-list"></i></div>暂无考试</div>`;
+        return;
+      }
+
+      wrap.innerHTML = exams.map(e => {
+        const count = records.filter(r => r.examId === e.id).length;
+        const remain = Math.max(0, e.maxAttempts - count);
+        const statusText = remain <= 0 ? "次数已用完" : `剩余 ${remain} 次`;
+        return `
+          <a href="${remain > 0 ? `exam-intro.html?id=${e.id}` : 'javascript:void(0)'}" class="h5-card" ${remain <= 0 ? 'style="opacity:0.7"' : ""}>
+            <div class="h5-card-row">
+              <div class="h5-card-icon exam"><i class="fa-solid fa-file-pen"></i></div>
+              <div class="h5-card-body">
+                <div class="h5-card-title">${e.title}</div>
+                <div class="h5-card-meta">
+                  <span>${e.duration} 分钟</span>
+                  <span>${e.questionIds.length} 题</span>
+                  <span>${e.passScore} 分及格</span>
+                </div>
+                <div class="h5-card-meta" style="margin-top: 8px;">
+                  <span class="${remain > 0 ? 'text-primary' : 'text-error'}">${statusText}</span>
+                  <span>已考 ${count} 次</span>
+                </div>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+
+    loadExams();
+  </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>答题中 - 学习考核平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+</head>
+<body class="h5-body">
+  <div class="h5-page" style="padding-bottom: 0;">
+    <div class="h5-exam-topbar">
+      <div class="h5-exam-timer">
+        <i class="fa-regular fa-clock"></i>
+        <span id="timer">00:00</span>
+      </div>
+      <div class="h5-exam-progress"><span id="answeredCount">0</span> / <span id="totalCount">0</span></div>
+    </div>
+
+    <div class="h5-question" id="questionArea">
+      <!-- question rendered here -->
+    </div>
+
+    <div class="h5-question-nav" id="questionNav"></div>
+
+    <div class="h5-exam-actions">
+      <button class="btn btn-ghost" id="prevBtn" onclick="prevQuestion()">上一题</button>
+      <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()">下一题</button>
+    </div>
+
+    <div style="padding: 0 16px 110px;">
+      <button class="btn btn-primary btn-lg btn-block" onclick="submitExam()">交卷</button>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ hideHeader: true, hideTabbar: true });
+
+    const learner = H5Common.getCurrentLearner();
+    const examId = H5Common.getQueryParam("id");
+    const exam = DataStore.getExamById(examId);
+
+    if (!exam || !DataStore._isVisibleToLearner(exam, learner.role)) {
+      H5Common.toast("考试不存在或无权限查看", "error");
+      setTimeout(() => location.href = "exams.html", 1000);
+    }
+
+    const questions = DataStore.getExamQuestions(examId);
+    const totalDuration = exam.duration;
+    let currentIndex = 0;
+    let answers = {};
+    let timerInterval = null;
+    let startTime = Date.now();
+
+    const session = DataStore.getExamSession();
+    if (session && session.examId === examId && session.answers) {
+      answers = session.answers;
+      startTime = session.startTime;
+    } else {
+      DataStore.saveExamSession({ examId, startTime, answers });
+    }
+
+    document.getElementById("totalCount").textContent = questions.length;
+
+    function startTimer() {
+      const endTime = startTime + totalDuration * 60 * 1000;
+      timerInterval = setInterval(() => {
+        const remaining = endTime - Date.now();
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById("timer").textContent = "00:00";
+          H5Common.toast("考试时间到，自动交卷", "warning");
+          doSubmit();
+        } else {
+          const minutes = Math.floor(remaining / 60000);
+          const seconds = Math.floor((remaining % 60000) / 1000);
+          document.getElementById("timer").textContent =
+            `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+        }
+      }, 1000);
+    }
+
+    function saveAnswer() {
+      const q = questions[currentIndex];
+      const inputs = document.querySelectorAll(`[name='answer_${q.id}']:checked`);
+      const vals = Array.from(inputs).map(el => el.value);
+      if (vals.length) {
+        answers[q.id] = vals;
+      } else {
+        delete answers[q.id];
+      }
+      const session = DataStore.getExamSession() || {};
+      session.answers = answers;
+      DataStore.saveExamSession(session);
+      updateNav();
+      updateProgress();
+    }
+
+    function renderQuestion(index) {
+      currentIndex = index;
+      const q = questions[index];
+      const typeLabel = { single: "单选", multiple: "多选", judge: "判断" }[q.type];
+      const inputType = q.type === "multiple" ? "checkbox" : "radio";
+      const currentAnswer = answers[q.id] || [];
+
+      document.getElementById("questionArea").innerHTML = `
+        <div class="h5-question-title">
+          <span class="h5-question-type">[${typeLabel}]</span>${index + 1}. ${q.content}
+        </div>
+        <div class="h5-options">
+          ${q.options.map(opt => `
+            <div class="h5-option ${currentAnswer.includes(opt.id) ? "selected" : ""}" data-value="${opt.id}" onclick="selectOption('${q.id}', '${opt.id}', '${inputType}')">
+              <div class="h5-option-label">${opt.id}</div>
+              <div class="h5-option-text">${opt.text}</div>
+              <input type="${inputType}" name="answer_${q.id}" value="${opt.id}" ${currentAnswer.includes(opt.id) ? "checked" : ""} style="display: none;">
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      document.getElementById("prevBtn").disabled = index === 0;
+      document.getElementById("nextBtn").textContent = index === questions.length - 1 ? "最后一题" : "下一题";
+      updateNav();
+      updateProgress();
+    }
+
+    window.selectOption = function(qid, value, type) {
+      const optionEl = document.querySelector(`.h5-option[data-value="${value}"]`);
+      const input = optionEl.querySelector("input");
+      if (type === "checkbox") {
+        input.checked = !input.checked;
+        optionEl.classList.toggle("selected", input.checked);
+      } else {
+        document.querySelectorAll(`[name='answer_${qid}']`).forEach(el => {
+          el.checked = el.value === value;
+          el.closest(".h5-option").classList.toggle("selected", el.checked);
+        });
+      }
+      saveAnswer();
+    };
+
+    function updateNav() {
+      const nav = document.getElementById("questionNav");
+      nav.innerHTML = questions.map((q, idx) => `
+        <div class="h5-question-nav-item ${answers[q.id]?.length ? "answered" : ""} ${idx === currentIndex ? "current" : ""}" onclick="goQuestion(${idx})">${idx + 1}</div>
+      `).join("");
+    }
+
+    function updateProgress() {
+      const count = Object.keys(answers).length;
+      document.getElementById("answeredCount").textContent = count;
+    }
+
+    window.goQuestion = function(idx) {
+      renderQuestion(idx);
+    };
+
+    window.nextQuestion = function() {
+      if (currentIndex < questions.length - 1) {
+        renderQuestion(currentIndex + 1);
+      }
+    };
+
+    window.prevQuestion = function() {
+      if (currentIndex > 0) {
+        renderQuestion(currentIndex - 1);
+      }
+    };
+
+    window.submitExam = function() {
+      const answered = Object.keys(answers).length;
+      const msg = answered < questions.length
+        ? `还有 ${questions.length - answered} 题未答，确定交卷吗？`
+        : "确定交卷吗？";
+      if (!confirm(msg)) return;
+      doSubmit();
+    };
+
+    function doSubmit() {
+      clearInterval(timerInterval);
+      const duration = Math.max(1, Math.floor((Date.now() - startTime) / 60000));
+      const record = DataStore.submitExam(examId, learner.id, answers, duration);
+      DataStore.clearExamSession();
+      location.href = `exam-result.html?recordId=${record.id}`;
+    }
+
+    renderQuestion(0);
+    startTimer();
+  </script>
+</body>
+</html>

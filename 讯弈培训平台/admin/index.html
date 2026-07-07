@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台首页 - 讯弈培训平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">数据概览</h1>
+          <div class="flex gap-12">
+            <a href="material-upload.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i>上传资料</a>
+            <a href="exam-create.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i>创建考试</a>
+          </div>
+        </div>
+
+        <div class="admin-stats" id="statsCards"></div>
+
+        <div class="card">
+          <div class="card-title">快捷入口</div>
+          <div class="flex gap-12" style="flex-wrap: wrap;">
+            <a href="materials.html" class="btn btn-ghost"><i class="fa-solid fa-book"></i>资料管理</a>
+            <a href="question-bank.html" class="btn btn-ghost"><i class="fa-solid fa-circle-question"></i>题库管理</a>
+            <a href="exams.html" class="btn btn-ghost"><i class="fa-solid fa-file-pen"></i>考试管理</a>
+            <a href="training-programs.html" class="btn btn-ghost"><i class="fa-solid fa-graduation-cap"></i>培训项目管理</a>
+            <a href="learners.html" class="btn btn-ghost"><i class="fa-solid fa-users"></i>学员管理</a>
+            <a href="stats-study.html" class="btn btn-ghost"><i class="fa-solid fa-chart-line"></i>学习统计</a>
+            <a href="stats-exam.html" class="btn btn-ghost"><i class="fa-solid fa-chart-pie"></i>考试统计</a>
+          </div>
+        </div>
+
+        <div class="card mt-16">
+          <div class="card-title">最近上传的资料</div>
+          <div class="table-wrap">
+            <table class="table table-zebra" id="recentMaterials">
+              <thead>
+                <tr>
+                  <th>资料名称</th>
+                  <th>类型</th>
+                  <th>分类</th>
+                  <th>上传人</th>
+                  <th>上传时间</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("index.html");
+    AdminCommon.setPageTitle("后台首页");
+
+    const currentUser = DataStore.getCurrentUser();
+    const scope = DataStore.getScopeAudience(currentUser);
+
+    function uploaderName(id) {
+      const u = id ? DataStore.getUserById(id) : null;
+      return u ? u.name : "-";
+    }
+
+    function renderStats() {
+      const materials = DataStore.filterByScope(DataStore.getMaterials(), currentUser);
+      const exams = DataStore.filterByScope(DataStore.getExams(), currentUser);
+      const programs = DataStore.filterByScope(DataStore.getTrainingPrograms(), currentUser);
+      const learnerCount = scope
+        ? DataStore.getLearners().filter(u => u.role === scope).length
+        : DataStore.getLearners().length;
+      const cards = [
+        { icon: "fa-book", color: "blue", value: materials.length, label: "资料总数" },
+        { icon: "fa-file-pen", color: "orange", value: exams.length, label: "考试总数" },
+        { icon: "fa-graduation-cap", color: "purple", value: programs.length, label: "培训项目" },
+        { icon: "fa-users", color: "green", value: learnerCount, label: "学员总数" }
+      ];
+      document.getElementById("statsCards").innerHTML = cards.map(c => `
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon ${c.color}"><i class="fa-solid ${c.icon}"></i></div>
+          <div class="admin-stat-info">
+            <div class="admin-stat-value">${c.value}</div>
+            <div class="admin-stat-label">${c.label}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderRecentMaterials() {
+      const materials = DataStore.filterByScope(DataStore.getMaterials(), currentUser).slice(0, 5);
+      const tbody = document.querySelector("#recentMaterials tbody");
+      if (!materials.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">暂无资料</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = materials.map(m => `
+        <tr>
+          <td>${m.title}</td>
+          <td><span class="badge badge-info">${m.type.toUpperCase()}</span></td>
+          <td>${m.category}</td>
+          <td>${uploaderName(m.uploaderId)}</td>
+          <td>${m.uploadTime}</td>
+          <td><span class="badge ${m.status === "published" ? "badge-success" : ""}">${m.status === "published" ? "已发布" : "草稿"}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    renderStats();
+    renderRecentMaterials();
+  </script>
+</body>
+</html>

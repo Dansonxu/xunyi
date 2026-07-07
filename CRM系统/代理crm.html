@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>讯弈围棋·代理端 CRM - 原型图</title>
+<!--
+  交互规格（给开发，不显示在 UI）
+  - 客户主体 = 家长手机号唯一；一个家长挂多个孩子（学员）
+  - 6 阶段单调推进：线索 lead → 联系中 contact → 意向 intent → 试听 trial → 在读 active → 流失 lost
+    · 「在读」由报名合约/订单审批通过后自动跳，不在 CRM 内手动设为在读（推进弹窗里选在读需先关联订单）
+  - 不做公海/私海；同一代理商内员工互见，客户有「负责人」字段
+  - 跟进记录字段：渠道(电话/微信/到店) + 结果文字 + 下次回访时间，记录人/时间自动带
+  - 本文件每个按钮都有可演示交互（DOM 操作 + toast），作为前端交互行为基线
+-->
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div id="toast-wrap"></div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <span>&#9818;</span>
+      <span>讯弈围棋·代理 CRM <span style="font-size:11px;font-weight:normal;background:#10b981;color:#fff;padding:1px 6px;border-radius:3px;margin-left:4px">原型</span></span>
+    </div>
+    <nav>
+      <div class="menu-item active" data-page="dashboard" onclick="switchPage('dashboard', this)">
+        <span class="icon">&#128202;</span> CRM 工作台
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-item" onclick="toggleSubmenu(this)">
+          <span class="icon">&#128101;</span> 客户管理 <span class="arrow open">&#9654;</span>
+        </div>
+        <div class="submenu open">
+          <div class="menu-item" data-page="customers" onclick="switchPage('customers', this)">客户列表</div>
+        </div>
+      </div>
+
+      <div class="menu-group">
+        <div class="menu-item" onclick="toggleSubmenu(this)">
+          <span class="icon">&#9201;</span> 跟进任务 <span class="arrow">&#9654;</span>
+        </div>
+        <div class="submenu">
+          <div class="menu-item" data-page="my-tasks" onclick="switchPage('my-tasks', this)">我的任务</div>
+          <div class="menu-item" id="menu-team-tasks" data-page="team-tasks" onclick="switchPage('team-tasks', this)">团队任务</div>
+        </div>
+      </div>
+
+      <div class="menu-item" id="menu-funnel" data-page="funnel" onclick="switchPage('funnel', this)">
+        <span class="icon">&#128200;</span> 数据看板
+      </div>
+
+      <div class="menu-group" id="menu-settings-group">
+        <div class="menu-item" onclick="toggleSubmenu(this)">
+          <span class="icon">&#9881;</span> 设置 <span class="arrow">&#9654;</span>
+        </div>
+        <div class="submenu">
+          <div class="menu-item" data-page="setting-source" onclick="switchPage('setting-source', this)">客户来源标签</div>
+          <div class="menu-item" data-page="setting-result" onclick="switchPage('setting-result', this)">跟进结果模板</div>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Main -->
+  <div class="main-area">
+    <div class="header">
+      <div class="header-left">
+        <span class="breadcrumb" id="breadcrumb">CRM 工作台</span>
+        <button class="btn btn-sm" style="margin-left:8px;" onclick="showModal('modal-integration')">&#128279; 数据对接</button>
+      </div>
+      <div class="header-right">
+        <div class="role-switch">
+          <span style="font-size:12px;color:#909399;">演示角色</span>
+          <select id="role-select" onchange="setRole(this.value)">
+            <option value="boss">代理老板</option>
+            <option value="manager">店长</option>
+            <option value="staff">店员</option>
+          </select>
+        </div>
+        <select id="store-select" class="store-sel" onchange="onStoreChange()">
+          <option value="all">&#127970; 全部门店</option>
+          <option>城东旗舰店</option>
+          <option>城西店</option>
+          <option>高新店</option>
+        </select>
+        <div class="user-info" onclick="toast('个人中心（演示）','info')">
+          <div class="avatar" id="user-avatar">王</div>
+          <span id="user-name">王老板</span>
+          <span class="tag tag-purple" id="user-role-tag" style="margin-left:2px;">老板</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ 1. CRM 工作台 ============ -->
+      <div class="page active" id="page-dashboard">
+        <div class="stat-cards">
+          <div class="stat-card" onclick="switchPage('customers', findMenu('customers'))"><div class="label">客户总数</div><div class="value">386</div><div class="sub">本月新增 42</div></div>
+          <div class="stat-card" onclick="switchPage('customers', findMenu('customers'))"><div class="label">本月新增线索</div><div class="value">42</div><div class="sub">较上月 +18%</div></div>
+          <div class="stat-card" onclick="switchPage('my-tasks', findMenu('my-tasks'))"><div class="label">待跟进（含逾期）</div><div class="value">15</div><div class="sub">逾期 4 条</div></div>
+          <div class="stat-card" onclick="switchPage('funnel', findMenu('funnel'))"><div class="label">本月转化（→在读）</div><div class="value">9</div><div class="sub">转化率 21.4%</div></div>
+        </div>
+
+        <div class="panel-row">
+          <div class="panel">
+            <div class="panel-header">今日待办 <a class="btn-text" onclick="switchPage('my-tasks', findMenu('my-tasks'))">查看全部 &rsaquo;</a></div>
+            <div class="panel-body" style="padding-top:6px;">
+              <div class="todo-line"><span class="todo-dot red"></span><div class="tl-main"><div class="tl-name">回访 张妈妈（朵朵）</div><div class="tl-meta">意向客户 · 试听后未报名 · 逾期 1 天</div></div><button class="btn btn-text" onclick="openFollow('张妈妈（朵朵）')">去跟进</button></div>
+              <div class="todo-line"><span class="todo-dot orange"></span><div class="tl-main"><div class="tl-name">回访 李先生（乐乐）</div><div class="tl-meta">试听客户 · 约定今天确认试听时间</div></div><button class="btn btn-text" onclick="openFollow('李先生（乐乐）')">去跟进</button></div>
+              <div class="todo-line"><span class="todo-dot blue"></span><div class="tl-main"><div class="tl-name">首次联系 陈女士（豆豆）</div><div class="tl-meta">新线索 · 来源：抖音直播 · 录入 2h 前</div></div><button class="btn btn-text" onclick="openFollow('陈女士（豆豆）')">去跟进</button></div>
+              <div class="todo-line"><span class="todo-dot orange"></span><div class="tl-main"><div class="tl-name">回访 周爸爸（果果）</div><div class="tl-meta">联系中 · 上次通话未接，约定改约</div></div><button class="btn btn-text" onclick="openFollow('周爸爸（果果）')">去跟进</button></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">转化漏斗（本月）<a class="btn-text" onclick="switchPage('funnel', findMenu('funnel'))">详情 &rsaquo;</a></div>
+            <div class="panel-body">
+              <div class="funnel">
+                <div class="funnel-row"><div class="funnel-bar" style="width:100%;background:#909399;" onclick="drillStage('lead')">线索 168</div></div>
+                <div class="funnel-row"><div class="funnel-bar" style="width:82%;background:#4080FF;" onclick="drillStage('contact')">联系中 138 <span class="fb-rate">82.1%</span></div></div>
+                <div class="funnel-row"><div class="funnel-bar" style="width:54%;background:#e6a23c;" onclick="drillStage('intent')">意向 91 <span class="fb-rate">65.9%</span></div></div>
+                <div class="funnel-row"><div class="funnel-bar" style="width:32%;background:#9b59b6;" onclick="drillStage('trial')">试听 54 <span class="fb-rate">59.3%</span></div></div>
+                <div class="funnel-row"><div class="funnel-bar" style="width:18%;background:#67c23a;" onclick="drillStage('active')">在读 30 <span class="fb-rate">55.6%</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">近期新增客户</div>
+          <div class="panel-body" style="padding:0;">
+            <table>
+              <thead><tr><th>家长</th><th>手机号</th><th>孩子</th><th>阶段</th><th>来源</th><th>负责人</th><th>录入时间</th></tr></thead>
+              <tbody>
+                <tr style="cursor:pointer" onclick="openCustomer('陈女士')"><td>陈女士</td><td>138****6621</td><td>豆豆 / 5岁</td><td><span class="stage stage-lead">线索</span></td><td>抖音直播</td><td>王店长</td><td>2小时前</td></tr>
+                <tr style="cursor:pointer" onclick="openCustomer('赵妈妈')"><td>赵妈妈</td><td>139****0087</td><td>苗苗 / 6岁</td><td><span class="stage stage-contact">联系中</span></td><td>转介绍</td><td>李老师</td><td>今天 09:12</td></tr>
+                <tr style="cursor:pointer" onclick="openCustomer('孙先生')"><td>孙先生</td><td>136****3345</td><td>壮壮 / 7岁</td><td><span class="stage stage-intent">意向</span></td><td>地推扫码</td><td>王店长</td><td>昨天 16:40</td></tr>
+                <tr style="cursor:pointer" onclick="openCustomer('钱女士')"><td>钱女士</td><td>135****9902</td><td>糖糖 / 5岁</td><td><span class="stage stage-trial">试听</span></td><td>美团</td><td>李老师</td><td>昨天 11:05</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 2. 客户列表 ============ -->
+      <div class="page" id="page-customers">
+        <div class="page-title">客户列表</div>
+        <div class="scope-bar" id="cust-scope"></div>
+        <div class="tabs" id="cust-tabs">
+          <div class="tab active" data-stage="all" onclick="filterStage(this,'all')">全部 <span class="cnt">386</span></div>
+          <div class="tab" data-stage="lead" onclick="filterStage(this,'lead')">线索 <span class="cnt">168</span></div>
+          <div class="tab" data-stage="contact" onclick="filterStage(this,'contact')">联系中 <span class="cnt">138</span></div>
+          <div class="tab" data-stage="intent" onclick="filterStage(this,'intent')">意向 <span class="cnt">91</span></div>
+          <div class="tab" data-stage="trial" onclick="filterStage(this,'trial')">试听 <span class="cnt">54</span></div>
+          <div class="tab" data-stage="active" onclick="filterStage(this,'active')">在读 <span class="cnt">30</span></div>
+          <div class="tab" data-stage="lost" onclick="filterStage(this,'lost')">流失 <span class="cnt">26</span></div>
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="cust-search" placeholder="搜手机号 / 家长 / 孩子姓名" onkeydown="if(event.key==='Enter')searchCustomers()">
+          <select id="cust-source"><option value="">全部来源</option><option>抖音直播</option><option>转介绍</option><option>地推扫码</option><option>美团</option><option>到店咨询</option></select>
+          <select id="cust-owner"><option value="">全部负责人</option><option>王店长</option><option>李老师</option><option>张老师</option></select>
+          <button class="btn" onclick="searchCustomers()">查询</button>
+          <button class="btn" onclick="resetCustFilter()">重置</button>
+          <button class="btn btn-primary" onclick="showModal('modal-customer')">+ 新建客户</button>
+          <button class="btn" onclick="openImport()">&#128229; 批量导入</button>
+        </div>
+
+        <div class="panel">
+          <table>
+            <thead><tr><th>家长</th><th>手机号</th><th>孩子</th><th>阶段</th><th>来源</th><th>负责人</th><th>最近跟进</th><th>下次回访</th><th>操作</th></tr></thead>
+            <tbody id="cust-tbody">
+              <tr data-stage="intent" data-source="转介绍" data-owner="王店长" data-store="城东旗舰店"><td>张妈妈</td><td>137****2210</td><td>朵朵 / 6岁</td><td><span class="stage stage-intent">意向</span></td><td>转介绍</td><td>王店长</td><td>2天前 · 电话</td><td><span class="tag tag-red">今天逾期</span></td><td><button class="btn-text" onclick="openCustomer('张妈妈')">详情</button><button class="btn-text" onclick="openFollow('张妈妈（朵朵）')">跟进</button></td></tr>
+              <tr data-stage="trial" data-source="美团" data-owner="李老师" data-store="城东旗舰店"><td>李先生</td><td>135****8841</td><td>乐乐 / 5岁</td><td><span class="stage stage-trial">试听</span></td><td>美团</td><td>李老师</td><td>昨天 · 微信</td><td>今天 18:00</td><td><button class="btn-text" onclick="openCustomer('李先生')">详情</button><button class="btn-text" onclick="openFollow('李先生（乐乐）')">跟进</button></td></tr>
+              <tr data-stage="lead" data-source="抖音直播" data-owner="王店长" data-store="城东旗舰店"><td>陈女士</td><td>138****6621</td><td>豆豆 / 5岁</td><td><span class="stage stage-lead">线索</span></td><td>抖音直播</td><td>王店长</td><td>—</td><td><span class="tag tag-orange">待首联</span></td><td><button class="btn-text" onclick="openCustomer('陈女士')">详情</button><button class="btn-text" onclick="openFollow('陈女士（豆豆）')">跟进</button></td></tr>
+              <tr data-stage="contact" data-source="地推扫码" data-owner="张老师" data-store="城西店"><td>周爸爸</td><td>136****1199</td><td>果果 / 7岁</td><td><span class="stage stage-contact">联系中</span></td><td>地推扫码</td><td>张老师</td><td>3天前 · 电话</td><td>明天 10:00</td><td><button class="btn-text" onclick="openCustomer('周爸爸')">详情</button><button class="btn-text" onclick="openFollow('周爸爸（果果）')">跟进</button></td></tr>
+              <tr data-stage="active" data-source="转介绍" data-owner="李老师" data-store="城东旗舰店"><td>吴妈妈</td><td>139****4452</td><td>多多 / 6岁</td><td><span class="stage stage-active">在读</span></td><td>转介绍</td><td>李老师</td><td>本周 · 到店</td><td>—</td><td><button class="btn-text" onclick="openCustomer('吴妈妈')">详情</button><button class="btn-text" onclick="openFollow('吴妈妈（多多）')">跟进</button></td></tr>
+              <tr data-stage="lost" data-source="美团" data-owner="孙店长" data-store="高新店"><td>郑先生</td><td>137****7763</td><td>淼淼 / 8岁</td><td><span class="stage stage-lost">流失</span></td><td>美团</td><td>王店长</td><td>20天前 · 微信</td><td>—</td><td><button class="btn-text" onclick="openCustomer('郑先生')">详情</button><button class="btn-text" onclick="openFollow('郑先生（淼淼）')">跟进</button></td></tr>
+            </tbody>
+          </table>
+          <div class="pagination" style="padding:12px 16px;">
+            <span id="cust-total">共 386 条</span>
+            <button class="page-btn" onclick="gotoPage(this,'prev')">&lsaquo;</button>
+            <button class="page-btn active" onclick="gotoPage(this,1)">1</button>
+            <button class="page-btn" onclick="gotoPage(this,2)">2</button>
+            <button class="page-btn" onclick="gotoPage(this,3)">3</button>
+            <button class="page-btn" onclick="gotoPage(this,'next')">&rsaquo;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 3. 客户详情 ============ -->
+      <div class="page" id="page-customer-detail">
+        <div class="toolbar" style="margin-bottom:12px;">
+          <button class="btn" onclick="switchPage('customers', findMenu('customers'))">&lsaquo; 返回列表</button>
+          <div style="font-size:18px;font-weight:600;margin-left:4px;"><span id="detail-name">张妈妈</span> <span class="stage stage-intent detail-stage" style="vertical-align:middle;">意向</span></div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn btn-primary" onclick="openFollow('张妈妈（朵朵）')">+ 添加跟进</button>
+            <button class="btn btn-success" onclick="showModal('modal-stage')">推进阶段</button>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="panel">
+              <div class="panel-header">基本信息 <button class="btn-text" onclick="toast('编辑基本信息（演示弹窗）','info')">编辑</button></div>
+              <div class="panel-body">
+                <div class="info-row"><span class="il">家长姓名</span><span class="iv">张妈妈</span></div>
+                <div class="info-row"><span class="il">手机号</span><span class="iv"><span id="detail-phone">137****2210</span> <span class="tag tag-gray">主体唯一标识</span>
+                  <button class="btn-text" onclick="revealPhone()">查看完整</button>
+                  <button class="btn-text" onclick="copyText('手机号')">复制</button>
+                </span></div>
+                <div class="info-row"><span class="il">微信</span><span class="iv">zhang_mama_88 <button class="btn-text" onclick="copyText('微信号')">复制</button></span></div>
+                <div class="info-row"><span class="il">当前阶段</span><span class="iv"><span class="stage stage-intent detail-stage">意向</span></span></div>
+                <div class="info-row"><span class="il">来源</span><span class="iv">转介绍（吴妈妈）</span></div>
+                <div class="info-row"><span class="il">负责人</span><span class="iv" id="detail-owner">王店长 <span class="tag tag-purple" style="padding:0 5px;font-size:10px;">店长</span> · 城东旗舰店 <button class="btn-text assign-btn" onclick="openAssign(document.getElementById('detail-name').textContent.trim())">分配</button></span></div>
+                <div class="info-row"><span class="il">所属门店</span><span class="iv" id="detail-store">城东旗舰店</span></div>
+                <div class="info-row"><span class="il">录入时间</span><span class="iv">2026-05-10 14:22</span></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">跟进时间线 <button class="btn-text" onclick="openFollow('张妈妈（朵朵）')">+ 添加</button></div>
+              <div class="panel-body">
+                <div class="timeline" id="detail-timeline">
+                  <div class="tl-node phone">
+                    <div class="tl-head">电话跟进 <span class="tag tag-gray">王店长</span></div>
+                    <div class="tl-time">2026-05-20 15:30</div>
+                    <div class="tl-body">试听后回访，家长说孩子挺喜欢，但要和爸爸商量学费。已发优惠政策。</div>
+                    <div class="tl-next">下次回访：2026-05-23（已逾期）</div>
+                  </div>
+                  <div class="tl-node visit">
+                    <div class="tl-head">到店试听 <span class="tag tag-gray">李老师</span></div>
+                    <div class="tl-time">2026-05-18 10:00</div>
+                    <div class="tl-body">朵朵参加入门体验课，课堂表现积极，老师评价手感好。</div>
+                  </div>
+                  <div class="tl-node">
+                    <div class="tl-head">微信跟进 <span class="tag tag-gray">王店长</span></div>
+                    <div class="tl-time">2026-05-12 19:40</div>
+                    <div class="tl-body">介绍课程体系和价格，家长有意向，约定本周末到店试听。</div>
+                  </div>
+                  <div class="tl-node phone">
+                    <div class="tl-head">首次联系 <span class="tag tag-gray">王店长</span></div>
+                    <div class="tl-time">2026-05-10 14:30</div>
+                    <div class="tl-body">吴妈妈转介绍，电话接通，孩子 6 岁，对围棋感兴趣。</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="panel">
+              <div class="panel-header">学员（孩子）</div>
+              <div class="panel-body">
+                <div id="kid-list">
+                  <div class="kid-card">
+                    <div class="kc-name">朵朵 <span class="tag tag-blue">主要意向</span></div>
+                    <div class="kc-meta">女 · 6岁 · 零基础</div>
+                  </div>
+                  <div class="kid-card">
+                    <div class="kc-name">朵朵弟弟</div>
+                    <div class="kc-meta">男 · 4岁 · 暂未到适龄</div>
+                  </div>
+                </div>
+                <button class="btn btn-sm" style="margin-top:4px;" onclick="showModal('modal-kid')">+ 添加孩子</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">订单 / 合约</div>
+              <div class="panel-body">
+                <div class="empty" style="padding:24px 0;">暂无订单<br><span style="font-size:12px;">报名后自动同步</span></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">下次回访</div>
+              <div class="panel-body">
+                <div style="font-size:20px;font-weight:600;color:#f56c6c;" id="detail-next-date">2026-05-23</div>
+                <div style="font-size:12px;color:#909399;margin-top:4px;">已逾期 1 天 · 电话回访</div>
+                <button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="openFollow('张妈妈（朵朵）')">立即跟进</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 6. 跟进任务 - 我的任务 ============ -->
+      <div class="page" id="page-my-tasks">
+        <div class="page-title">我的任务</div>
+        <div class="tabs">
+          <div class="tab active" onclick="switchTaskTab(this,'my-pending')">待跟进 <span class="cnt">15</span></div>
+          <div class="tab" onclick="switchTaskTab(this,'my-overdue')">逾期 <span class="cnt">4</span></div>
+          <div class="tab" onclick="switchTaskTab(this,'my-done')">今日完成 <span class="cnt">6</span></div>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>客户</th><th>孩子</th><th>阶段</th><th>任务</th><th>回访时间</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody id="my-task-body">
+              <tr><td>张妈妈</td><td>朵朵</td><td><span class="stage stage-intent">意向</span></td><td>试听后回访确认报名</td><td>2026-05-23</td><td><span class="tag tag-red">逾期1天</span></td><td><button class="btn-text" onclick="openFollow('张妈妈（朵朵）')">跟进</button></td></tr>
+              <tr><td>李先生</td><td>乐乐</td><td><span class="stage stage-trial">试听</span></td><td>确认试听时间</td><td>今天 18:00</td><td><span class="tag tag-orange">今天</span></td><td><button class="btn-text" onclick="openFollow('李先生（乐乐）')">跟进</button></td></tr>
+              <tr><td>陈女士</td><td>豆豆</td><td><span class="stage stage-lead">线索</span></td><td>首次联系</td><td>今天</td><td><span class="tag tag-orange">今天</span></td><td><button class="btn-text" onclick="openFollow('陈女士（豆豆）')">跟进</button></td></tr>
+              <tr><td>周爸爸</td><td>果果</td><td><span class="stage stage-contact">联系中</span></td><td>改约通话</td><td>明天 10:00</td><td><span class="tag tag-blue">待办</span></td><td><button class="btn-text" onclick="openFollow('周爸爸（果果）')">跟进</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ============ 6b. 跟进任务 - 团队任务（老板视角） ============ -->
+      <div class="page" id="page-team-tasks">
+        <div class="page-title">团队任务 <span class="tag tag-purple" style="vertical-align:middle;">老板 / 店长视角</span></div>
+        <div class="scope-bar" id="team-scope"></div>
+        <div class="toolbar">
+          <select><option>全部成员</option><option>王店长</option><option>李老师</option><option>张老师</option></select>
+          <select><option>全部阶段</option><option>线索</option><option>联系中</option><option>意向</option><option>试听</option></select>
+          <select><option>本周</option><option>本月</option></select>
+          <button class="btn" onclick="toast('已按筛选刷新团队数据','info')">查询</button>
+        </div>
+        <div class="panel section-gap">
+          <div class="panel-header">成员跟进概览</div>
+          <table>
+            <thead><tr><th>成员</th><th>负责客户</th><th>待跟进</th><th>逾期</th><th>本月新增</th><th>本月转化</th><th>转化率</th></tr></thead>
+            <tbody>
+              <tr><td>王店长</td><td>142</td><td>8</td><td><span class="tag tag-red">2</span></td><td>18</td><td>5</td><td>27.8%</td></tr>
+              <tr><td>李老师</td><td>118</td><td>5</td><td><span class="tag tag-red">1</span></td><td>15</td><td>3</td><td>20.0%</td></tr>
+              <tr><td>张老师</td><td>96</td><td>2</td><td><span class="tag tag-gray">0</span></td><td>9</td><td>1</td><td>11.1%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <div class="panel-header">逾期任务（需关注）</div>
+          <table>
+            <thead><tr><th>负责人</th><th>客户</th><th>阶段</th><th>任务</th><th>应回访</th><th>逾期</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr><td>王店长</td><td>张妈妈</td><td><span class="stage stage-intent">意向</span></td><td>试听后回访</td><td>2026-05-23</td><td><span class="tag tag-red">1天</span></td><td><button class="btn-text" onclick="remind('王店长','张妈妈')">催办</button></td></tr>
+              <tr><td>王店长</td><td>孙先生</td><td><span class="stage stage-contact">联系中</span></td><td>二次沟通</td><td>2026-05-21</td><td><span class="tag tag-red">3天</span></td><td><button class="btn-text" onclick="remind('王店长','孙先生')">催办</button></td></tr>
+              <tr><td>李老师</td><td>钱女士</td><td><span class="stage stage-trial">试听</span></td><td>试听后回访</td><td>2026-05-22</td><td><span class="tag tag-red">2天</span></td><td><button class="btn-text" onclick="remind('李老师','钱女士')">催办</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ============ 7. 数据看板 / 转化漏斗 ============ -->
+      <div class="page" id="page-funnel">
+        <div class="page-title">数据看板</div>
+        <div class="scope-bar" id="board-scope"></div>
+        <div class="toolbar">
+          <select><option>本月</option><option>上月</option><option>近 90 天</option></select>
+          <select><option>全店</option><option>王店长</option><option>李老师</option><option>张老师</option></select>
+          <button class="btn" onclick="toast('已按筛选刷新看板','info')">查询</button>
+          <button class="btn" onclick="toast('报表导出中（演示）…','info')">导出</button>
+        </div>
+
+        <div class="panel-row">
+          <div class="panel">
+            <div class="panel-header">转化漏斗</div>
+            <div class="panel-body">
+              <div class="funnel">
+                <div class="funnel-row"><div class="funnel-bar" style="width:100%;background:#909399;" onclick="drillStage('lead')">线索 168</div></div>
+                <div class="funnel-row"><div class="funnel-bar" style="width:82%;background:#4080FF;" onclick="drillStage('contact')">联系中 138 <span class="fb-rate">82.1%</span></div></div>
+                <div class="funnel-row"><div class="funnel-bar" style="width:54%;background:#e6a23c;" onclick="drillStage('intent')">意向 91 <span class="fb-rate">65.9%</span></div></div>
+                <div class="funnel-row"><div class="funnel-bar" style="width:32%;background:#9b59b6;" onclick="drillStage('trial')">试听 54 <span class="fb-rate">59.3%</span></div></div>
+                <div class="funnel-row"><div class="funnel-bar" style="width:18%;background:#67c23a;" onclick="drillStage('active')">在读 30 <span class="fb-rate">55.6%</span></div></div>
+              </div>
+              <div style="margin-top:16px;text-align:center;font-size:13px;color:#606266;">线索 → 在读 整体转化率 <b style="color:#67c23a;">17.9%</b></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">来源分析</div>
+            <div class="panel-body">
+              <table>
+                <thead><tr><th>来源</th><th>线索数</th><th>在读</th><th>转化率</th></tr></thead>
+                <tbody>
+                  <tr style="cursor:pointer" onclick="drillSource('转介绍')"><td>转介绍</td><td>52</td><td>16</td><td><span class="tag tag-green">30.8%</span></td></tr>
+                  <tr style="cursor:pointer" onclick="drillSource('到店咨询')"><td>到店咨询</td><td>28</td><td>7</td><td><span class="tag tag-green">25.0%</span></td></tr>
+                  <tr style="cursor:pointer" onclick="drillSource('美团')"><td>美团/点评</td><td>34</td><td>5</td><td><span class="tag tag-orange">14.7%</span></td></tr>
+                  <tr style="cursor:pointer" onclick="drillSource('地推扫码')"><td>地推扫码</td><td>30</td><td>1</td><td><span class="tag tag-red">3.3%</span></td></tr>
+                  <tr style="cursor:pointer" onclick="drillSource('抖音直播')"><td>抖音直播</td><td>24</td><td>1</td><td><span class="tag tag-red">4.2%</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">各阶段停留与流失</div>
+          <div class="panel-body" style="display:grid;grid-template-columns:1.3fr 1fr;gap:28px;">
+
+            <!-- 左：各阶段平均停留 + 流失人数 -->
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#606266;margin-bottom:14px;">各阶段平均停留 / 流失人数</div>
+              <div class="dwell">
+                <div class="dwell-row"><span class="dwell-label"><span class="stage stage-lead">线索</span></span><div class="dwell-track"><div class="dwell-bar" style="width:19%;background:#909399;">1.2 天</div></div><span class="dwell-lost">流失 30</span></div>
+                <div class="dwell-row"><span class="dwell-label"><span class="stage stage-contact">联系中</span></span><div class="dwell-track"><div class="dwell-bar" style="width:56%;background:#4080FF;">3.5 天</div></div><span class="dwell-lost">流失 47</span></div>
+                <div class="dwell-row"><span class="dwell-label"><span class="stage stage-intent">意向</span></span><div class="dwell-track"><div class="dwell-bar" style="width:77%;background:#e6a23c;">4.8 天</div></div><span class="dwell-lost">流失 37</span></div>
+                <div class="dwell-row"><span class="dwell-label"><span class="stage stage-trial">试听</span></span><div class="dwell-track"><div class="dwell-bar" style="width:100%;background:#9b59b6;">6.2 天</div></div><span class="dwell-lost">流失 24</span></div>
+              </div>
+              <div style="margin-top:12px;font-size:12px;color:#909399;">条长 = 平均停留天数 · 右侧为该阶段累计流失人数</div>
+            </div>
+
+            <!-- 右：流失原因分布 -->
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#606266;margin-bottom:14px;">流失原因分布 <span style="font-weight:normal;color:#c0c4cc;">（共 138 人）</span></div>
+              <div class="reason">
+                <div class="reason-row"><span class="reason-label">价格超预算</span><div class="reason-track"><div class="reason-bar" style="width:32%;"></div></div><span class="reason-pct">32%</span></div>
+                <div class="reason-row"><span class="reason-label">接送不便 / 没时间</span><div class="reason-track"><div class="reason-bar" style="width:24%;"></div></div><span class="reason-pct">24%</span></div>
+                <div class="reason-row"><span class="reason-label">选了其他机构</span><div class="reason-track"><div class="reason-bar" style="width:18%;"></div></div><span class="reason-pct">18%</span></div>
+                <div class="reason-row"><span class="reason-label">多次失联</span><div class="reason-track"><div class="reason-bar" style="width:15%;"></div></div><span class="reason-pct">15%</span></div>
+                <div class="reason-row"><span class="reason-label">孩子兴趣不足</span><div class="reason-track"><div class="reason-bar" style="width:11%;"></div></div><span class="reason-pct">11%</span></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 8a. 设置 - 客户来源标签 ============ -->
+      <div class="page" id="page-setting-source">
+        <div class="page-title">客户来源标签</div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="addSettingRow('source-tbody','source')">+ 新增来源</button>
+        </div>
+        <div class="panel" style="max-width:680px;">
+          <table>
+            <thead><tr><th>来源名称</th><th>启用</th><th>本月线索数</th><th>排序</th><th>操作</th></tr></thead>
+            <tbody id="source-tbody">
+              <tr><td>抖音直播</td><td><span class="tag tag-green en">启用</span></td><td>24</td><td>1</td><td><button class="btn-text" onclick="toast('编辑「抖音直播」（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>转介绍</td><td><span class="tag tag-green en">启用</span></td><td>52</td><td>2</td><td><button class="btn-text" onclick="toast('编辑「转介绍」（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>地推扫码</td><td><span class="tag tag-green en">启用</span></td><td>30</td><td>3</td><td><button class="btn-text" onclick="toast('编辑「地推扫码」（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>美团/点评</td><td><span class="tag tag-green en">启用</span></td><td>34</td><td>4</td><td><button class="btn-text" onclick="toast('编辑「美团/点评」（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>到店咨询</td><td><span class="tag tag-green en">启用</span></td><td>28</td><td>5</td><td><button class="btn-text" onclick="toast('编辑「到店咨询」（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>电话咨询</td><td><span class="tag tag-gray en">停用</span></td><td>0</td><td>6</td><td><button class="btn-text" onclick="toast('编辑「电话咨询」（演示）','info')">编辑</button><button class="btn-text" onclick="toggleEnable(this)">启用</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ============ 8b. 设置 - 跟进结果模板 ============ -->
+      <div class="page" id="page-setting-result">
+        <div class="page-title">跟进结果模板</div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="addSettingRow('result-tbody','result')">+ 新增模板</button>
+        </div>
+        <div class="panel" style="max-width:680px;">
+          <table>
+            <thead><tr><th>结果模板</th><th>适用渠道</th><th>启用</th><th>操作</th></tr></thead>
+            <tbody id="result-tbody">
+              <tr><td>已接通，有意向</td><td>电话</td><td><span class="tag tag-green en">启用</span></td><td><button class="btn-text" onclick="toast('编辑模板（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>未接通，待改约</td><td>电话</td><td><span class="tag tag-green en">启用</span></td><td><button class="btn-text" onclick="toast('编辑模板（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>已加微信，发资料</td><td>微信</td><td><span class="tag tag-green en">启用</span></td><td><button class="btn-text" onclick="toast('编辑模板（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>到店试听完成</td><td>到店</td><td><span class="tag tag-green en">启用</span></td><td><button class="btn-text" onclick="toast('编辑模板（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+              <tr><td>暂无意向，标记流失</td><td>通用</td><td><span class="tag tag-green en">启用</span></td><td><button class="btn-text" onclick="toast('编辑模板（演示）','info')">编辑</button><button class="btn-text danger" onclick="toggleEnable(this)">停用</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: 新建客户 ============ -->
+<div class="modal-overlay hidden" id="modal-customer">
+  <div class="modal">
+    <div class="modal-header">新建客户 <button class="modal-close" onclick="hideModal('modal-customer')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="form-label"><span class="req">*</span>家长手机</div><div class="form-control"><input id="mc-phone" placeholder="11 位手机号（客户唯一标识）"></div></div>
+      <div class="form-row"><div class="form-label"><span class="req">*</span>家长称呼</div><div class="form-control"><input id="mc-name" placeholder="如：张妈妈 / 李先生"></div></div>
+      <div class="form-row"><div class="form-label">微信号</div><div class="form-control"><input placeholder="选填"></div></div>
+      <div class="form-row"><div class="form-label"><span class="req">*</span>来源</div><div class="form-control"><select id="mc-source"><option>抖音直播</option><option>转介绍</option><option>地推扫码</option><option>美团</option><option>到店咨询</option></select></div></div>
+      <div class="form-row"><div class="form-label">负责人</div><div class="form-control"><select id="mc-owner"><option>王店长（我）</option><option>李老师</option><option>张老师</option></select></div></div>
+      <div class="form-row"><div class="form-label">孩子姓名</div><div class="form-control"><input id="mc-kid" placeholder="选填，可稍后补充"></div></div>
+      <div class="form-row"><div class="form-label">孩子年龄</div><div class="form-control"><input id="mc-age" placeholder="如：6"></div></div>
+      <div class="form-row"><div class="form-label">备注</div><div class="form-control"><textarea placeholder="首次沟通要点"></textarea></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideModal('modal-customer')">取消</button>
+      <button class="btn btn-primary" onclick="createCustomerModal()">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: 数据对接说明（开发参考，非业务界面） ============ -->
+<div class="modal-overlay hidden" id="modal-integration">
+  <div class="modal" style="width:820px;">
+    <div class="modal-header">CRM 数据与现有系统打通说明 <button class="modal-close" onclick="hideModal('modal-integration')">&times;</button></div>
+    <div class="modal-body">
+      <div style="background:#fdf6ec;border:1px solid #faecd8;border-left:3px solid #e6a23c;border-radius:4px;padding:10px 14px;font-size:13px;color:#b45309;margin-bottom:14px;line-height:1.7;">
+        <b>核心原则：CRM 对主系统数据只读，绝不写回 / 修改。</b><br>
+        CRM 仅写自有数据（客户、跟进记录、阶段、来源标签、结果模板）；家长 / 学员 / 订单 / 合约 / 门店 / 账号等主系统数据一律只读引用，报名等写操作走主系统既有流程。
+      </div>
+      <div style="font-size:12px;color:#909399;margin-bottom:14px;">开发对接参考 · 图例：
+        <span class="tag tag-green">&#10003; 复用现有</span>
+        <span class="tag tag-orange">&#9680; 部分打通</span>
+        <span class="tag tag-gray">&#10007; CRM 新建</span>
+      </div>
+      <table>
+        <thead><tr><th>CRM 数据</th><th style="width:90px;">打通</th><th>对接现有模块</th><th>对接方式</th></tr></thead>
+        <tbody>
+          <tr><td>家长（手机号主体）</td><td><span class="tag tag-green">复用</span></td><td>统一认证 User / 运营端「家长学员档案」</td><td>手机号唯一键，已注册家长直接关联，未注册仅 CRM 暂存</td></tr>
+          <tr><td>学员（孩子）</td><td><span class="tag tag-green">复用</span></td><td>运营端「家长学员档案」</td><td>在读学员关联现有档案；线索期可仅在 CRM 暂存，报名后归一</td></tr>
+          <tr><td>订单 / 合约</td><td><span class="tag tag-green">复用（只读）</span></td><td>运营端「学员订单管理」/「审批中心」</td><td>详情页只读展示，CRM 不另建订单数据</td></tr>
+          <tr><td>阶段＝在读</td><td><span class="tag tag-green">联动</span></td><td>「审批中心」合约审批</td><td>合约审批通过 → 自动跳「在读」，不在 CRM 手动设</td></tr>
+          <tr><td>所属门店</td><td><span class="tag tag-green">复用</span></td><td>「组织架构」门店树</td><td>门店列表与归属来自现有组织树</td></tr>
+          <tr><td>负责人 / 角色</td><td><span class="tag tag-green">复用</span></td><td>代理端账号体系（老板/店长/店员）</td><td>CRM 不做用户管理，只读 role + storeId + userId</td></tr>
+          <tr><td>数据看板（在读数/转化率）</td><td><span class="tag tag-orange">部分</span></td><td>订单 / 学员统计</td><td>在读、报名数取现有；线索/联系/意向/试听 取 CRM</td></tr>
+          <tr><td>客户来源标签</td><td><span class="tag tag-gray">新建</span></td><td>—</td><td>CRM 自有配置（设置页维护）</td></tr>
+          <tr><td>跟进记录（时间线）</td><td><span class="tag tag-gray">新建</span></td><td>—</td><td>CRM 自有，现有系统无</td></tr>
+          <tr><td>阶段（线索→联系→意向→试听）</td><td><span class="tag tag-gray">新建</span></td><td>—</td><td>CRM 自有（仅「在读」联动现有合约）</td></tr>
+          <tr><td>跟进结果模板</td><td><span class="tag tag-gray">新建</span></td><td>—</td><td>CRM 自有配置（设置页维护）</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:12px;color:#606266;margin-top:12px;line-height:1.8;">
+        <b>归一原则</b>：家长以<b>手机号</b>为唯一键，CRM 客户与现有家长账号同源；同一手机号在现有系统已存在则直接挂接，避免重复建档。
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="hideModal('modal-integration')">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: 批量导入 ============ -->
+<div class="modal-overlay hidden" id="modal-import">
+  <div class="modal" style="width:600px;">
+    <div class="modal-header">批量导入客户 <button class="modal-close" onclick="hideModal('modal-import')">&times;</button></div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:#606266;line-height:1.9;margin-bottom:14px;background:#f5f7fa;border-radius:4px;padding:10px 14px;">
+        <b>导入步骤</b><br>
+        1. 下载模板，按列填写：手机号、家长称呼、来源、孩子姓名、年龄<br>
+        2. 上传填好的 Excel，系统自动校验格式<br>
+        3. 确认无误后导入，新客户进入「线索」阶段、负责人默认为你本人
+      </div>
+      <div class="form-row"><div class="form-label">导入模板</div><div class="form-control" style="line-height:32px;"><button class="btn btn-sm" onclick="toast('模板下载中（演示）…','info')">&#11015; 下载 Excel 模板</button></div></div>
+      <div class="form-row"><div class="form-label">上传文件</div><div class="form-control">
+        <div id="import-drop" style="border:2px dashed #dcdfe6;border-radius:6px;padding:22px;text-align:center;color:#909399;cursor:pointer;" onclick="mockPickFile()">
+          <div style="font-size:28px;">&#128196;</div>
+          <div id="import-fname" style="margin-top:6px;font-size:13px;">点击选择文件 / 拖拽 .xlsx 到此处</div>
+        </div>
+      </div></div>
+      <div id="import-preview" style="display:none;">
+        <div style="font-size:13px;font-weight:600;color:#606266;margin:8px 0;">校验预览 <span class="tag tag-green">3 条可导入</span> <span class="tag tag-red">1 条有误</span></div>
+        <table>
+          <thead><tr><th>手机号</th><th>家长</th><th>来源</th><th>孩子</th><th>校验</th></tr></thead>
+          <tbody>
+            <tr><td>13800001111</td><td>赵女士</td><td>转介绍</td><td>苗苗/6</td><td><span class="tag tag-green">&#10003; 正常</span></td></tr>
+            <tr><td>13800002222</td><td>钱先生</td><td>地推扫码</td><td>壮壮/7</td><td><span class="tag tag-green">&#10003; 正常</span></td></tr>
+            <tr><td>13800003333</td><td>孙女士</td><td>美团</td><td>糖糖/5</td><td><span class="tag tag-green">&#10003; 正常</span></td></tr>
+            <tr><td>138000</td><td>李先生</td><td>抖音直播</td><td>乐乐/5</td><td><span class="tag tag-red">&#10007; 手机号格式错误</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideModal('modal-import')">取消</button>
+      <button class="btn btn-primary" onclick="doImport()">导入可用记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: 添加跟进记录 ============ -->
+<div class="modal-overlay hidden" id="modal-follow">
+  <div class="modal">
+    <div class="modal-header">添加跟进记录 <button class="modal-close" onclick="hideModal('modal-follow')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="form-label">客户</div><div class="form-control"><input id="mf-customer" value="" readonly style="background:#f5f7fa;"></div></div>
+      <div class="form-row"><div class="form-label"><span class="req">*</span>跟进渠道</div><div class="form-control">
+        <div class="radio-group">
+          <label><input type="radio" name="mf-ch" value="phone" checked> 电话</label>
+          <label><input type="radio" name="mf-ch" value="wechat"> 微信</label>
+          <label><input type="radio" name="mf-ch" value="visit"> 到店</label>
+        </div>
+      </div></div>
+      <div class="form-row"><div class="form-label">结果模板</div><div class="form-control"><select id="mf-tpl" onchange="applyResultTpl()"><option value="">选填，快速套用</option><option>已接通，有意向</option><option>未接通，待改约</option><option>已加微信，发资料</option><option>到店试听完成</option><option>暂无意向，标记流失</option></select></div></div>
+      <div class="form-row"><div class="form-label"><span class="req">*</span>跟进结果</div><div class="form-control"><textarea id="mf-result" placeholder="本次沟通内容与结果"></textarea></div></div>
+      <div class="form-row"><div class="form-label">下次回访</div><div class="form-control"><input type="date" id="mf-next"></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideModal('modal-follow')">取消</button>
+      <button class="btn btn-primary" onclick="saveFollow()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: 推进阶段 ============ -->
+<div class="modal-overlay hidden" id="modal-stage">
+  <div class="modal" style="width:460px;">
+    <div class="modal-header">推进阶段 <button class="modal-close" onclick="hideModal('modal-stage')">&times;</button></div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:#606266;margin-bottom:14px;">当前阶段：<span class="stage stage-intent detail-stage">意向</span> → 选择目标阶段</div>
+      <div class="form-row"><div class="form-label">目标阶段</div><div class="form-control"><select id="ms-target"><option value="trial">试听</option><option value="active">在读（需绑定订单/合约）</option><option value="lost">流失</option></select></div></div>
+      <div class="form-row"><div class="form-label">备注</div><div class="form-control"><textarea placeholder="推进原因"></textarea></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideModal('modal-stage')">取消</button>
+      <button class="btn btn-success" onclick="promoteStage()">确认推进</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: 分配负责人 ============ -->
+<div class="modal-overlay hidden" id="modal-assign">
+  <div class="modal" style="width:480px;">
+    <div class="modal-header">分配负责人 <button class="modal-close" onclick="hideModal('modal-assign')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="form-label">客户</div><div class="form-control"><input id="asg-customer" readonly style="background:#f5f7fa;"></div></div>
+      <div class="form-row"><div class="form-label">当前负责人</div><div class="form-control" style="line-height:32px;color:#606266;font-size:13px;"><span id="asg-current">—</span></div></div>
+      <div class="form-row"><div class="form-label"><span class="req">*</span>分配给</div><div class="form-control"><select id="asg-owner"></select></div></div>
+      <div style="font-size:12px;color:#909399;">仅可分配给你管辖范围内的成员；客户所属门店将跟随新负责人。</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideModal('modal-assign')">取消</button>
+      <button class="btn btn-primary" onclick="doAssign()">确认分配</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Modal: 添加孩子 ============ -->
+<div class="modal-overlay hidden" id="modal-kid">
+  <div class="modal" style="width:440px;">
+    <div class="modal-header">添加孩子 <button class="modal-close" onclick="hideModal('modal-kid')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row"><div class="form-label"><span class="req">*</span>姓名</div><div class="form-control"><input id="mk-name" placeholder="孩子姓名"></div></div>
+      <div class="form-row"><div class="form-label">性别</div><div class="form-control"><select id="mk-sex"><option>男</option><option>女</option></select></div></div>
+      <div class="form-row"><div class="form-label">年龄</div><div class="form-control"><input id="mk-age" placeholder="如：6"></div></div>
+      <div class="form-row"><div class="form-label">基础</div><div class="form-control"><select id="mk-base"><option>零基础</option><option>有基础</option></select></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideModal('modal-kid')">取消</button>
+      <button class="btn btn-primary" onclick="addKid()">添加</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>

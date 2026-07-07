@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>资料中心 - 学习考核平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+</head>
+<body class="h5-body">
+  <div class="h5-page">
+    <div class="h5-filter" id="typeFilterRow">
+      <div class="h5-filter-item active" data-type="">全部</div>
+      <div class="h5-filter-item" data-type="pdf">PDF</div>
+      <div class="h5-filter-item" data-type="word">Word</div>
+      <div class="h5-filter-item" data-type="video">视频</div>
+    </div>
+
+    <div class="h5-filter" id="categoryFilterRow" style="border-top: none; padding-top: 0; display: none;">
+      <div class="h5-filter-item active" data-category="">全部分类</div>
+    </div>
+
+    <div class="h5-section h5-mt-0" id="materialsList"></div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ activeTab: "materials", showBack: false, title: "资料中心" });
+
+    const learner = H5Common.getCurrentLearner();
+    let currentType = "";
+    let currentCategory = "";
+
+    function loadCategories() {
+      const categories = DataStore.getMaterialCategories();
+      const row = document.getElementById("categoryFilterRow");
+      if (!categories.length) {
+        row.style.display = "none";
+        return;
+      }
+
+      row.style.display = "flex";
+      row.innerHTML = `<div class="h5-filter-item active" data-category="">全部分类</div>` +
+        categories.map(c => `<div class="h5-filter-item" data-category="${c.name}">${c.name}</div>`).join("");
+
+      row.querySelectorAll(".h5-filter-item").forEach(item => {
+        item.addEventListener("click", function() {
+          row.querySelectorAll(".h5-filter-item").forEach(i => i.classList.remove("active"));
+          this.classList.add("active");
+          currentCategory = this.dataset.category;
+          loadMaterials();
+        });
+      });
+    }
+
+    function loadMaterials() {
+      let materials = H5Common.getVisibleMaterials();
+      if (currentType) materials = materials.filter(m => m.type === currentType);
+      if (currentCategory) materials = materials.filter(m => m.category === currentCategory);
+      const records = DataStore.getLearnerStudyRecords(learner.id);
+
+      const wrap = document.getElementById("materialsList");
+      if (!materials.length) {
+        wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-book-open"></i></div>暂无符合条件的资料</div>`;
+        return;
+      }
+
+      wrap.innerHTML = materials.map(m => {
+        const r = records.find(x => x.materialId === m.id);
+        const progress = r ? r.progress : 0;
+        const statusText = r && r.status === "finished" ? "已完成" : "未学习";
+        return `
+          <a href="material-detail.html?id=${m.id}" class="h5-card">
+            <div class="h5-card-row">
+              <div class="h5-card-icon ${m.type}">
+                <i class="fa-solid ${m.type === "video" ? "fa-play" : (m.type === "pdf" ? "fa-file-pdf" : "fa-file-word")}"></i>
+              </div>
+              <div class="h5-card-body">
+                <div class="h5-card-title">${m.title}</div>
+                <div class="h5-card-meta">
+                  <span>${m.type.toUpperCase()}</span>
+                  <span>${m.category}</span>
+                  <span class="${r && r.status === 'finished' ? 'text-success' : 'text-warning'}">${statusText}</span>
+                </div>
+                <div class="h5-card-status">
+                  <div class="h5-progress"><div class="h5-progress-bar" style="width: ${progress}%"></div></div>
+                  <div class="h5-progress-text">${progress}%</div>
+                </div>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+
+    document.querySelectorAll("#typeFilterRow .h5-filter-item").forEach(item => {
+      item.addEventListener("click", function() {
+        document.querySelectorAll("#typeFilterRow .h5-filter-item").forEach(i => i.classList.remove("active"));
+        this.classList.add("active");
+        currentType = this.dataset.type;
+        loadMaterials();
+      });
+    });
+
+    loadCategories();
+    loadMaterials();
+  </script>
+</body>
+</html>

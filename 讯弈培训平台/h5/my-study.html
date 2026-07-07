@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>学习记录 - 学习考核平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+</head>
+<body class="h5-body">
+  <div class="h5-page">
+    <div class="h5-section" id="studyList"></div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ activeTab: "profile", showBack: true, title: "学习记录" });
+
+    const learner = H5Common.getCurrentLearner();
+    const records = DataStore.getLearnerStudyRecords(learner.id);
+    const materials = DataStore.getMaterials();
+    const wrap = document.getElementById("studyList");
+
+    if (!records.length) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-book-open"></i></div>暂无学习记录</div>`;
+    } else {
+      wrap.innerHTML = records.sort((a, b) => (b.finishTime || b.startTime).localeCompare(a.finishTime || a.startTime)).map(r => {
+        const m = materials.find(x => x.id === r.materialId);
+        if (!m) return "";
+        return `
+          <a href="material-detail.html?id=${m.id}" class="h5-card">
+            <div class="h5-card-row">
+              <div class="h5-card-icon ${m.type}"><i class="fa-solid ${m.type === 'video' ? 'fa-play' : 'fa-file'}"></i></div>
+              <div class="h5-card-body">
+                <div class="h5-card-title">${m.title}</div>
+                <div class="h5-card-meta">
+                  <span class="${r.status === 'finished' ? 'text-success' : 'text-warning'}">${r.status === 'finished' ? '已完成' : '学习中'}</span>
+                  <span>进度 ${r.progress}%</span>
+                  <span>${r.finishTime || r.startTime}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+  </script>
+</body>
+</html>

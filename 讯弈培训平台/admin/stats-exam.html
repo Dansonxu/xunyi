@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>考试统计 - 代理商学习考核平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">考试统计</h1>
+          <select class="form-control" id="audienceFilter" style="width: 140px;">
+            <option value="">全部学员</option>
+            <option value="agent">代理商</option>
+            <option value="employee">内部员工</option>
+          </select>
+        </div>
+
+        <div class="admin-stats" id="examStats"></div>
+
+        <div class="card">
+          <div class="card-title">各考试参与情况</div>
+          <div class="chart-container">
+            <canvas id="examChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("stats-exam.html");
+    AdminCommon.setPageTitle("考试统计");
+
+    let examChart = null;
+
+    function renderStats() {
+      const role = document.getElementById("audienceFilter").value;
+      const stats = DataStore.getExamStats(role || null);
+      const cards = [
+        { icon: "fa-file-pen", color: "blue", value: stats.examCount, label: "考试总数" },
+        { icon: "fa-user-pen", color: "green", value: stats.totalCount, label: "参考人次" },
+        { icon: "fa-check-circle", color: "orange", value: stats.passedCount, label: "通过人次" },
+        { icon: "fa-percent", color: "red", value: stats.passRate + "%", label: "通过率" }
+      ];
+      if (role) {
+        cards.push({ icon: "fa-users", color: "purple", value: stats.learnerCount, label: role === "agent" ? "代理商数" : "员工数" });
+      } else {
+        cards.push({ icon: "fa-users", color: "purple", value: stats.learnerCount, label: "学员总数" });
+      }
+
+      document.getElementById("examStats").innerHTML = cards.map(c => `
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon ${c.color}"><i class="fa-solid ${c.icon}"></i></div>
+          <div class="admin-stat-info">
+            <div class="admin-stat-value">${c.value}</div>
+            <div class="admin-stat-label">${c.label}</div>
+          </div>
+        </div>
+      `).join("");
+
+      const exams = DataStore.getExams().filter(e => !role || DataStore._isVisibleToRole(e, role));
+      const records = DataStore.getExamRecords().filter(r => {
+        if (!role) return true;
+        const user = DataStore.getUserById(r.agentId);
+        return user && user.role === role;
+      });
+      const examData = exams.map(e => {
+        const count = records.filter(r => r.examId === e.id).length;
+        const passed = records.filter(r => r.examId === e.id && r.status === "passed").length;
+        return { name: e.title.length > 8 ? e.title.slice(0, 8) + "..." : e.title, count, passed };
+      });
+
+      const ctx = document.getElementById("examChart").getContext("2d");
+      if (examChart) examChart.destroy();
+      examChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: examData.map(d => d.name),
+          datasets: [
+            { label: "参考人次", data: examData.map(d => d.count), backgroundColor: "#1677ff" },
+            { label: "通过人次", data: examData.map(d => d.passed), backgroundColor: "#52c41a" }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    document.getElementById("audienceFilter").addEventListener("change", renderStats);
+    renderStats();
+  </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>考试结果 - 学习考核平台</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/h5.css">
+</head>
+<body class="h5-body">
+  <div class="h5-page">
+    <div class="h5-result-score">
+      <div class="h5-result-score-value" id="scoreValue">0</div>
+      <div class="h5-result-score-pass" id="scorePass"></div>
+      <div class="h5-result-meta">
+        <div>答对 <span id="correctCount">0</span> 题</div>
+        <div>用时 <span id="duration">0</span> 分钟</div>
+      </div>
+    </div>
+
+    <div class="h5-result-detail" id="detailList">
+      <div class="h5-section-title">答案解析</div>
+    </div>
+
+    <div class="h5-exam-actions" style="padding-bottom: 30px;">
+      <a href="exams.html" class="btn btn-primary btn-lg btn-block">返回考试中心</a>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/h5-common.js"></script>
+  <script>
+    H5Common.init({ activeTab: "exams", showBack: false, title: "考试结果", hideTabbar: true });
+
+    const recordId = H5Common.getQueryParam("recordId");
+    const record = DataStore.getExamRecordById(recordId);
+
+    if (!record) {
+      H5Common.toast("考试记录不存在", "error");
+      setTimeout(() => location.href = "exams.html", 1000);
+    }
+
+    const exam = DataStore.getExamById(record.examId);
+    const questions = DataStore.getExamQuestions(record.examId);
+
+    document.getElementById("scoreValue").textContent = record.score;
+    document.getElementById("scorePass").innerHTML = record.status === "passed"
+      ? `<span class="badge badge-success"><i class="fa-solid fa-check"></i> 已通过</span>`
+      : `<span class="badge badge-error"><i class="fa-solid fa-xmark"></i> 未通过</span>`;
+    document.getElementById("correctCount").textContent = record.correctCount;
+    document.getElementById("duration").textContent = record.duration;
+
+    const detailList = document.getElementById("detailList");
+    detailList.innerHTML = `<div class="h5-section-title" style="margin-bottom: 12px;">答案解析</div>` +
+      questions.map((q, idx) => {
+        const userAns = record.answers[q.id] || [];
+        const correct = Array.isArray(q.correctAnswer) ? q.correctAnswer : [q.correctAnswer];
+        const isCorrect = userAns.length === correct.length && userAns.every(a => correct.includes(a));
+        const userAnsText = userAns.length ? userAns.map(id => {
+          const opt = q.options.find(o => o.id === id);
+          if (!opt) return id;
+          return q.type === "judge" ? opt.text : `${id}. ${opt.text}`;
+        }).join("、") : "未作答";
+        const correctText = correct.map(id => {
+          const opt = q.options.find(o => o.id === id);
+          if (!opt) return id;
+          return q.type === "judge" ? opt.text : `${id}. ${opt.text}`;
+        }).join("、");
+        return `
+          <div class="h5-result-question">
+            <div class="h5-result-question-title">${idx + 1}. ${q.content}</div>
+            <div class="h5-result-answer ${isCorrect ? 'correct' : 'wrong'}">
+              <div>你的答案：${userAnsText} ${isCorrect ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-xmark"></i>'}</div>
+              <div>正确答案：${correctText}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+  </script>
+</body>
+</html>

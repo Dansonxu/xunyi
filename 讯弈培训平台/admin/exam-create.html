@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="edutech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>创建考试 - 代理商学习考核平台</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            surface: '#F8FAFC',
+            'primary-light': '#EBF4FF',
+            'secondary-light': '#ECFDF5'
+          },
+          borderRadius: {
+            '2xl': '12px'
+          }
+        }
+      },
+      daisyui: {
+        themes: [{
+          edutech: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#3B82F6',
+            neutral: '#1F2937',
+            'base-100': '#F8FAFC',
+            'base-200': '#F1F5F9',
+            'base-300': '#E2E8F0',
+            info: '#3B82F6',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444'
+          }
+        }]
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../shared/css/common.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <div class="admin-main">
+      <div class="admin-content">
+        <div class="admin-page-header">
+          <h1 class="admin-page-title">创建考试</h1>
+          <a href="exams.html" class="btn btn-ghost"><i class="fa-solid fa-arrow-left"></i>返回列表</a>
+        </div>
+
+        <div class="card">
+          <div class="card-title">考试信息</div>
+          <form id="examForm">
+            <input type="hidden" id="examId">
+
+            <div class="admin-form-section">
+              <div class="admin-form-section-title"><i class="fa-solid fa-circle-info"></i>基础信息</div>
+              <div class="form-group">
+                <label class="form-label"><span class="required">考试名称</span></label>
+                <input type="text" class="form-control" id="title" placeholder="请输入考试名称">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">考试说明</label>
+                <textarea class="form-control" id="description" rows="2" placeholder="请输入考试说明，帮助学员了解考试要求"></textarea>
+              </div>
+
+              <div class="admin-form-grid admin-form-grid-3">
+                <div class="form-group">
+                  <label class="form-label"><span class="required">适用受众</span></label>
+                  <select class="form-control" id="audienceMode">
+                    <option value="agent">代理商</option>
+                    <option value="employee">内部员工</option>
+                    <option value="all">全部</option>
+                    <option value="specific">指定人员</option>
+                  </select>
+                  <div id="audienceSpecificWrap" style="display:none; margin-top: 10px;">
+                    <button type="button" class="btn btn-outline btn-sm" id="pickAudienceBtn"><i class="fa-solid fa-user-group"></i>选择人员</button>
+                    <div class="audience-field-summary" id="audienceSummary"></div>
+                  </div>
+                  <input type="hidden" id="audienceUserIds">
+                  <input type="hidden" id="audienceDepartments">
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-form-section">
+              <div class="admin-form-section-title"><i class="fa-solid fa-book"></i>关联学习资料</div>
+              <div class="admin-selector">
+                <div class="admin-selector-search">
+                  <input type="text" class="form-control" id="materialSearch" placeholder="搜索资料名称">
+                </div>
+                <div class="admin-selector-toolbar">
+                  <span>共 <span id="materialTotal">0</span> 条</span>
+                  <span>已选 <span class="admin-selector-count" id="materialSelected">0</span> 条</span>
+                </div>
+                <div id="materialsWrap"></div>
+              </div>
+            </div>
+
+            <div class="admin-form-section">
+              <div class="admin-form-section-title"><i class="fa-solid fa-circle-question"></i>选择题库题目</div>
+              <div class="admin-selector">
+                <div class="admin-selector-search">
+                  <input type="text" class="form-control" id="questionSearch" placeholder="搜索题干">
+                </div>
+                <div class="admin-selector-toolbar">
+                  <span>共 <span id="questionTotal">0</span> 题</span>
+                  <span>已选 <span class="admin-selector-count" id="questionSelected">0</span> 题，总分 <span class="admin-selector-count" id="totalScore">0</span> 分</span>
+                </div>
+                <div id="questionsWrap"></div>
+              </div>
+            </div>
+
+            <div class="admin-form-section">
+              <div class="admin-form-section-title"><i class="fa-solid fa-clock"></i>考试设置</div>
+              <div class="admin-form-grid admin-form-grid-3">
+                <div class="form-group">
+                  <label class="form-label"><span class="required">考试时长（分钟）</span></label>
+                  <input type="number" class="form-control" id="duration" value="30" min="1">
+                </div>
+                <div class="form-group">
+                  <label class="form-label"><span class="required">及格分数</span></label>
+                  <input type="number" class="form-control" id="passScore" value="60" min="0">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">最大考试次数</label>
+                  <input type="number" class="form-control" id="maxAttempts" value="3" min="1">
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-form-section">
+              <div class="admin-form-section-title"><i class="fa-solid fa-gear"></i>发布设置</div>
+              <div class="admin-form-grid">
+                <div class="form-group">
+                  <label class="form-label">发布状态</label>
+                  <select class="form-control" id="status">
+                    <option value="published">已发布</option>
+                    <option value="draft">草稿</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-form-actions">
+              <a href="exams.html" class="btn btn-ghost">取消</a>
+              <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i>保存</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/js/mock-data.js"></script>
+  <script src="../shared/js/data-store.js"></script>
+  <script src="../shared/js/audience-picker.js"></script>
+  <script src="../shared/js/heroicons-replace.js"></script>
+  <script src="js/admin-common.js"></script>
+  <script>
+    AdminCommon.init("exams.html");
+    AdminCommon.setPageTitle("创建考试");
+
+    const examId = AdminCommon.getQueryParam("id");
+    const currentUser = DataStore.getCurrentUser();
+    const scope = DataStore.getScopeAudience(currentUser);
+    const materials = DataStore.filterByScope(DataStore.getMaterials(), currentUser);
+    const questions = DataStore.getQuestions();
+
+    // Operators can only build exams for their own type.
+    if (scope) {
+      const audienceModeSel = document.getElementById("audienceMode");
+      audienceModeSel.value = scope;
+      audienceModeSel.disabled = true;
+      Array.from(audienceModeSel.options).forEach(opt => {
+        if (opt.value !== scope) opt.style.display = "none";
+      });
+    }
+
+    let selectedMaterialIds = [];
+    let selectedQuestionIds = [];
+    let currentAudience = { mode: "role", role: scope || "agent", userIds: [], departments: [] };
+
+    const audienceModeSel = document.getElementById("audienceMode");
+    const audienceSpecificWrap = document.getElementById("audienceSpecificWrap");
+    const pickAudienceBtn = document.getElementById("pickAudienceBtn");
+    const audienceSummaryEl = document.getElementById("audienceSummary");
+
+    function updateAudienceSummary() {
+      if (currentAudience.mode !== "specific") {
+        audienceSpecificWrap.style.display = "none";
+        audienceSummaryEl.textContent = "";
+        return;
+      }
+      audienceSpecificWrap.style.display = "block";
+      const userCount = currentAudience.userIds.length;
+      const deptCount = currentAudience.departments.length;
+      if (!userCount && !deptCount) {
+        audienceSummaryEl.textContent = "尚未选择人员或部门";
+      } else {
+        const parts = [];
+        if (deptCount) parts.push(`${deptCount}个部门全选`);
+        const learners = DataStore.getLearners();
+        const individualCount = currentAudience.userIds.filter(id => {
+          const u = learners.find(x => x.id === id);
+          return u && !(u.department && currentAudience.departments.includes(u.department));
+        }).length;
+        if (individualCount) parts.push(`${individualCount}人单独选择`);
+        audienceSummaryEl.textContent = `已选：${parts.join("、")}`;
+      }
+    }
+
+    function openAudiencePicker() {
+      const roleFilter = scope || null;
+      AudiencePicker.open({
+        roleFilter,
+        selectedUserIds: currentAudience.userIds,
+        selectedDepartments: currentAudience.departments,
+        onConfirm: ({ userIds, departments }) => {
+          currentAudience.userIds = userIds;
+          currentAudience.departments = departments;
+          updateAudienceSummary();
+        }
+      });
+    }
+
+    function setAudienceMode(mode) {
+      audienceModeSel.value = mode;
+      currentAudience.mode = mode;
+      if (mode === "specific") {
+        audienceSpecificWrap.style.display = "block";
+      } else {
+        audienceSpecificWrap.style.display = "none";
+      }
+      updateAudienceSummary();
+    }
+
+    audienceModeSel.addEventListener("change", () => {
+      const mode = audienceModeSel.value;
+      currentAudience.mode = mode;
+      if (mode === "specific") {
+        audienceSpecificWrap.style.display = "block";
+        if (!currentAudience.userIds.length && !currentAudience.departments.length) {
+          openAudiencePicker();
+        }
+      } else {
+        audienceSpecificWrap.style.display = "none";
+      }
+      updateAudienceSummary();
+    });
+
+    pickAudienceBtn.addEventListener("click", openAudiencePicker);
+
+    function getSelectedIds(name) {
+      return Array.from(document.querySelectorAll(`[name='${name}']:checked`)).map(el => el.value);
+    }
+
+    function renderMaterials(keyword = "") {
+      const wrap = document.getElementById("materialsWrap");
+      const list = materials.filter(m => m.title.toLowerCase().includes(keyword.toLowerCase()));
+
+      if (!materials.length) {
+        wrap.innerHTML = `<div class="admin-selector-empty">
+          暂无资料，请先 <a href="material-upload.html">上传资料</a>
+        </div>`;
+      } else if (!list.length) {
+        wrap.innerHTML = `<div class="admin-selector-empty">无匹配资料</div>`;
+      } else {
+        wrap.innerHTML = list.map(m => `
+          <div class="admin-selector-item">
+            <input type="checkbox" name="materialIds" value="${m.id}" id="mat_${m.id}" ${selectedMaterialIds.includes(m.id) ? "checked" : ""}>
+            <div>
+              <label for="mat_${m.id}">${m.title}</label>
+              <div class="admin-selector-meta">${m.type.toUpperCase()} · ${m.category}</div>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      document.getElementById("materialTotal").textContent = materials.length;
+      document.getElementById("materialSelected").textContent = selectedMaterialIds.length;
+    }
+
+    function renderQuestions(keyword = "") {
+      const wrap = document.getElementById("questionsWrap");
+      const list = questions.filter(q => q.content.toLowerCase().includes(keyword.toLowerCase()));
+
+      if (!questions.length) {
+        wrap.innerHTML = `<div class="admin-selector-empty">
+          暂无题目，请先 <a href="question-bank.html">添加题目</a>
+        </div>`;
+      } else if (!list.length) {
+        wrap.innerHTML = `<div class="admin-selector-empty">无匹配题目</div>`;
+      } else {
+        wrap.innerHTML = list.map(q => {
+          const typeLabel = { single: "单选", multiple: "多选", judge: "判断" }[q.type];
+          return `
+            <div class="admin-selector-item">
+              <input type="checkbox" name="questionIds" value="${q.id}" id="q_${q.id}" data-score="${q.score}" ${selectedQuestionIds.includes(q.id) ? "checked" : ""}>
+              <div>
+                <label for="q_${q.id}">${q.content}</label>
+                <div class="admin-selector-meta">${typeLabel} · ${q.score}分 · ${q.category || "-"}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      document.getElementById("questionTotal").textContent = questions.length;
+      updateQuestionStats();
+    }
+
+    function updateQuestionStats() {
+      selectedQuestionIds = getSelectedIds("questionIds");
+      const total = selectedQuestionIds.reduce((sum, id) => {
+        const q = questions.find(x => x.id === id);
+        return sum + (q ? q.score : 0);
+      }, 0);
+      document.getElementById("questionSelected").textContent = selectedQuestionIds.length;
+      document.getElementById("totalScore").textContent = total;
+    }
+
+    document.getElementById("materialsWrap").addEventListener("change", () => {
+      selectedMaterialIds = getSelectedIds("materialIds");
+      document.getElementById("materialSelected").textContent = selectedMaterialIds.length;
+    });
+
+    document.getElementById("questionsWrap").addEventListener("change", updateQuestionStats);
+
+    document.getElementById("materialSearch").addEventListener("input", function() {
+      renderMaterials(this.value.trim());
+    });
+
+    document.getElementById("questionSearch").addEventListener("input", function() {
+      renderQuestions(this.value.trim());
+    });
+
+    if (examId) {
+      const exam = DataStore.getExamById(examId);
+      if (exam) {
+        document.getElementById("examId").value = exam.id;
+        document.getElementById("title").value = exam.title;
+        document.getElementById("description").value = exam.description;
+        currentAudience = DataStore.normalizeAudience(exam.audience);
+        setAudienceMode(currentAudience.mode);
+        if (currentAudience.mode === "specific") {
+          currentAudience.userIds = [...(currentAudience.userIds || [])];
+          currentAudience.departments = [...(currentAudience.departments || [])];
+        }
+        document.getElementById("duration").value = exam.duration;
+        document.getElementById("passScore").value = exam.passScore;
+        document.getElementById("maxAttempts").value = exam.maxAttempts;
+        document.getElementById("status").value = exam.status;
+        selectedMaterialIds = exam.materialIds || [];
+        selectedQuestionIds = exam.questionIds || [];
+      }
+    }
+
+    updateAudienceSummary();
+
+    renderMaterials();
+    renderQuestions();
+
+    document.getElementById("examForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const duration = parseInt(document.getElementById("duration").value) || 0;
+      const passScore = parseInt(document.getElementById("passScore").value) || 0;
+      const maxAttempts = parseInt(document.getElementById("maxAttempts").value) || 1;
+      const status = document.getElementById("status").value;
+
+      let audience;
+      if (scope) {
+        audience = { mode: "role", role: scope, userIds: [], departments: [] };
+      } else if (currentAudience.mode === "specific") {
+        audience = {
+          mode: "specific",
+          role: null,
+          userIds: currentAudience.userIds,
+          departments: currentAudience.departments
+        };
+      } else {
+        audience = { mode: "role", role: audienceModeSel.value, userIds: [], departments: [] };
+      }
+
+      if (!title) { AdminCommon.toast("请输入考试名称", "error"); return; }
+      if (!selectedQuestionIds.length) { AdminCommon.toast("请至少选择一道题目", "error"); return; }
+      if (duration <= 0) { AdminCommon.toast("考试时长必须大于 0", "error"); return; }
+
+      const data = { title, description, audience, materialIds: selectedMaterialIds, questionIds: selectedQuestionIds, duration, passScore, maxAttempts, status };
+      const existingId = document.getElementById("examId").value;
+      if (existingId) {
+        DataStore.updateExam(existingId, data);
+      } else {
+        data.creatorId = currentUser.id;
+        DataStore.addExam(data);
+      }
+      AdminCommon.toast("保存成功");
+      setTimeout(() => location.href = "exams.html", 800);
+    });
+  </script>
+</body>
+</html>
